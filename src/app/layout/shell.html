@@ -1,0 +1,66 @@
+@if (auth.authenticated()) {
+<a class="skip-link" href="#main-content">Saltar al contenido</a>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a routerLink="/inicio" class="brand" aria-label="Vestuario BML, inicio">
+      <img src="assets/brand/logo-banda-ui.png" alt="" width="38" height="54" />
+      <span><strong>Vestuario</strong><small>Ntra. Sra. del Valle</small></span>
+    </a>
+    <p class="sidebar-label">Espacio de trabajo</p>
+    <nav aria-label="Navegación principal" class="desktop-nav">
+      @for (item of navigation; track item.path) {
+      <a
+        [routerLink]="item.path"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+        ><app-icon [name]="item.icon" />{{ item.label }}</a
+      >
+      }
+    </nav>
+    <div class="sidebar-footer">
+      <span class="band-mark">BML</span>
+      <p>Banda Municipal de Música<br />La Palma del Condado</p>
+    </div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar">
+      <a routerLink="/inicio" class="mobile-title"
+        ><app-icon name="hanger" /><strong>Vestuario</strong><span>BML</span></a
+      >
+      <span class="desktop-title">Banda Municipal Ntra. Sra. del Valle</span>
+      <div class="account">
+        <span class="avatar" aria-hidden="true"
+          >{{ auth.profile()?.display_name?.slice(0, 1)?.toUpperCase() }}</span
+        ><span class="account-name">{{ auth.profile()?.display_name }}</span
+        ><button
+          class="btn btn-quiet logout"
+          type="button"
+          (click)="signOut()"
+          [disabled]="auth.busy()"
+        >
+          <app-icon name="logout" /><span>Salir</span>
+        </button>
+      </div>
+    </header>
+    @if (!connection.online()) {
+    <div class="connection-notice" role="status">
+      Sin conexión. Necesitas internet para guardar operaciones.
+    </div>
+    }
+    <main id="main-content" tabindex="-1"><router-outlet /></main>
+    <footer class="workspace-footer">
+      <span>Vestuario BML · Gestión interna</span><app-install-app />
+    </footer>
+  </div>
+  <nav aria-label="Navegación principal móvil" class="bottom-nav">
+    @for (item of navigation; track item.path) {
+    <a
+      [routerLink]="item.path"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+      ><app-icon [name]="item.icon" /><span>{{ item.label }}</span></a
+    >
+    }
+  </nav>
+</div>
+}

@@ -1,0 +1,130 @@
+<main class="login-page">
+  <aside class="identity" aria-label="Banda Municipal Ntra. Sra. del Valle">
+    <div class="identity-top">
+      <span>BML</span><span>La Palma del Condado</span>
+    </div>
+    <div class="identity-center">
+      <img
+        src="assets/brand/logo-banda-blanco.png"
+        alt=""
+        width="170"
+        height="240"
+      />
+      <div class="gold-rule"></div>
+      <p>Banda Municipal de Música</p>
+      <h2>Ntra. Sra. del Valle</h2>
+      <span>La Palma del Condado · Huelva</span>
+    </div>
+    <div class="identity-bottom">
+      <app-icon name="hanger" /><span
+        >Un mismo compromiso.<br />Dentro y fuera del escenario.</span
+      >
+    </div>
+  </aside>
+
+  <section class="access" aria-labelledby="login-title">
+    <div class="mobile-brand">
+      <img
+        src="assets/brand/logo-banda-ui.png"
+        alt=""
+        width="42"
+        height="60"
+      /><span>Banda Municipal<br /><strong>Ntra. Sra. del Valle</strong></span>
+    </div>
+    <div class="access-body">
+      <div class="access-label">
+        <app-icon name="lock" /><span>Acceso privado</span>
+      </div>
+      <h1 id="login-title">Gestión de<br /><em>vestuario</em></h1>
+      <p class="intro">
+        Bienvenido a tu espacio de trabajo.<br />Accede con tu cuenta de la
+        Banda.
+      </p>
+
+      @if (!auth.configured) {
+      <p class="notice" role="status">
+        Estamos preparando el acceso. Contacta con un responsable de la Banda
+        para más información.
+      </p>
+      } @if (!connection.online()) {
+      <p class="notice" role="status">
+        Estás sin conexión. Conéctate a internet para iniciar sesión.
+      </p>
+      }
+      <form
+        [formGroup]="form"
+        (ngSubmit)="submit()"
+        novalidate
+        [attr.aria-busy]="auth.busy()"
+      >
+        <div class="field">
+          <label for="email">Correo electrónico</label>
+          <input
+            id="email"
+            type="email"
+            inputmode="email"
+            formControlName="email"
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
+            placeholder="tu@correo.es"
+            [attr.aria-invalid]="form.controls.email.touched && form.controls.email.invalid"
+            aria-describedby="email-error"
+          />
+          <span id="email-error" class="field-error"
+            >@if (form.controls.email.touched && form.controls.email.invalid) {
+            Introduce un correo electrónico válido. }</span
+          >
+        </div>
+        <div class="field">
+          <label for="password">Contraseña</label>
+          <div class="password-field">
+            <input
+              id="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              autocomplete="current-password"
+              placeholder="Tu contraseña"
+              [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid"
+              aria-describedby="password-error"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="showPassword.set(!showPassword())"
+              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              [attr.aria-pressed]="showPassword()"
+            >
+              <app-icon name="eye" />
+            </button>
+          </div>
+          <span id="password-error" class="field-error"
+            >@if (form.controls.password.touched &&
+            form.controls.password.invalid) { Introduce tu contraseña. }</span
+          >
+        </div>
+        @if (error() || auth.notice()) {
+        <p class="notice notice-error" role="alert">
+          {{ error() || auth.notice() }}
+        </p>
+        }
+        <button
+          type="submit"
+          class="btn btn-primary login-submit"
+          [disabled]="auth.busy() || !auth.configured || !connection.online()"
+        >
+          @if (auth.busy()) {
+          <span class="spinner" aria-hidden="true"></span> Entrando… } @else {
+          Entrar <app-icon name="arrow" /> }
+        </button>
+      </form>
+      <p class="access-help">
+        ¿Necesitas acceso? Contacta con un responsable de la Banda.
+      </p>
+      <app-install-app />
+    </div>
+    <footer>
+      Vestuario BML <span aria-hidden="true">·</span> Ntra. Sra. del Valle
+    </footer>
+  </section>
+</main>

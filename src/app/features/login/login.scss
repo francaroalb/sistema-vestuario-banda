@@ -1,0 +1,216 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+.login-page {
+  display: grid;
+  min-height: 100dvh;
+  background: var(--color-surface);
+}
+.identity {
+  display: none;
+}
+.access {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem var(--page-gutter);
+  padding-top: max(1.25rem, env(safe-area-inset-top));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  min-width: 0;
+}
+.mobile-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  line-height: 1.65;
+  img {
+    object-fit: contain;
+  }
+  strong {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+}
+.access-body {
+  width: 100%;
+  max-width: 25rem;
+  margin: auto;
+  padding: 2.5rem 0 1.5rem;
+}
+.access-label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  color: var(--color-primary);
+  app-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+h1 {
+  font: 500 clamp(3.25rem, 10vw, 4.5rem)/0.98 var(--font-display);
+  letter-spacing: -0.045em;
+  margin: 1.25rem 0;
+  em {
+    color: var(--color-primary);
+    font-weight: 500;
+  }
+}
+.intro {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  line-height: 1.8;
+  margin: 0 0 2rem;
+}
+form {
+  display: grid;
+  gap: 0.7rem;
+}
+.field-error {
+  min-height: 1.1rem;
+}
+.password-field {
+  position: relative;
+  input {
+    padding-right: 3.5rem;
+  }
+}
+.password-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 0.25rem;
+  top: 0.2rem;
+  width: 3rem;
+  height: 3rem;
+  border: 0;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  cursor: pointer;
+}
+.login-submit {
+  width: 100%;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+  min-height: 3.5rem;
+}
+.access-help {
+  font-size: var(--text-xs);
+  line-height: 1.75;
+  color: var(--color-muted);
+  margin: 1.5rem 0 0.5rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+footer {
+  font-size: 0.65rem;
+  color: var(--color-muted);
+  text-align: center;
+  padding: 1rem 0;
+  span {
+    padding: 0 0.45rem;
+  }
+}
+@media (min-width: 56rem) {
+  .login-page {
+    grid-template-columns: minmax(22rem, 44%) 1fr;
+  }
+  .identity {
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    flex-direction: column;
+    padding: 2.25rem 2.5rem;
+    color: var(--color-on-primary);
+    background:
+      radial-gradient(
+        ellipse at 15% 10%,
+        rgb(196 129 19 / 13%),
+        transparent 65%
+      ),
+      linear-gradient(145deg, #69131a, #3c0a0f);
+  }
+  .identity::after {
+    content: '';
+    position: absolute;
+    inset: 1rem;
+    border: 1px solid rgb(233 187 102 / 16%);
+    pointer-events: none;
+  }
+  .identity-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #ddc4b7;
+    span:first-child {
+      font-weight: 700;
+      color: var(--color-accent-light);
+    }
+  }
+  .identity-center {
+    margin: auto 0;
+    text-align: center;
+    padding: 3rem 0;
+    img {
+      object-fit: contain;
+      margin: 0 auto 2rem;
+      height: 14rem;
+      width: 10rem;
+    }
+    p {
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #ddc4b7;
+      margin: 1.75rem 0 0.5rem;
+    }
+    h2 {
+      font: 500 clamp(2rem, 3.4vw, 3.2rem)/1.1 var(--font-display);
+      margin: 0.6rem 0 1rem;
+    }
+    span {
+      font-size: 0.7rem;
+      letter-spacing: 0.035em;
+      color: #ddc4b7;
+    }
+  }
+  .gold-rule {
+    height: 1px;
+    width: 2.5rem;
+    background: var(--color-accent-light);
+    margin: auto;
+  }
+  .identity-bottom {
+    display: flex;
+    gap: 0.85rem;
+    align-items: center;
+    font-size: 0.65rem;
+    color: #ddc4b7;
+    line-height: 1.8;
+    app-icon {
+      color: var(--color-accent-light);
+      width: 1.6rem;
+      height: 1.6rem;
+    }
+  }
+  .mobile-brand {
+    display: none;
+  }
+  .access {
+    padding: 2rem 3rem;
+  }
+  .access-body {
+    padding: 3rem 0;
+  }
+}
