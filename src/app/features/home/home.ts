@@ -1,8 +1,13 @@
+import { EventsRepository } from '../../core/events/events-repository';
+import { BandEvent } from '../../core/events/models';
+import { madridDayRange } from '../../core/events/today';
 import { ConflictsRepository } from '../../core/conflicts/conflicts-repository';
 import { ConflictSummary } from '../../core/conflicts/models';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
+  HostListener,
   inject,
   signal,
 } from '@angular/core';
@@ -20,6 +25,38 @@ import { Icon } from '../../shared/ui/icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Home {
+  private readonly eventsRepo = inject(EventsRepository);
+  readonly todayEvents = signal<BandEvent[]>([]);
+  readonly todayError = signal(false);
+  readonly todayLoading = signal(true);
+  private todayRequest = 0;
+  private todayDay = '';
+  readonly hour = (date: string) =>
+    new Intl.DateTimeFormat('es-ES', {
+      timeZone: 'Europe/Madrid',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(date));
+  async loadToday() {
+    const request = ++this.todayRequest;
+    this.todayDay = madridDayRange().day;
+    this.todayError.set(false);
+    this.todayLoading.set(true);
+    try {
+      const events = await this.eventsRepo.today();
+      if (request === this.todayRequest) this.todayEvents.set(events);
+    } catch {
+      if (request === this.todayRequest) {
+        this.todayEvents.set([]);
+        this.todayError.set(true);
+      }
+    } finally {
+      if (request === this.todayRequest) this.todayLoading.set(false);
+    }
+  }
+  @HostListener('window:focus') refreshToday() {
+    void this.loadToday();
+  }
   private readonly conflictsRepo = inject(ConflictsRepository);
   readonly conflicts = signal<ConflictSummary | null>(null);
   readonly conflictsError = signal(false);
@@ -37,6 +74,14 @@ export class Home {
   readonly loading = signal(true);
   readonly error = signal('');
   constructor() {
+    void this.loadToday();
+    const timer = setInterval(() => {
+      if (madridDayRange().day !== this.todayDay) void this.loadToday();
+    }, 60000);
+    inject(DestroyRef).onDestroy(() => {
+      clearInterval(timer);
+      this.todayRequest++;
+    });
     void this.load();
     void this.loadConflicts();
   }

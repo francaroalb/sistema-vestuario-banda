@@ -93,6 +93,7 @@ async function mockSupabase(
         },
         json: [],
       });
+    if (url.includes('/events?')) return route.fulfill({ json: [] });
     if (url.includes('/garment_types')) return route.fulfill({ json: [] });
     if (url.includes('/garment_inventory'))
       return route.fulfill({
@@ -492,6 +493,87 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
     await expect(page.getByRole('alert')).toContainText(
       'No encontramos esta cesión',
     );
+  });
+  test('inicio: actuaciones de hoy, acceso directo, recuperación y agenda vacía', async ({
+    page,
+  }) => {
+    await page.clock.install({ time: new Date('2026-10-05T22:30:00Z') });
+    await mockSupabase(page);
+    let mode = 'error';
+    await page.route('**/rest/v1/events?*', (route) => {
+      const url = new URL(route.request().url());
+      if (url.searchParams.has('id')) return route.fulfill({ json: null });
+      expect(url.searchParams.get('cancelled')).toBe('eq.false');
+      expect(url.searchParams.get('starts_at')).toBe(
+        'gte.2026-10-05T22:00:00.000Z',
+      );
+      expect(url.searchParams.getAll('starts_at')[1]).toBe(
+        'lt.2026-10-06T22:00:00.000Z',
+      );
+      if (mode === 'error')
+        return route.fulfill({ status: 500, json: { message: 'test' } });
+      return route.fulfill({
+        json:
+          mode === 'empty'
+            ? []
+            : [
+                {
+                  id: 'hoy-1',
+                  title: 'Pasacalles de mañana',
+                  starts_at: '2026-10-06T08:00:00Z',
+                  uniform_name: 'Verano',
+                },
+                {
+                  id: 'hoy-2',
+                  title: 'Concierto de tarde',
+                  starts_at: '2026-10-06T18:00:00Z',
+                  uniform_name: 'Invierno',
+                  series_id: 'serie',
+                },
+              ],
+      });
+    });
+    await page.goto('/login');
+    await enter(page);
+    await expect(
+      page.getByText('No se han podido consultar las actuaciones de hoy.', {
+        exact: false,
+      }),
+    ).toBeVisible();
+    mode = 'events';
+    await page
+      .getByRole('button', { name: 'Reintentar actuaciones de hoy' })
+      .click();
+    await expect(page.locator('.today-event')).toHaveCount(2);
+    await expect(page.locator('.today-event').first()).toContainText('10:00');
+    await expect(page.locator('.today-event').last()).toHaveAttribute(
+      'href',
+      '/actuaciones/hoy-2',
+    );
+    await expect(
+      page.getByRole('heading', { name: 'Agenda y seguimiento' }),
+    ).toBeVisible();
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      if (width === 390 || width === 1440)
+        await page.screenshot({
+          path: '.local/screenshots/home-today-' + width + '.png',
+          fullPage: true,
+        });
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+    await page.locator('.today-event').first().click();
+    await expect(page).toHaveURL(/actuaciones\/hoy-1$/);
+    mode = 'empty';
+    await page.goto('/inicio');
+    await expect(page.locator('.today-event')).toHaveCount(0);
+    await expect(
+      page.getByRole('heading', { name: 'Agenda y seguimiento' }),
+    ).toBeVisible();
   });
   test('pestañas de actuaciones, series y uniformes conservan rutas y selección', async ({
     page,

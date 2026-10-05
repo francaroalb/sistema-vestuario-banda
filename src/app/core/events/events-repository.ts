@@ -1,3 +1,4 @@
+import { madridDayRange } from './today';
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from '../config/supabase';
 import { Json } from '../config/database.types';
@@ -17,6 +18,24 @@ export class EventsRepository {
   private get client() {
     if (!this.supabase.client) throw new Error('Not configured');
     return this.supabase.client;
+  }
+  async today() {
+    const { from, until } = madridDayRange();
+    const events: BandEvent[] = [];
+    for (let offset = 0; ; offset += 100) {
+      const r = await this.client
+        .from('events')
+        .select('*')
+        .eq('cancelled', false)
+        .gte('starts_at', from)
+        .lt('starts_at', until)
+        .order('starts_at')
+        .order('id')
+        .range(offset, offset + 99);
+      if (r.error) throw r.error;
+      events.push(...r.data);
+      if (r.data.length < 100) return events;
+    }
   }
   async recommend(event: string, person: string, type: string) {
     const r = await this.client.rpc('garment_recommendation', {

@@ -214,3 +214,19 @@ Para una prenda disponible, elegir reserva y Entregar exige la confirmación de 
 No se altera la posesión ni se devuelven prendas al quitar una asignación.
 Validación: compilación y ocho casos de base de datos del recomendador aprobados, incluido
 reutilizar una prenda propia sin generar una nueva cesión.
+
+### Inicio: actuaciones del día y agenda
+
+La última tarjeta pasa a Agenda y seguimiento, con tres accesos compactos a Actuaciones,
+Series y Conflictos y avisos. Los enlaces comparten jerarquía y superficie; se apilan en móvil.
+Antes de las gestiones habituales aparecen las actuaciones cuyo inicio cae en el día actual
+de Europe/Madrid, excluyendo canceladas y ordenadas por hora. Cada tarjeta muestra hora,
+nombre y uniforme, con acceso a la ficha individual de participantes para entregar y firmar,
+también cuando la actuación pertenece a una serie. No realiza entregas ni asignaciones.
+
+Consulta paginada de solo lectura con los permisos existentes. No hay tarjeta vacía cuando
+no hay actuaciones hoy; los fallos ofrecen reintento. Al recuperar el foco se recarga la agenda,
+y se detecta el cambio de día cada minuto mientras Inicio está abierto. Se respetan los días
+de 23 y 25 horas por cambio de horario. Validación: 27 pruebas unitarias, compilación y pruebas
+de navegador de agenda vacía, dos actuaciones, error/reintento, enlace directo y anchos de
+320 a 1440 px en escritorio y móvil. Capturas locales `home-today-390.png` y `home-today-1440.png`.

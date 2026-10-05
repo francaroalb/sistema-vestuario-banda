@@ -1,6 +1,38 @@
 <header class="home-heading">
   <h1>Hola, {{ auth.profile()?.display_name }}.</h1>
 </header>
+@if (todayLoading() && !todayEvents().length) {
+  <p class="today-loading" role="status">Consultando actuaciones de hoy…</p>
+}
+@if (todayError()) {
+  <p class="notice" role="alert">
+    No se han podido consultar las actuaciones de hoy.
+    <button class="text-button" (click)="loadToday()">
+      Reintentar actuaciones de hoy
+    </button>
+  </p>
+}
+@if (todayEvents().length) {
+  <section class="today-events" aria-label="Actuaciones de hoy">
+    @for (event of todayEvents(); track event.id) {
+      <a class="today-event" [routerLink]="['/actuaciones', event.id]">
+        <div class="today-time">
+          <app-icon name="calendar" /><strong>{{
+            hour(event.starts_at)
+          }}</strong>
+        </div>
+        <div class="today-description">
+          <span class="today-label">Actuación para hoy</span>
+          <h2>{{ event.title }}</h2>
+          <small>{{ event.uniform_name }}</small>
+        </div>
+        <span class="today-action"
+          >Ver participantes · Entregar y firmar <app-icon name="arrow"
+        /></span>
+      </a>
+    }
+  </section>
+}
 @if (conflicts(); as c) {
   @if (c.conflicts || c.pending) {
     <a class="notice home-conflicts" routerLink="/conflictos"
@@ -135,22 +167,26 @@
   </section>
   <section class="planning-panel" aria-labelledby="planning-title">
     <div class="planning-heading">
-      <h2 id="planning-title">Preparar vestuario</h2>
+      <h2 id="planning-title">Agenda y seguimiento</h2>
     </div>
-    <a class="section-link" routerLink="/conflictos">Conflictos y avisos →</a>
-    <div class="planning-links">
+    <nav class="planning-links" aria-label="Agenda y seguimiento">
       <a routerLink="/actuaciones"
         ><app-icon name="calendar" /><span
           ><strong>Actuaciones</strong
-          ><small>Participantes y prendas</small></span
+          ><small>Participantes y entregas</small></span
         ><app-icon name="arrow"
       /></a>
       <a routerLink="/actuaciones/series"
         ><app-icon name="hanger" /><span
-          ><strong>Series</strong
-          ><small>Varias actuaciones, un plan</small></span
+          ><strong>Series</strong><small>Preparación conjunta</small></span
         ><app-icon name="arrow"
       /></a>
-    </div>
+      <a routerLink="/conflictos"
+        ><app-icon name="warning" /><span
+          ><strong>Conflictos y avisos</strong
+          ><small>Revisar próximos usos</small></span
+        ><app-icon name="arrow"
+      /></a>
+    </nav>
   </section>
 </div>
