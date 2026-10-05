@@ -90,19 +90,22 @@ import { Icon } from '../../shared/ui/icon';
               [routerLink]="['/cesiones', loan.id]"
               [queryParams]="{ volver: router.url }"
               [attr.aria-label]="'Ver cesión de ' + loan.person_name"
-              ><span
-                class="loan-badge"
-                [class.closed]="loan.closed_at"
-                [class.overdue]="overdue(loan)"
-                >{{
-                  loan.closed_at
-                    ? 'Finalizada'
-                    : overdue(loan)
-                      ? 'Devolución vencida'
-                      : 'Activa'
-                }}</span
-              >
-              <h2>{{ loan.person_name }}</h2>
+            >
+              <div class="loan-card-heading">
+                <h2>{{ loan.person_name }}</h2>
+                <span
+                  class="loan-badge"
+                  [class.closed]="loan.closed_at"
+                  [class.overdue]="overdue(loan)"
+                  >{{
+                    loan.closed_at
+                      ? 'Finalizada'
+                      : overdue(loan)
+                        ? 'Devolución vencida'
+                        : 'Activa'
+                  }}</span
+                >
+              </div>
               <p>
                 {{ loan.held_count }}
                 {{

@@ -41,7 +41,7 @@ import { Feedback } from '../../core/feedback';
     @if (loading()) {
       <p role="status">Cargando uniformes…</p>
     } @else {
-      <div class="event-stack">
+      <div class="event-stack uniform-grid">
         @if (open()) {
           <form
             #form="ngForm"

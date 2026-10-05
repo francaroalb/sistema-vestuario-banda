@@ -22,16 +22,18 @@
     }
   </div>
   <div class="event-stack">
-    <section class="card event-card">
+    <section class="card event-card event-summary">
       <h2>{{ e.uniform_name }}</h2>
-      <p>
-        <strong>Actuación:</strong> {{ time(e.starts_at) }} —
-        {{ time(e.ends_at) }}
-      </p>
-      <p>
-        <strong>Prendas reservadas:</strong> {{ time(e.planned_from) }} —
-        {{ time(e.planned_until) }}
-      </p>
+      <dl class="event-schedule">
+        <div>
+          <dt>Actuación</dt>
+          <dd>{{ time(e.starts_at) }} — {{ time(e.ends_at) }}</dd>
+        </div>
+        <div>
+          <dt>Prendas reservadas</dt>
+          <dd>{{ time(e.planned_from) }} — {{ time(e.planned_until) }}</dd>
+        </div>
+      </dl>
       <p class="event-help">
         Todas las horas son de Madrid. Asignar una prenda no registra su
         entrega.
@@ -46,9 +48,9 @@
         </p>
       }
     </section>
-    <section class="card event-card">
+    <section class="card event-card participant-tools">
       <h2>
-        Participantes y refuerzos <span class="muted">· {{ count() }}</span>
+        Participantes y refuerzos <span class="count-badge">{{ count() }}</span>
       </h2>
       <p class="event-help">
         Busca la ficha existente para conservar su historial. Si no existe,
@@ -127,20 +129,43 @@
       }
     </section>
     @for (person of people(); track person.person_id) {
-      <section class="card event-card">
-        <h2>
-          <a [routerLink]="['/personas', person.person_id]">{{
-            person.full_name
-          }}</a>
-        </h2>
-        <p class="muted">
-          {{ person.instrument || 'Sin instrumento' }} ·
-          {{ person.kind === 'REFUERZO' ? 'Refuerzo' : 'Banda'
-          }}{{ person.archived_at ? ' · Persona archivada' : '' }}
-        </p>
+      <section class="card event-card participant-card">
+        <header class="participant-header">
+          <div>
+            <h2>
+              <a [routerLink]="['/personas', person.person_id]">{{
+                person.full_name
+              }}</a>
+            </h2>
+            <p class="muted">
+              {{ person.instrument || 'Sin instrumento' }} ·
+              {{ person.kind === 'REFUERZO' ? 'Refuerzo' : 'Banda'
+              }}{{ person.archived_at ? ' · Persona archivada' : '' }}
+            </p>
+          </div>
+          @if (!e.cancelled) {
+            <div class="event-actions participant-actions">
+              @if (canDeliver(person.person_id)) {
+                <a
+                  class="btn btn-primary"
+                  routerLink="/cesiones/nueva"
+                  [queryParams]="{ actuacion: id, persona: person.person_id }"
+                  >Entregar prendas</a
+                >
+              }
+              <button
+                class="btn btn-quiet"
+                [disabled]="saving() || !connection.online()"
+                (click)="remove(person)"
+              >
+                Quitar participante
+              </button>
+            </div>
+          }
+        </header>
         @for (row of lines(person.person_id); track row.type_id) {
-          <div class="event-choice">
-            <div>
+          <div class="event-choice preparation-line">
+            <div class="preparation-data">
               <strong
                 >{{ row.type_name }}
                 @if (row.code) {
@@ -152,6 +177,8 @@
                 }</strong
               ><span
                 class="event-status"
+                [class.assigned]="row.status === 'ASIGNADA'"
+                [class.returned]="row.status === 'DEVUELTA'"
                 [class.warn]="
                   row.status === 'CONFLICTO' ||
                   row.status === 'PENDIENTE_DEVOLUCION'
@@ -187,7 +214,8 @@
                 <a
                   class="btn btn-secondary"
                   [routerLink]="['/cesiones', row.loan_id, 'devolver']"
-                  >Devolver {{ row.code }}</a
+                  [attr.aria-label]="'Devolver ' + row.code"
+                  >Devolver</a
                 >
               }
               @if (!e.cancelled) {
@@ -195,16 +223,20 @@
                   class="btn btn-secondary"
                   [disabled]="saving() || !connection.online()"
                   (click)="pick(row)"
+                  [attr.aria-label]="
+                    row.garment_id ? 'Cambiar asignación' : 'Asignar prenda'
+                  "
                 >
-                  {{ row.garment_id ? 'Cambiar asignación' : 'Asignar prenda' }}
+                  {{ row.garment_id ? 'Cambiar' : 'Asignar prenda' }}
                 </button>
                 @if (row.garment_id) {
                   <button
                     class="btn btn-quiet"
                     [disabled]="saving() || !connection.online()"
                     (click)="assign(row, null)"
+                    aria-label="Quitar asignación"
                   >
-                    Quitar asignación
+                    Quitar
                   </button>
                 }
               }
@@ -292,25 +324,6 @@
               }
             </div>
           }
-        }
-        @if (!e.cancelled) {
-          <div class="event-actions">
-            @if (canDeliver(person.person_id)) {
-              <a
-                class="btn btn-primary"
-                routerLink="/cesiones/nueva"
-                [queryParams]="{ actuacion: id, persona: person.person_id }"
-                >Entregar prendas</a
-              >
-            }
-            <button
-              class="btn btn-quiet"
-              [disabled]="saving() || !connection.online()"
-              (click)="remove(person)"
-            >
-              Quitar participante
-            </button>
-          </div>
         }
       </section>
     } @empty {

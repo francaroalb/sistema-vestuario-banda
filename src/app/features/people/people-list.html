@@ -102,12 +102,14 @@
             [queryParams]="{ volver: router.url }"
             [attr.aria-label]="'Ver persona ' + person.full_name"
           >
-            <span
-              class="person-badge"
-              [class.reinforcement]="person.kind === 'REFUERZO'"
-              >{{ kindLabel(person.kind) }}</span
-            >
-            <h2>{{ person.full_name }}</h2>
+            <div class="person-card-heading">
+              <h2>{{ person.full_name }}</h2>
+              <span
+                class="person-badge"
+                [class.reinforcement]="person.kind === 'REFUERZO'"
+                >{{ kindLabel(person.kind) }}</span
+              >
+            </div>
             <div class="garment-card-bottom">
               <span class="instrument">{{
                 person.instrument || "Sin instrumento indicado"

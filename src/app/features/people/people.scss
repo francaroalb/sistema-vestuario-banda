@@ -30,3 +30,24 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+.person-card-heading {
+  display: flex;
+  align-items: start;
+  gap: var(--space-3);
+  justify-content: space-between;
+}
+.person-card-heading h2 {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-lg);
+}
+.person-card-heading .person-badge {
+  flex-shrink: 0;
+  max-width: 45%;
+}
+.person-card .instrument {
+  font-weight: 600;
+  color: var(--color-text);
+}

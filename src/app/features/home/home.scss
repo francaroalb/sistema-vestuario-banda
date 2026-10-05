@@ -20,7 +20,7 @@
   padding: var(--card-padding);
   border-radius: var(--radius-lg);
   text-decoration: none;
-  min-height: 6.5rem;
+  min-height: 5rem;
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
   span {
@@ -112,7 +112,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  margin: var(--space-8) 0 var(--space-4);
+  margin: var(--space-5) 0 var(--space-3);
   h2 {
     font-size: var(--text-section);
     margin: 0;
@@ -146,11 +146,11 @@
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: start;
-  gap: var(--space-3);
+  gap: var(--space-2);
   padding: var(--card-padding);
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  background: var(--stat-surface);
   color: var(--color-text);
   box-shadow: var(--shadow-card);
   text-decoration: none;
@@ -167,6 +167,7 @@
   }
   strong {
     grid-row: 1;
+    color: var(--stat-color);
     font-size: var(--text-metric);
     font-weight: 700;
     letter-spacing: -0.04em;
@@ -259,7 +260,7 @@
     grid-template-columns: 1.15fr 1fr;
   }
   .people-actions {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
   }
   .stats {
     grid-template-columns: repeat(5, minmax(0, 1fr));

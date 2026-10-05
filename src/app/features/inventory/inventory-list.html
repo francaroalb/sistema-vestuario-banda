@@ -129,17 +129,19 @@
             [attr.aria-label]="'Ver prenda ' + garment.code"
           >
             <div class="garment-card-top">
-              <span class="garment-type">{{ garment.garment_types?.name }}</span
-              ><span class="size-badge">{{ garment.size }}</span>
+              <div>
+                <span class="garment-type">{{
+                  garment.garment_types?.name
+                }}</span>
+                <h2>{{ garment.code }}</h2>
+              </div>
+              <span class="size-badge">{{ garment.size }}</span>
             </div>
-            <h2>{{ garment.code }}</h2>
             <div class="garment-card-bottom">
               <app-garment-status
                 [state]="garment.physical_state"
                 [held]="!!garment.loan_id"
-              /><app-icon
-                name="arrow"
-              />
+              /><app-icon name="arrow" />
             </div>
             @if (garment.loan_id) {
               <span class="custody-label"
@@ -148,7 +150,11 @@
                 ></span
               >
             }
-            @if (garment.next_assignee) {<span class="custody-label">Reserva prevista para {{garment.next_assignee}}</span>}
+            @if (garment.next_assignee) {
+              <span class="custody-label"
+                >Reserva prevista para {{ garment.next_assignee }}</span
+              >
+            }
             @if (garment.archived_at) {
               <span class="archived-label"
                 ><app-icon name="archive" />Archivada</span

@@ -60,9 +60,9 @@ import { formatTimestamp } from '../../core/inventory/inventory';
         <button class="text-button" (click)="load()">Reintentar</button>
       </p>
     } @else {
-      <div class="event-stack">
+      <div class="event-stack event-list-grid">
         @for (e of rows(); track e.id) {
-          <article class="card event-card">
+          <article class="card event-card event-list-card">
             <h2>
               <a [routerLink]="['/actuaciones', e.id]">{{ e.title }}</a>
             </h2>

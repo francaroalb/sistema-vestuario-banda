@@ -9,6 +9,7 @@ Aplicación independiente de `../sistema-entradas-banda`. Usar Entradas solo com
 - Actuaciones individuales, uniformes, refuerzos y asignaciones básicas disponibles. No adelantar series ni recomendador.
 - Nombre visible: Gestión de trajes. Inicio operativo sin mensajes promocionales; navegación inferior burdeos, cabecera/lateral claros y logo de la Banda.
 - Refinamiento visual autorizado antes de fase 5: seguir los tokens de `src/styles.scss` y `docs/sistema-visual.md`; no alterar flujos ni arquitectura por cambios de UI.
+- Preferencia de UI: tarjetas compactas, datos y acciones en paralelo cuando caben; destacar nombres, códigos, tallas y estados con la paleta existente, sin ocultar contenido.
 - Al acabar cada fase: explicar cambios, pruebas, decisiones y detenerse.
 
 ## Decisiones aprobadas

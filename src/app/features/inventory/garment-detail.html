@@ -105,8 +105,10 @@
       }}
     </button>
   </div>
-  <app-planned-uses [garment]="item.id" />
-  <app-loan-history [garment]="item.id" />
+  <div class="detail-columns">
+    <app-planned-uses [garment]="item.id" />
+    <app-loan-history [garment]="item.id" />
+  </div>
   <dialog
     #archiveDialog
     class="confirmation"
