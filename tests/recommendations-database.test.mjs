@@ -265,10 +265,17 @@ test('Recomendador y preparación asistida', async (t) => {
           g = await garment('60'),
           ev = await event();
         await history(owner, g, true);
+        const movements = (
+          await user('select count(*) n from public.loan_movements')
+        )[0].n;
         await add(ev, owner);
+        assert.equal(
+          (await user('select count(*) n from public.loan_movements'))[0].n,
+          movements,
+        );
         const r = await rec(ev, owner);
         assert.equal(r.candidates[0].own_custody, true);
-        await apply(await preview(ev));
+        assert.equal((await preview(ev)).preserved, 1);
         assert.equal(
           (
             await user(
@@ -277,6 +284,107 @@ test('Recomendador y preparación asistida', async (t) => {
             )
           )[0].status,
           'EN_SU_PODER',
+        );
+      },
+    );
+    await t.test(
+      'alta no elige entre varias prendas propias ni sustituye una reserva; serie reutiliza por bloque',
+      async () => {
+        const owner = await person(),
+          g1 = await garment('64'),
+          g2 = await garment('64');
+        await history(owner, g1, true);
+        await history(owner, g2, true);
+        const ambiguous = await event();
+        await add(ambiguous, owner);
+        assert.equal(
+          (
+            await user(
+              'select * from public.event_preparation where event_id=$1',
+              [ambiguous],
+            )
+          )[0].status,
+          'SIN_ASIGNAR',
+        );
+        const single = await person(),
+          held = await garment('66');
+        await history(single, held, true);
+        const first = await event(),
+          overlapping = await event();
+        await add(first, single);
+        await add(overlapping, single);
+        assert.equal(
+          (
+            await user(
+              'select * from public.event_preparation where event_id=$1',
+              [overlapping],
+            )
+          )[0].status,
+          'SIN_ASIGNAR',
+        );
+        const replacement = await garment('66');
+        await cmd(first, 'ASSIGN', {
+          person_id: single,
+          type_id: type,
+          garment_id: replacement,
+        });
+        await add(first, single);
+        assert.equal(
+          (
+            await user(
+              'select * from public.event_preparation where event_id=$1',
+              [first],
+            )
+          )[0].garment_id,
+          replacement,
+        );
+        const seriesOwner = await person(),
+          seriesGarment = await garment('68');
+        await history(seriesOwner, seriesGarment, true);
+        const sid = uuid(),
+          es = [await event(), await event()];
+        await user("select public.plan_series($1,'SERIES',$2,null,$3)", [
+          uuid(),
+          sid,
+          JSON.stringify({ name: 'Cesión indefinida' }),
+        ]);
+        const sc = async (action, data) => {
+          const v = (
+            await user('select version from public.event_series where id=$1', [
+              sid,
+            ])
+          )[0].version;
+          return user('select public.plan_series($1,$2,$3,$4,$5)', [
+            uuid(),
+            action,
+            sid,
+            v,
+            JSON.stringify(data),
+          ]);
+        };
+        for (const e of es)
+          await sc('MEMBERSHIP', {
+            event_id: e,
+            event_version: (await erow(e)).version,
+            active: true,
+          });
+        const count = (
+          await user('select count(*) n from public.loan_movements')
+        )[0].n;
+        await sc('ATTENDANCE', { person_id: seriesOwner, event_ids: es });
+        const assigned = await user(
+          'select * from public.event_preparation where event_id=any($1::uuid[])',
+          [es],
+        );
+        assert.equal(assigned.length, 2);
+        assert.ok(
+          assigned.every(
+            (r) => r.garment_id === seriesGarment && r.status === 'EN_SU_PODER',
+          ),
+        );
+        assert.equal(
+          (await user('select count(*) n from public.loan_movements'))[0].n,
+          count,
         );
       },
     );

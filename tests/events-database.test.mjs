@@ -643,7 +643,7 @@ test('Actuaciones individuales: planificación, disponibilidad y entrega', async
             [isolated, person],
           )
         )[0];
-        assert.equal(assignment.garment_id, null);
+        assert.equal(assignment.garment_id, held);
         assert.equal(assignment.fulfilled_item_id, null);
         const lines = await user(
           'select * from public.loan_items where loan_id=$1',
@@ -677,7 +677,7 @@ test('Actuaciones individuales: planificación, disponibilidad y entrega', async
               [isolated, person, type],
             )
           )[0].status,
-          'SIN_ASIGNAR',
+          'EN_SU_PODER',
         );
       },
     );

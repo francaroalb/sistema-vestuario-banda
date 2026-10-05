@@ -278,3 +278,22 @@ Se requiere aprobación expresa entre fases. No comenzar fase 9 sin autorizació
 - Migración 20261005001000_conflicts.sql aplicada al Supabase independiente de Vestuario.
   No se alteran datos físicos ni reservas preexistentes al aplicar la migración.
 - Fase 9 pendiente de autorización: no se añaden importaciones, duplicados ni acciones masivas.
+
+## Reutilización de prendas propias al añadir participantes
+
+Migración `20261005001100_reuse_owned_garments.sql`: PARTICIPANT y ATTENDANCE vinculan
+las prendas actualmente cedidas a esa persona para los tipos requeridos por el uniforme
+(o la unión de tipos del periodo de serie). Incluye cesiones sin devolución prevista.
+Solo se elige automáticamente una única prenda compatible por tipo, no archivada y en
+buen estado, sin reserva solapada fuera de ese periodo. Varias opciones dejan la decisión
+manual. No sustituye asignaciones ya existentes. Reincorporar elimina las reservas antiguas
+según la regla previa y después evalúa de nuevo la posesión real actual.
+
+La operación usa las transacciones, bloqueo de planificación, versiones e idempotencia
+existentes. El ayudante privado no tiene permisos directos para usuarios del navegador.
+No crea movimientos, cesiones ni firmas; no cambia la fecha prevista de devolución.
+Las prendas reutilizadas se muestran EN_SU_PODER por su cesión activa, con Ver cesión.
+Se aplica al registrar participación; no hace una asignación implícita al consultar pantallas.
+Validación: 83 comprobaciones de base de datos aprobadas, incluidos ausencia de nuevas
+entregas, ambigüedad, solapamiento, conservación de asignaciones y propagación por serie.
+Aplicada en Supabase y comprobada con el caso existente reportado, sin nuevos movimientos.
