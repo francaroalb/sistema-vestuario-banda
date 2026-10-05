@@ -90,3 +90,24 @@ Las tallas de estos ejemplos son elecciones de prueba, no medidas personales de 
 ## Identificación del lote
 
 La referencia está en Observaciones de todas las personas y prendas creadas. El manifiesto local con sus UUID se conserva en .local/manual-demo-manifest.json, excluido de Git. Permite identificar exactamente los registros del lote si más adelante solicitas limpiarlos. No se ha ejecutado ninguna limpieza ni programado un borrado automático.
+
+## Historial para probar recomendaciones (5 de octubre de 2026)
+
+Lote `DEMO-HISTORIAL-RECOMENDADOR-20261005`: tres cesiones de prueba cerradas por persona,
+con tres usos de chaqueta y uno de camisa. Se simularon entrega y devolución; las notas
+identifican explícitamente que no hubo entrega física ni firma real. Fechas de registro
+actuales, sin inventar fechas históricas. No se modificaron cesiones abiertas ni reservas.
+
+| Persona | Chaqueta de referencia | Camisa añadida |
+| --- | --- | --- |
+| Isabel Mora | 48 | M |
+| Fran Caro | 48 | L |
+| Pilar Alonso | 46 | S |
+| Carmelo | 52 | XL |
+
+El historial previo se conserva. El RPC del recomendador confirmó talla 48 para Isabel y
+Fran, y 46 para Pilar en sus actuaciones futuras existentes. Carmelo todavía no participa
+en una actuación futura: añadirlo a una para consultar su propuesta de talla 52.
+El recomendador usa frecuencia de talla y disponibilidad para la fecha, no garantiza siempre
+la misma chaqueta física. Manifiesto local excluido de Git:
+`.local/recommendation-history-manifest.json` (12 cesiones cerradas, 16 prendas devueltas).
