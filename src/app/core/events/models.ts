@@ -84,7 +84,7 @@ export const preparationLabel = {
   SIN_ASIGNAR: 'Pendiente de asignar',
   CONFLICTO: 'Revisar disponibilidad',
   EN_SU_PODER: 'En su poder',
-  PENDIENTE_DEVOLUCION: 'Pendiente de devolución',
+  PENDIENTE_DEVOLUCION: 'Asignada · devolución prevista',
   DEVUELTA: 'Devuelta',
   ASIGNADA: 'Asignada · pendiente de entrega',
 };

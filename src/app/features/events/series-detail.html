@@ -142,6 +142,17 @@
                     </li>
                   }
                 </ul>
+                @if (s.notices) {
+                  <small
+                    >ⓘ {{ s.notices }}
+                    {{
+                      s.notices === 1
+                        ? 'devolución prevista'
+                        : 'devoluciones previstas'
+                    }}
+                    antes de la entrega</small
+                  >
+                }
                 @if (s.review) {
                   <small class="agenda-review"
                     >{{ s.review }} asignaciones por revisar</small
@@ -363,6 +374,9 @@
               person.instrument || 'Sin instrumento'
             }}</span>
             <span class="tile-jacket">{{ info.jacket }}</span>
+            @if (info.notices) {
+              <span class="tile-notice">ⓘ Devolución prevista</span>
+            }
           </button>
         } @empty {
           <p class="empty-participants">
@@ -470,17 +484,25 @@
                       ><span
                         class="event-status"
                         [class.ok]="r.status === 'EN_SU_PODER'"
-                        [class.assigned]="r.status === 'ASIGNADA'"
-                        [class.warn]="
-                          r.status === 'CONFLICTO' ||
+                        [class.assigned]="
+                          r.status === 'ASIGNADA' ||
                           r.status === 'PENDIENTE_DEVOLUCION'
                         "
+                        [class.warn]="r.status === 'CONFLICTO'"
                         >{{ label[r.status] }}</span
                       >
                       @if (r.status === 'EN_SU_PODER') {
                         <small
                           >Ya la conserva · devolución prevista
                           {{ time(b.planned_until) }}</small
+                        >
+                      }
+                      @if (r.status === 'PENDIENTE_DEVOLUCION') {
+                        <small class="return-reminder"
+                          >Aviso: devolución prevista el {{ time(r.due_at!) }}.
+                          Nueva entrega prevista el {{ time(b.planned_from) }};
+                          se usará en {{ eventName(b.event_ids[0]) }} el
+                          {{ eventStart(b.event_ids[0]) }}.</small
                         >
                       }
                       @if (r.holder_name && r.holder_id !== b.person_id) {

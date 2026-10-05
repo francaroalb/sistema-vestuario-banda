@@ -4,6 +4,7 @@ export type ParticipantSummary = {
   state: 'pending' | 'review' | 'ready';
   priority: number;
   jacket: string;
+  notices: number;
   assigned: number;
   total: number;
 };
@@ -27,9 +28,7 @@ export function summarizeParticipant(
     ...new Set(jackets.map((r) => r.code).filter((c): c is string => !!c)),
   ];
   const missingJacket = jackets.some((r) => !r.garment_id);
-  const review = unique.some(
-    (r) => r.status === 'CONFLICTO' || r.status === 'PENDIENTE_DEVOLUCION',
-  );
+  const review = unique.some((r) => r.status === 'CONFLICTO');
   const assigned = unique.filter((r) => r.garment_id).length;
   const ready = unique.length > 0 && assigned === unique.length && !review;
   return {
@@ -40,6 +39,7 @@ export function summarizeParticipant(
       : !codes.length
         ? 'Chaqueta sin asignar'
         : codes.join(' · ') + (missingJacket ? ' · Faltan periodos' : ''),
+    notices: unique.filter((r) => r.status === 'PENDIENTE_DEVOLUCION').length,
     assigned,
     total: unique.length,
   };
@@ -64,8 +64,7 @@ export function summarizeEvent(
     for (const person of people.keys()) {
       const r = lookup.get(person + ':' + id);
       if (r?.garment_id && r.status !== 'SIN_ASIGNAR') assigned++;
-      if (r?.status === 'CONFLICTO' || r?.status === 'PENDIENTE_DEVOLUCION')
-        review++;
+      if (r?.status === 'CONFLICTO') review++;
     }
     return {
       id,
@@ -78,11 +77,16 @@ export function summarizeEvent(
   const reinforcements = new Set(
     relevant.filter((r) => r.kind === 'REFUERZO').map((r) => r.person_id),
   ).size;
+  const notices = [...lookup.values()].filter(
+    (r) =>
+      event.type_ids.includes(r.type_id) && r.status === 'PENDIENTE_DEVOLUCION',
+  ).length;
   const pending = types.reduce((n, t) => n + t.total - t.assigned, 0);
   const review = types.reduce((n, t) => n + t.review, 0);
   return {
     total: people.size,
     reinforcements,
+    notices,
     types,
     pending,
     review,

@@ -31,8 +31,8 @@ describe('Resumen de preparación de un participante', () => {
     expect(s.assigned).toBe(1);
     expect(s.total).toBe(2);
   });
-  it('da prioridad a conflictos y devoluciones pendientes aunque esté todo asignado', () => {
-    for (const status of ['CONFLICTO', 'PENDIENTE_DEVOLUCION'] as const) {
+  it('da prioridad a conflictos aunque esté todo asignado', () => {
+    for (const status of ['CONFLICTO'] as const) {
       const s = summarizeParticipant(
         [block()],
         [row({ garment_id: 'g', code: 'C26-48', status })],
@@ -99,8 +99,8 @@ describe('Resumen de una actuación de la serie', () => {
     ).toBe(true);
     expect(summarizeEvent(event, blocks, [jacket]).ready).toBe(false);
   });
-  it('no marca completo un conflicto, una devolución pendiente ni una actuación vacía', () => {
-    for (const status of ['CONFLICTO', 'PENDIENTE_DEVOLUCION'] as const) {
+  it('no marca completo un conflicto ni una actuación vacía', () => {
+    for (const status of ['CONFLICTO'] as const) {
       const s = summarizeEvent({ ...event, type_ids: ['j'] }, blocks, [
         { ...jacket, status },
       ]);
@@ -108,5 +108,28 @@ describe('Resumen de una actuación de la serie', () => {
       expect(s.review).toBe(1);
     }
     expect(summarizeEvent(event, [], []).ready).toBe(false);
+  });
+});
+
+describe('Devolución compatible antes del próximo uso', () => {
+  it('cuenta como preparado, conserva el aviso y no lo convierte en conflicto', () => {
+    const b = { id: 'b', person_id: 'p', event_ids: ['e'] } as SeriesBlock;
+    const r = row({
+      person_id: 'p',
+      garment_id: 'g',
+      code: 'C01-40',
+      status: 'PENDIENTE_DEVOLUCION',
+    });
+    const participant = summarizeParticipant([b], [r]);
+    expect(participant.state).toBe('ready');
+    expect(participant.notices).toBe(1);
+    const event = summarizeEvent(
+      { id: 'e', type_ids: ['j'] } as BandEvent,
+      [b],
+      [r],
+    );
+    expect(event.ready).toBe(true);
+    expect(event.review).toBe(0);
+    expect(event.notices).toBe(1);
   });
 });

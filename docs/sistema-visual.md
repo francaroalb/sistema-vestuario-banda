@@ -142,8 +142,8 @@ accesible de la tarjeta; los resúmenes largos se limitan a dos líneas.
 Se ordenan primero las personas con incidencias, después quienes necesitan chaqueta,
 después quienes necesitan otras prendas y finalmente quienes tienen todas las asignaciones
 preparadas. El verde identifica preparados, el ámbar revisión y el borde burdeos la selección.
-Preparado exige todas las prendas de todos los periodos, sin conflictos ni devoluciones
-pendientes. Los filtros y la búsqueda por nombre o instrumento permiten localizar personas.
+Preparado exige todas las prendas de todos los periodos, sin conflictos. Una devolución
+prevista compatible conserva un aviso y no impide que la asignación esté preparada. Los filtros y la búsqueda por nombre o instrumento permiten localizar personas.
 
 La agenda y la preparación asistida comienzan plegadas y comparten fila en escritorio.
 Las actuaciones de cada periodo también se consultan al desplegar su agenda. Asignar una
@@ -164,7 +164,7 @@ El desplegable Actuaciones usa tarjetas horizontales con desplazamiento táctil 
 Cada tarjeta muestra fecha, uniforme, total de participantes (incluidos los refuerzos),
 recuento de refuerzos y necesidades por tipo de prenda con progreso de asignación.
 El estado Completado se muestra en verde solo cuando todas las prendas del uniforme de
-esa actuación están asignadas sin conflictos ni devoluciones pendientes. Las asignaciones
+esa actuación están asignadas sin conflictos. Las devoluciones previstas compatibles son avisos. Las asignaciones
 pendientes o por revisar aparecen en ámbar; sin participantes y cancelada son estados neutros.
 Los recuentos se calculan desde los bloques de asistencia, incluso cuando el servidor devuelve
 las prendas solo para la primera actuación del bloque. No se cuentan prendas de otros uniformes.
@@ -186,3 +186,21 @@ los textos auxiliares y recuentos mantienen una jerarquía secundaria.
 Validación: compilación y seis pruebas de navegador aprobadas entre escritorio y móvil,
 con navegación entre pestañas, recarga, filtros, preparación y comparación de estilos
 calculados. Se comprobó que las tres pestañas caben a 320 px sin desbordamiento.
+
+
+### Reservas futuras dependientes de una devolución
+
+Una asignación con estado PENDIENTE_DEVOLUCION cuenta como preparada: la fecha prevista
+es compatible con la próxima entrega. Se muestra un aviso informativo con la persona que
+posee la prenda, devolución prevista, nueva entrega y próximo uso; no se agrupa con los
+conflictos ni con las prendas sin asignar. Las tarjetas compactas conservan una indicación
+de devolución prevista y las actuaciones muestran el número de avisos.
+Inicio utiliza «Avisos de próximos usos» cuando no hay conflictos; el panel distingue
+«Aviso · próximo uso» y «Ver preparación» de las acciones para resolver conflictos.
+
+La clasificación del servidor ya diferenciaba ambos casos. No cambian esquema, reservas,
+cesiones ni permisos: devolución vencida, incompatible, sin fecha o decisión de mantener
+siguen requiriendo revisión según las reglas existentes. La entrega física sigue exigiendo
+la devolución real de una prenda que posee otra persona.
+Validación: 25 pruebas unitarias, 8 casos de base de datos de conflictos y permanencia,
+compilación y 2 pruebas de navegador en escritorio y móvil aprobadas.

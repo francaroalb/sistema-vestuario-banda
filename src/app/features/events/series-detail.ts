@@ -277,6 +277,10 @@ export class SeriesDetailPage {
   lines(block: string) {
     return this.detail()?.rows.filter((r) => r.block_id === block) ?? [];
   }
+  eventStart(id: string) {
+    const event = this.detail()?.events.find((e) => e.id === id);
+    return event ? this.time(event.starts_at) : '';
+  }
   eventName(id: string) {
     return this.detail()?.events.find((e) => e.id === id)?.title ?? '';
   }

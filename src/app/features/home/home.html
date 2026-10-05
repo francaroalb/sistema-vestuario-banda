@@ -4,17 +4,23 @@
 @if (conflicts(); as c) {
   @if (c.conflicts || c.pending) {
     <a class="notice home-conflicts" routerLink="/conflictos"
-      ><strong
-        >{{ c.conflicts }}
-        {{ c.conflicts === 1 ? 'conflicto' : 'conflictos' }} de
-        vestuario</strong
+      ><strong>
+        @if (c.conflicts) {
+          {{ c.conflicts }}
+          {{ c.conflicts === 1 ? 'conflicto' : 'conflictos' }} de vestuario
+        } @else {
+          Avisos de próximos usos
+        }</strong
       ><span
         >{{ c.pending }}
         {{
-          c.pending === 1 ? 'devolución prevista' : 'devoluciones previstas'
-        }}
-        por comprobar</span
-      ><span>Revisar incidencias →</span></a
+          c.pending === 1
+            ? 'devolución prevista antes de una nueva entrega'
+            : 'devoluciones previstas antes de nuevas entregas'
+        }}</span
+      ><span
+        >Ver {{ c.conflicts ? 'conflictos y avisos' : 'avisos' }} →</span
+      ></a
     >
   }
 }

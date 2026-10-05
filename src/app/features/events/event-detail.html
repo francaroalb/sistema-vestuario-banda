@@ -217,15 +217,22 @@
                 }</strong
               ><span
                 class="event-status"
-                [class.assigned]="row.status === 'ASIGNADA'"
-                [class.returned]="row.status === 'DEVUELTA'"
-                [class.warn]="
-                  row.status === 'CONFLICTO' ||
+                [class.assigned]="
+                  row.status === 'ASIGNADA' ||
                   row.status === 'PENDIENTE_DEVOLUCION'
                 "
+                [class.returned]="row.status === 'DEVUELTA'"
+                [class.warn]="row.status === 'CONFLICTO'"
                 [class.held]="row.status === 'EN_SU_PODER'"
                 >{{ label[row.status] }}</span
               >
+              @if (row.status === 'PENDIENTE_DEVOLUCION') {
+                <small
+                  >Aviso: devolución prevista el {{ time(row.due_at!) }}. Nueva
+                  entrega prevista el {{ time(e.planned_from) }}; se usará el
+                  {{ time(e.starts_at) }}.</small
+                >
+              }
               @if (row.holder_name && row.holder_id !== person.person_id) {
                 <small
                   >Actualmente en poder de {{ row.holder_name }} ·

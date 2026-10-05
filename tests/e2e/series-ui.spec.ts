@@ -177,7 +177,17 @@ test.describe('Preparación compacta de series', () => {
       garment_id: i === 1 ? null : 'g' + i,
       code: i === 1 ? null : 'C' + String(i + 10) + '-48',
       size: '48',
-      status: i === 0 ? 'CONFLICTO' : i === 1 ? 'SIN_ASIGNAR' : 'ASIGNADA',
+      status:
+        i === 0
+          ? 'CONFLICTO'
+          : i === 1
+            ? 'SIN_ASIGNAR'
+            : i === 3
+              ? 'PENDIENTE_DEVOLUCION'
+              : 'ASIGNADA',
+      holder_name: i === 3 ? 'Pedro López' : null,
+      holder_id: i === 3 ? 'other-person' : null,
+      due_at: i === 3 ? '2090-04-01T16:00:00Z' : null,
     }));
     rows.push({
       ...rows[2],
@@ -274,6 +284,24 @@ test.describe('Preparación compacta de series', () => {
     await page.locator('.series-agenda > summary').click();
     await expect(page.locator('.person-tile')).toHaveCount(30);
     await expect(page.locator('.participant-card')).toHaveCount(0);
+    const preparedNotice = page.getByRole('button', {
+      name: 'Preparar a Músico 04',
+      exact: true,
+    });
+    await expect(preparedNotice).toHaveClass(/ready/);
+    await expect(preparedNotice).toContainText('Devolución prevista');
+    await preparedNotice.click();
+    await expect(page.locator('.participant-card')).toContainText(
+      'Aviso: devolución prevista el',
+    );
+    await expect(page.locator('.participant-card')).toContainText(
+      'Nueva entrega prevista el',
+    );
+    await expect(page.locator('.participant-card')).toContainText(
+      'Pedro López',
+    );
+    await page.getByRole('button', { name: 'Plegar', exact: true }).click();
+
     await expect(page.locator('.person-tile').nth(0)).toContainText(
       'Carmen Ruiz',
     );

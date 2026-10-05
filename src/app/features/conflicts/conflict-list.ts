@@ -48,7 +48,8 @@ import { formatTimestamp } from '../../core/inventory/inventory';
       </p>
     } @else {
       <p class="count">
-        {{ count() }} incidencias · cada periodo de una serie se cuenta una vez.
+        {{ count() }} conflictos y avisos · cada periodo de una serie se cuenta
+        una vez.
       </p>
       <div class="conflicts">
         @for (
@@ -61,7 +62,7 @@ import { formatTimestamp } from '../../core/inventory/inventory';
                 ><strong>{{ r.code }}</strong> · {{ r.type_name }} · Talla
                 {{ r.size }}</a
               ><span class="badge">{{
-                r.critical ? 'Conflicto' : 'Devolución pendiente'
+                r.critical ? 'Conflicto' : 'Aviso · próximo uso'
               }}</span>
             </header>
             <h2>{{ r.full_name }}</h2>
@@ -71,6 +72,13 @@ import { formatTimestamp } from '../../core/inventory/inventory';
             <p class="period">
               Reserva: {{ time(r.planned_from) }} — {{ time(r.planned_until) }}
             </p>
+            @if (!r.critical) {
+              <p>
+                Aviso: devolución prevista el {{ time(r.due_at!) }}. Nueva
+                entrega prevista el {{ time(r.planned_from) }} para
+                {{ r.full_name }}; se usará el {{ time(r.starts_at) }}.
+              </p>
+            }
             <ul>
               @for (reason of r.reasons; track reason) {
                 <li>{{ reasons[reason] }}</li>
@@ -93,7 +101,7 @@ import { formatTimestamp } from '../../core/inventory/inventory';
                     ? ['/actuaciones/series', r.series_id]
                     : ['/actuaciones', r.event_id]
                 "
-                >Revisar asignación</a
+                >{{ r.critical ? 'Revisar asignación' : 'Ver preparación' }}</a
               >
               @if (r.loan_id) {
                 <a
