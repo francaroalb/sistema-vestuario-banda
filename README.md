@@ -375,3 +375,18 @@ Ver [validación y decisiones de fase 8](docs/qa-fase8.md).
 
 Ver [validación y alcance de fase 9](docs/qa-fase9.md). La aplicación sigue ejecutándose
 localmente: Cloudflare, dominio y validación de producción corresponden a la fase 10.
+
+## Despliegue actual: Cloudflare Workers Static Assets
+
+El proyecto creado en Cloudflare usa Workers Builds. `wrangler.jsonc` fija el nombre
+`sistema-vestuario-banda`, la fecha de compatibilidad y la carpeta `browser` generada
+por Angular. El modo SPA sirve el inicio en las navegaciones a rutas internas. Se retira
+el catch-all de `_redirects` porque el fallback lo gestiona Workers sin reescribir assets.
+
+- Build command: `npm run build:production`.
+- Deploy command: `npx wrangler deploy`.
+- Variables de build: `NODE_VERSION=22.22.3`, `SUPABASE_URL` y
+  `SUPABASE_PUBLISHABLE_KEY` del proyecto de Vestuario.
+- Dominio: `trajes.bmlapalma.com`, asociado al Worker desde Cloudflare.
+
+La configuración queda en Git y debe subirse para que la use Workers Builds.

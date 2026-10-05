@@ -1,0 +1,8 @@
+{
+  "name": "sistema-vestuario-banda",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist/sistema-vestuario-banda/browser",
+    "not_found_handling": "single-page-application"
+  }
+}
