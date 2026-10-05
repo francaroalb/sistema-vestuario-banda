@@ -21,12 +21,22 @@
     <button
       class="btn btn-secondary"
       (click)="rename = !rename"
-      [disabled]="saving()"
+      [disabled]="saving() || assisting()"
     >
       Cambiar nombre
     </button>
   </div>
-  <fieldset class="series-work" [disabled]="saving() || !connection.online()">
+  <app-assisted-preparation
+    scope="series"
+    [id]="id"
+    [disabled]="saving() || dirty()"
+    (busy)="assisting.set($event)"
+    (applied)="load()"
+  />
+  <fieldset
+    class="series-work"
+    [disabled]="saving() || assisting() || !connection.online()"
+  >
     @if (rename) {
       <form class="card event-card" (ngSubmit)="saveName()">
         <div class="field">
@@ -404,6 +414,13 @@
                   picking()?.type_id === r.type_id
                 ) {
                   <div class="series-picker">
+                    <app-recommendation-panel
+                      [event]="r.event_id"
+                      [person]="r.person_id"
+                      [type]="r.type_id"
+                      [disabled]="saving() || assisting()"
+                      (selected)="assign(r, $event)"
+                    />
                     <form
                       class="event-filters"
                       (ngSubmit)="choicePage = 1; loadChoices()"

@@ -2,7 +2,11 @@
 @if (error()) {
   <p class="notice notice-error" role="alert">
     {{ error() }}
-    <button class="text-button" [disabled]="saving()" (click)="load()">
+    <button
+      class="text-button"
+      [disabled]="saving() || assisting()"
+      (click)="load()"
+    >
       Recargar datos
     </button>
   </p>
@@ -28,6 +32,15 @@
       >
       · Participaciones y asignaciones se gestionan conjuntamente.
     </p>
+  }
+  @if (!e.cancelled && !e.series_id) {
+    <app-assisted-preparation
+      scope="event"
+      [id]="id"
+      [disabled]="saving() || dirty()"
+      (busy)="assisting.set($event)"
+      (applied)="load()"
+    />
   }
   <div class="event-stack">
     <section class="card event-card event-summary">
@@ -68,18 +81,22 @@
         <div class="event-actions">
           <button
             class="btn btn-primary"
-            [disabled]="saving() || !connection.online()"
+            [disabled]="saving() || assisting() || !connection.online()"
             (click)="adding.set(!adding())"
           >
             {{ adding() ? 'Cerrar búsqueda' : 'Añadir participante' }}</button
-          ><button class="btn btn-quiet" [disabled]="saving()" (click)="load()">
+          ><button
+            class="btn btn-quiet"
+            [disabled]="saving() || assisting()"
+            (click)="load()"
+          >
             Actualizar disponibilidad
           </button>
         </div>
         @if (adding()) {
           <app-choice-picker mode="person" (picked)="add($event)" /><button
             class="btn btn-secondary"
-            [disabled]="saving() || !connection.online()"
+            [disabled]="saving() || assisting() || !connection.online()"
             (click)="quick.set(true)"
           >
             No existe: crear refuerzo
@@ -96,7 +113,7 @@
             <div class="field">
               <label for="quick-name">Nombre y apellidos</label
               ><input
-                [disabled]="saving()"
+                [disabled]="saving() || assisting()"
                 id="quick-name"
                 name="name"
                 [(ngModel)]="name"
@@ -107,7 +124,7 @@
             <div class="field">
               <label for="quick-instrument">Instrumento</label
               ><input
-                [disabled]="saving()"
+                [disabled]="saving() || assisting()"
                 id="quick-instrument"
                 name="instrument"
                 [(ngModel)]="instrument"
@@ -119,14 +136,17 @@
               <button
                 class="btn btn-primary"
                 [disabled]="
-                  !quickForm.valid || saving() || !connection.online()
+                  !quickForm.valid ||
+                  saving() ||
+                  assisting() ||
+                  !connection.online()
                 "
               >
                 Crear y añadir</button
               ><button
                 class="btn btn-quiet"
                 type="button"
-                [disabled]="saving()"
+                [disabled]="saving() || assisting()"
                 (click)="closeQuick()"
               >
                 Cancelar
@@ -164,7 +184,7 @@
               @if (!e.series_id) {
                 <button
                   class="btn btn-quiet"
-                  [disabled]="saving() || !connection.online()"
+                  [disabled]="saving() || assisting() || !connection.online()"
                   (click)="remove(person)"
                 >
                   Quitar participante
@@ -241,7 +261,7 @@
               @if (!e.cancelled && !e.series_id) {
                 <button
                   class="btn btn-secondary"
-                  [disabled]="saving() || !connection.online()"
+                  [disabled]="saving() || assisting() || !connection.online()"
                   (click)="pick(row)"
                   [attr.aria-label]="
                     row.garment_id ? 'Cambiar asignación' : 'Asignar prenda'
@@ -252,7 +272,7 @@
                 @if (row.garment_id) {
                   <button
                     class="btn btn-quiet"
-                    [disabled]="saving() || !connection.online()"
+                    [disabled]="saving() || assisting() || !connection.online()"
                     (click)="assign(row, null)"
                     aria-label="Quitar asignación"
                   >
@@ -268,6 +288,13 @@
           ) {
             <div class="event-picker">
               <h3>Elegir {{ row.type_name }}</h3>
+              <app-recommendation-panel
+                [event]="id"
+                [person]="row.person_id"
+                [type]="row.type_id"
+                [disabled]="saving() || assisting()"
+                (selected)="assign(row, $event)"
+              />
               <form
                 class="event-actions"
                 (ngSubmit)="choicePage = 1; loadChoices()"
@@ -275,7 +302,7 @@
                 <div class="field">
                   <label for="choice-code">Buscar por código</label
                   ><input
-                    [disabled]="saving()"
+                    [disabled]="saving() || assisting()"
                     id="choice-code"
                     name="query"
                     [(ngModel)]="query"
@@ -311,7 +338,10 @@
                     <button
                       class="btn btn-secondary"
                       [disabled]="
-                        !!g.blocked || saving() || !connection.online()
+                        !!g.blocked ||
+                        saving() ||
+                        assisting() ||
+                        !connection.online()
                       "
                       (click)="assign(row, g.id)"
                     >
@@ -356,14 +386,14 @@
       <nav class="event-actions" aria-label="Páginas de participantes">
         <button
           class="btn btn-secondary"
-          [disabled]="page === 1 || saving()"
+          [disabled]="page === 1 || saving() || assisting()"
           (click)="go(page - 1)"
         >
           Anterior</button
         ><span>Página {{ page }} · {{ count() }} participantes</span
         ><button
           class="btn btn-secondary"
-          [disabled]="page * 12 >= count() || saving()"
+          [disabled]="page * 12 >= count() || saving() || assisting()"
           (click)="go(page + 1)"
         >
           Siguiente
@@ -374,7 +404,7 @@
       <div class="event-actions">
         <button
           class="btn btn-danger"
-          [disabled]="saving() || !connection.online()"
+          [disabled]="saving() || assisting() || !connection.online()"
           (click)="cancel()"
         >
           Cancelar actuación

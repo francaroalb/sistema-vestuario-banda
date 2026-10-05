@@ -79,7 +79,9 @@ test.describe('Supabase real · inventario fase 2', () => {
     await expect(
       page.getByText('Un espacio para cuidar', { exact: false }),
     ).toHaveCount(0);
-    await expect(page.locator('.stat.total')).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: /Prendas activas/ }),
+    ).toBeVisible();
     await page.screenshot({
       path: `.local/screenshots/fase2-inicio-${testInfo.project.name}.png`,
       fullPage: true,

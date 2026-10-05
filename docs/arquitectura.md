@@ -202,6 +202,37 @@ Antes de fase 5 se ha aplicado el refinamiento visual solicitado: tokens comunes
 neutras, navegación inferior burdeos y lateral claro, controles y jerarquía consistentes.
 Ver `docs/sistema-visual.md`. Esta revisión no modifica modelos, RPC ni flujos funcionales.
 
-7 Recomendador · 8 Conflictos · 9 Productividad · 10 QA y producción.
+8 Conflictos · 9 Productividad · 10 QA y producción.
 
-Se requiere aprobación expresa entre fases. No comenzar fase 7 sin autorización.
+Se requiere aprobación expresa entre fases. No comenzar fase 8 sin autorización.
+
+
+## Fase 7 — recomendador y preparación asistida
+
+- Reglas deterministas en PostgreSQL, sin IA. El histórico se obtiene de las tallas y tipos
+  guardados en las líneas de cesiones físicas, incluyendo prendas devueltas. No se usa el
+  inventario actual para reinterpretar una entrega antigua ni se aprende de reservas futuras.
+- Talla preferida: mayor número de entregas por persona y tipo. Desempate por entrega más
+  reciente y etiqueta estable; los empates siguen requiriendo revisión aunque exista un orden.
+- Comparación conservadora: enteros positivos 1–999 y escala XXS, XS, S, M, L, XL, XXL/2XL,
+  XXXL/3XL. No se mezclan números y letras. Otras etiquetas requieren coincidencia exacta.
+  No se convierten sistemas de tallaje ni se presupone equivalencia entre marcas.
+- Candidatas: misma talla primero y siguiente mayor disponible, hasta cinco opciones,
+  ordenadas por talla, posesión propia y código/UUID. Nunca se propone una menor. La talla
+  superior siempre requiere elección manual. Sin histórico no se inventa talla.
+- Se excluyen prendas archivadas, dañadas, pendientes de lavandería, en poder de otra persona
+  o reservadas en un intervalo incompatible. Una prenda en poder de su destinatario puede
+  reutilizarse. Se comprueba todo el bloque de serie, incluidos huecos KEEP.
+- La vista previa conserva las asignaciones existentes y cuenta las que necesitan revisar
+  por conflicto o devolución pendiente. Solo propone automáticamente coincidencias claras.
+  La asignación provisional es determinista por UUID de persona, inicio del periodo y tipo;
+  no es un optimizador global de reparto. Evita repetir una prenda en periodos incompatibles.
+- Máximo 200 líneas pendientes por vista previa. Para planes mayores hay que reducir las
+  pendientes mediante la preparación manual. La interfaz pagina las propuestas de ocho en ocho.
+- Confirmación explícita mediante RPC ADMIN: bloqueo de planificación compartido, bloqueo de
+  personas y prendas, recálculo íntegro y comparación con la vista previa. Si cambian datos,
+  rechaza todo el conjunto y pide actualizar; las asignaciones son atómicas e idempotentes.
+- Se reutilizan plan_event/plan_series y su auditoría. No se crean cesiones, movimientos ni
+  firmas al recomendar o reservar. Las escrituras directas siguen denegadas por RLS.
+- Migración 20261005000900_recommendations.sql aplicada exclusivamente al Supabase de Vestuario.
+  La fase 8 (resolución avanzada de conflictos) continúa pendiente.

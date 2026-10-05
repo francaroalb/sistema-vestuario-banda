@@ -2,10 +2,10 @@
 
 Aplicación privada de la Banda Municipal Ntra. Sra. del Valle de La Palma del Condado.
 
-**Fase 6 implementada:** acceso privado, inventario, personas, cesiones con firma y preparación
+**Fase 7 implementada:** acceso privado, inventario, personas, cesiones con firma y preparación
 individual de actuaciones. Incluye uniformes configurables, refuerzos y reservas por intervalos.
 La asignación futura y la posesión real se muestran por separado. No se almacena ni transmite el dibujo de la firma.
-Incluye series, participación conjunta y periodos de reserva con decisión mantener/dividir. El recomendador sigue pendiente. No se ha desplegado en Cloudflare ni configurado el dominio.
+Incluye series, participación conjunta y periodos de reserva con decisión mantener/dividir. Incluye recomendaciones por histórico y preparación asistida con revisión previa. No se ha desplegado en Cloudflare ni configurado el dominio.
 
 ## Arrancar en este equipo
 
@@ -230,7 +230,7 @@ los permisos SQL prohíben que el navegador cree, modifique o elimine administra
 
 Las migraciones de `supabase/migrations/` están aplicadas y registradas en
 `supabase_migrations.schema_migrations`: acceso ADMIN, inventario y respuesta HTTP 409 a
-conflictos de edición, más Personas, Cesiones y Actuaciones. Las escrituras de inventario, personas, cesiones y planificación pasan
+conflictos de edición, más Personas, Cesiones, Actuaciones, Series y Recomendaciones. Las escrituras de inventario, personas, cesiones y planificación pasan
 por RPC transaccionales que verifican el administrador y la versión. El navegador no puede borrar
 prendas/personas ni modificar la auditoría.
 
@@ -299,7 +299,7 @@ No se publica nada automáticamente desde este proyecto.
 Los logotipos y las tipografías conservan la identidad de Entradas. Los iconos PWA de Vestuario
 se generan desde el SVG propio con `node scripts/generate-icons.mjs` (requiere Chrome).
 
-Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 7.**
+Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 8.**
 Ver [sistema visual y refinamiento de la interfaz](docs/sistema-visual.md).
 Ver [validación de fase 2](docs/qa-fase2.md).
 
@@ -321,3 +321,17 @@ También se puede proporcionar `VESTUARIO_QA_MANAGEMENT_TOKEN` temporalmente al 
 usar la API de gestión sin acceder al llavero en cada limpieza. Ninguna de estas variables se copia al frontend.
 
 Ver [validación y decisiones de fase 6](docs/qa-fase6.md).
+
+
+## Probar la fase 7
+
+En una actuación individual o una serie, pulsa **Ver propuestas** en **Preparación asistida**.
+La vista previa muestra las asignaciones claras, los casos que necesitan revisión y las
+asignaciones anteriores que se conservarán. **Aplicar N propuestas** confirma el conjunto.
+No registra entregas ni devoluciones físicas.
+
+Al pulsar **Asignar prenda** también aparece la recomendación de esa persona y tipo de prenda,
+con su histórico y alternativas. Puedes elegir una propuesta o usar el selector manual.
+Las personas sin histórico, los empates y las tallas superiores necesitan revisión manual.
+
+Ver [reglas y validación de fase 7](docs/qa-fase7.md).

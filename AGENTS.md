@@ -4,9 +4,9 @@ Aplicación independiente de `../sistema-entradas-banda`. Usar Entradas solo com
 
 ## Trabajo por fases
 
-- Fases 0 a 4 y refinamiento visual aprobados. Fase 5 y revisión de tarjetas aprobadas. Fase 6 implementada y validada: series y periodos de vestuario; pendiente de revisión del usuario.
-- NO comenzar fase 7 ni funcionalidades posteriores sin autorización expresa del usuario.
-- Actuaciones individuales, uniformes, refuerzos y asignaciones básicas disponibles. Series y preparación por periodos disponibles en fase 6; no adelantar recomendador ni resolución avanzada de conflictos.
+- Fases 0 a 4 y refinamiento visual aprobados. Fase 5 y revisión de tarjetas aprobadas. Fase 6 y rediseño del inicio aprobados. Fase 7 implementada: recomendador y preparación asistida; pendiente de revisión del usuario.
+- NO comenzar fase 8 ni funcionalidades posteriores sin autorización expresa del usuario.
+- Actuaciones individuales, uniformes, refuerzos y asignaciones básicas disponibles. Series y preparación por periodos disponibles en fase 6; recomendador disponible en fase 7, sin adelantar resolución avanzada de conflictos.
 - Nombre visible: Gestión de trajes. Inicio operativo sin mensajes promocionales; navegación inferior burdeos, cabecera/lateral claros y logo de la Banda.
 - Refinamiento visual autorizado antes de fase 5: seguir los tokens de `src/styles.scss` y `docs/sistema-visual.md`; no alterar flujos ni arquitectura por cambios de UI.
 - Preferencia de UI: tarjetas compactas, datos y acciones en paralelo cuando caben; destacar nombres, códigos, tallas y estados con la paleta existente, sin ocultar contenido.

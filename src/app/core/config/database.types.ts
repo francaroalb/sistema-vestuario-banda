@@ -181,6 +181,18 @@ export interface Database {
       garment_inventory: { Row: StockGarment; Relationships: [] };
     };
     Functions: {
+      garment_recommendation: {
+        Args: { p_event: string; p_person: string; p_type: string };
+        Returns: Json;
+      };
+      preview_assisted_plan: {
+        Args: { p_scope: string; p_id: string };
+        Returns: Json;
+      };
+      apply_assisted_plan: {
+        Args: { p_request_id: string; p_preview: Json };
+        Returns: Json;
+      };
       plan_series: {
         Args: {
           p_request_id: string;

@@ -1,3 +1,5 @@
+import { RecommendationPanel } from './recommendation-panel';
+import { AssistedPreparation } from './assisted-preparation';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -27,7 +29,13 @@ import { Choice } from '../../core/loans/models';
 import { ChoicePicker } from '../loans/choice-picker';
 @Component({
   selector: 'app-series-detail',
-  imports: [FormsModule, RouterLink, ChoicePicker],
+  imports: [
+    FormsModule,
+    RouterLink,
+    ChoicePicker,
+    RecommendationPanel,
+    AssistedPreparation,
+  ],
   templateUrl: './series-detail.html',
   styleUrls: ['../inventory/inventory.scss', './events.scss', './series.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,6 +49,7 @@ export class SeriesDetailPage {
   readonly detail = signal<SeriesDetail | null>(null);
   readonly loading = signal(true);
   readonly saving = signal(false);
+  readonly assisting = signal(false);
   readonly error = signal('');
   readonly dirty = signal(false);
   readonly candidates = signal<BandEvent[]>([]);
@@ -145,7 +154,12 @@ export class SeriesDetailPage {
     );
   }
   async command(action: string, data: Json) {
-    if (!this.detail() || this.saving() || !this.connection.online())
+    if (
+      !this.detail() ||
+      this.saving() ||
+      this.assisting() ||
+      !this.connection.online()
+    )
       return false;
     const key = JSON.stringify([action, this.detail()!.series.version, data]);
     if (key !== this.commandKey) {
@@ -323,6 +337,7 @@ export class SeriesDetailPage {
   canLeave() {
     return (
       !this.saving() &&
+      !this.assisting() &&
       (!this.dirty() ||
         confirm('¿Descartar los cambios de la serie sin guardar?'))
     );

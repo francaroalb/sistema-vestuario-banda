@@ -1,3 +1,5 @@
+import { RecommendationPanel } from './recommendation-panel';
+import { AssistedPreparation } from './assisted-preparation';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   ChangeDetectionStrategy,
@@ -25,7 +27,13 @@ import { Choice } from '../../core/loans/models';
 import { ChoicePicker } from '../loans/choice-picker';
 @Component({
   selector: 'app-event-detail',
-  imports: [FormsModule, RouterLink, ChoicePicker],
+  imports: [
+    FormsModule,
+    RouterLink,
+    ChoicePicker,
+    RecommendationPanel,
+    AssistedPreparation,
+  ],
   templateUrl: './event-detail.html',
   styleUrls: ['../inventory/inventory.scss', './events.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,6 +51,7 @@ export class EventDetail {
   readonly loading = signal(true);
   readonly error = signal('');
   readonly saving = signal(false);
+  readonly assisting = signal(false);
   readonly adding = signal(false);
   readonly quick = signal(false);
   readonly dirty = signal(false);
@@ -112,7 +121,12 @@ export class EventDetail {
     );
   }
   async command(action: string, data: Json): Promise<boolean> {
-    if (!this.event() || this.saving() || !this.connection.online())
+    if (
+      !this.event() ||
+      this.saving() ||
+      this.assisting() ||
+      !this.connection.online()
+    )
       return false;
     const key = JSON.stringify([action, this.event()!.version, data]);
     if (key !== this.lastCommand) {
@@ -247,6 +261,7 @@ export class EventDetail {
   canLeave() {
     return (
       !this.saving() &&
+      !this.assisting() &&
       (!this.dirty() ||
         confirm('El refuerzo aún no se ha guardado. ¿Descartar el borrador?'))
     );

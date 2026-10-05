@@ -104,6 +104,12 @@ export function madridLocal(value: string) {
 export function planningError(error: unknown): string {
   const e = error as { message?: string; code?: string };
   const messages: Record<string, string> = {
+    RECOMMENDATION_CHANGED:
+      'Han cambiado el histórico, las prendas o la planificación. Pulsa Ver propuestas para revisar una propuesta actualizada. No se ha aplicado ninguna asignación.',
+    NOTHING_TO_ASSIGN:
+      'No hay coincidencias claras para asignar. Revisa las prendas manualmente.',
+    ASSIST_LIMIT:
+      'La preparación asistida admite hasta 200 líneas pendientes. Reduce las pendientes mediante asignación manual antes de volver a proponer.',
     GAP_DECISION_REQUIRED:
       'Hay actuaciones intermedias sin participar. Elige mantener la prenda o dividir el periodo.',
     USE_SERIES:
@@ -182,3 +188,50 @@ export function hasParticipationGap(
     .filter((i) => i >= 0);
   return indexes.some((value, i) => i > 0 && value > indexes[i - 1] + 1);
 }
+
+export const recommendationReason = {
+  NO_HISTORY: 'Sin histórico de vestuario. Selecciona la prenda manualmente.',
+  TIED_HISTORY:
+    'Varias tallas tienen la misma frecuencia. Se muestra primero la más reciente; comprueba la talla antes de elegir.',
+  NO_AVAILABLE:
+    'No hay prendas de la talla histórica o de una talla superior comparable disponibles durante todo el periodo.',
+  LARGER_SIZE:
+    'No hay prendas de la talla histórica disponibles. Esta es la siguiente talla mayor disponible; requiere revisión.',
+  SAME_SIZE:
+    'Coincide con la talla más utilizada y está disponible durante todo el periodo.',
+};
+export type Recommendation = {
+  event_id: string;
+  person_id: string;
+  type_id: string;
+  block_id: string | null;
+  from: string;
+  until: string;
+  historical_size: string | null;
+  history: { size: string; uses: number; recent: string }[];
+  ambiguous: boolean;
+  review: boolean;
+  reason: keyof typeof recommendationReason;
+  candidates: {
+    id: string;
+    code: string;
+    size: string;
+    own_custody: boolean;
+    size_step: number;
+    loan_id: string | null;
+  }[];
+};
+export type AssistedPlan = {
+  scope: 'event' | 'series';
+  id: string;
+  version: number;
+  preserved: number;
+  existing_review: number;
+  suggested: number;
+  review: number;
+  lines: (Recommendation & {
+    full_name: string;
+    type_name: string;
+    garment_id: string | null;
+  })[];
+};

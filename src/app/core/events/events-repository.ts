@@ -3,6 +3,8 @@ import { SupabaseService } from '../config/supabase';
 import { Json } from '../config/database.types';
 import { literalSearch } from '../inventory/inventory';
 import {
+  Recommendation,
+  AssistedPlan,
   BandEvent,
   EventChoice,
   Uniform,
@@ -15,6 +17,33 @@ export class EventsRepository {
   private get client() {
     if (!this.supabase.client) throw new Error('Not configured');
     return this.supabase.client;
+  }
+  async recommend(event: string, person: string, type: string) {
+    const r = await this.client.rpc('garment_recommendation', {
+      p_event: event,
+      p_person: person,
+      p_type: type,
+    });
+    if (r.error) throw r.error;
+    return r.data as unknown as Recommendation;
+  }
+  async assistedPreview(scope: 'event' | 'series', id: string) {
+    const r = await this.client.rpc('preview_assisted_plan', {
+      p_scope: scope,
+      p_id: id,
+    });
+    if (r.error) throw r.error;
+    return r.data as unknown as AssistedPlan;
+  }
+  async assistedApply(preview: AssistedPlan, request: string) {
+    const r = await this.client
+      .rpc('apply_assisted_plan', {
+        p_request_id: request,
+        p_preview: preview as unknown as Json,
+      })
+      .retry(false);
+    if (r.error) throw r.error;
+    return r.data as unknown as { assigned: number; review: number };
   }
   async seriesList(q: string, page: number) {
     const r = await this.client
