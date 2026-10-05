@@ -15,6 +15,41 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'inicio' },
       {
+        path: 'actividad',
+        title: 'Actividad · Gestión de trajes',
+        loadComponent: () =>
+          import('./features/productivity/activity').then((m) => m.Activity),
+      },
+      {
+        path: 'inventario/importar',
+        title: 'Importar prendas · Gestión de trajes',
+        data: { kind: 'garments' },
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/productivity/import-page').then(
+            (m) => m.ImportPage,
+          ),
+      },
+      {
+        path: 'personas/importar',
+        title: 'Importar personas · Gestión de trajes',
+        data: { kind: 'people' },
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/productivity/import-page').then(
+            (m) => m.ImportPage,
+          ),
+      },
+      {
+        path: 'actuaciones/series/:id/duplicar',
+        title: 'Duplicar serie · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/productivity/copy-series').then(
+            (m) => m.CopySeries,
+          ),
+      },
+      {
         path: 'conflictos',
         title: 'Conflictos · Gestión de trajes',
         loadComponent: () =>

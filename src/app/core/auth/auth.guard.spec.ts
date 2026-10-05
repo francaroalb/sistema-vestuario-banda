@@ -5,6 +5,8 @@ describe('Destinos tras el login', () => {
       '/inventario?buscar=C-05',
     );
     expect(safeReturnUrl('/personas')).toBe('/personas');
+    expect(safeReturnUrl('/actividad')).toBe('/actividad');
+    expect(safeReturnUrl('/conflictos')).toBe('/conflictos');
   });
   it('rechaza redirecciones externas y bucles al login', () => {
     for (const url of [

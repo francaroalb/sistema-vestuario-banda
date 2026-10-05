@@ -85,6 +85,11 @@ import { Connectivity } from '../../core/connectivity';
               [routerLink]="['/actuaciones/series', s.id]"
               >Preparar serie</a
             >
+            <a
+              class="btn btn-quiet"
+              [routerLink]="['/actuaciones/series', s.id, 'duplicar']"
+              >Duplicar agenda</a
+            >
           </article>
         } @empty {
           <p class="empty-state card">

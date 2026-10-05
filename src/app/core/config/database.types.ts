@@ -189,6 +189,19 @@ export interface Database {
       garment_inventory: { Row: StockGarment; Relationships: [] };
     };
     Functions: {
+      preview_import: { Args: { p_kind: string; p_rows: Json }; Returns: Json };
+      apply_import: {
+        Args: { p_request: string; p_preview: Json };
+        Returns: Json;
+      };
+      preview_series_copy: {
+        Args: { p_source: string; p_name: string; p_first_date: string };
+        Returns: Json;
+      };
+      apply_series_copy: {
+        Args: { p_request: string; p_preview: Json };
+        Returns: Json;
+      };
       conflict_summary: { Args: Record<string, never>; Returns: Json };
       preview_retention: {
         Args: { p_loan: string; p_items: string[] };

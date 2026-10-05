@@ -2,7 +2,7 @@
 
 Aplicación privada de la Banda Municipal Ntra. Sra. del Valle de La Palma del Condado.
 
-**Fase 8 implementada:** acceso privado, inventario, personas, cesiones con firma y preparación
+**Fase 9 implementada (0.9.0):** acceso privado, inventario, personas, cesiones con firma y preparación
 individual de actuaciones. Incluye uniformes configurables, refuerzos y reservas por intervalos.
 La asignación futura y la posesión real se muestran por separado. No se almacena ni transmite el dibujo de la firma.
 Incluye series, participación conjunta y periodos de reserva con decisión mantener/dividir. Incluye recomendaciones por histórico, preparación asistida, conflictos y permanencia de prendas con revisión previa. No se ha desplegado en Cloudflare ni configurado el dominio.
@@ -299,7 +299,7 @@ No se publica nada automáticamente desde este proyecto.
 Los logotipos y las tipografías conservan la identidad de Entradas. Los iconos PWA de Vestuario
 se generan desde el SVG propio con `node scripts/generate-icons.mjs` (requiere Chrome).
 
-Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 9.**
+Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 10 (QA y producción).**
 Ver [sistema visual y refinamiento de la interfaz](docs/sistema-visual.md).
 Ver [validación de fase 2](docs/qa-fase2.md).
 
@@ -340,7 +340,7 @@ Ver [reglas y validación de fase 7](docs/qa-fase7.md).
 ## Probar la fase 8
 
 - **Inicio → Conflictos y avisos**: muestra los conflictos y las devoluciones previstas que
-  conviene comprobar. También se puede entrar desde Actuaciones. Cada periodo de una serie
+  conviene comprobar. El acceso permanente está en Agenda y seguimiento del Inicio. Cada periodo de una serie
   se cuenta una vez, aunque incluya varias actuaciones.
 - **Cesiones → Abrir una cesión → Registrar que mantiene prendas**: disponible en cesiones
   activas con devolución prevista. Selecciona las prendas y pulsa **Revisar impacto**.
@@ -354,3 +354,26 @@ Ver [reglas y validación de fase 7](docs/qa-fase7.md).
   Las reservas nunca se eliminan automáticamente por un conflicto.
 
 Ver [validación y decisiones de fase 8](docs/qa-fase8.md).
+
+
+## Probar la fase 9 — productividad
+
+- **Inventario / Personas → Importar CSV**: descarga la plantilla, completa los datos y
+  selecciona el archivo. Desde Excel, guarda como **CSV UTF-8** (no XLSX). Admite coma o
+  punto y coma, comillas y hasta 200 filas / 1 MB. Pulsa **Revisar archivo**, comprueba todas
+  las columnas y confirma **Importar**. Los errores indican la fila; corrige el archivo y
+  vuelve a seleccionarlo. Las altas son conjuntas: no se guarda una parte del archivo.
+- Los códigos existentes (también archivados) y los nombres coincidentes se señalan antes
+  de importar. Las coincidencias no se sobrescriben. Los homónimos se crean manualmente
+  para distinguir personas. La importación no crea cesiones, firmas ni reservas.
+- **Actuaciones → Series → Duplicar agenda**: indica nombre y fecha de la primera actuación.
+  **Ver nueva agenda** muestra las fechas desplazadas manteniendo horas locales de Madrid,
+  distancias entre actuaciones e intervalos de recogida/devolución. Confirma la copia.
+  Se usan los uniformes actuales; no se copian actuaciones canceladas ni participaciones,
+  asignaciones, cesiones o firmas. Prepara después los participantes de la nueva serie.
+- **Inicio → Agenda y seguimiento → Actividad reciente**: consulta quién hizo cada cambio,
+  cuándo y sobre qué ficha, con filtro de prendas, personas, cesiones, actuaciones, series
+  y uniformes. Permite abrir las fichas relacionadas; la auditoría no se modifica ni borra.
+
+Ver [validación y alcance de fase 9](docs/qa-fase9.md). La aplicación sigue ejecutándose
+localmente: Cloudflare, dominio y validación de producción corresponden a la fase 10.

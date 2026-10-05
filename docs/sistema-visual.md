@@ -260,3 +260,11 @@ La etiqueta visible del tipo BANDA cambia a Componente en listados, fichas y for
 el valor interno y los datos existentes se conservan. Validación: 27 pruebas unitarias,
 compilación sin avisos y seis pruebas de navegador aprobadas entre escritorio y móvil,
 incluyendo desplegables, búsqueda, recarga, paginación, errores y nombres largos.
+
+## Productividad — fase 9
+
+Importación y copia usan paneles compactos con los tokens existentes. Las vistas previas
+separan revisión y confirmación. La tabla CSV conserva un ancho mínimo legible y desplaza
+solo su contenedor en móvil; el selector de archivo ofrece una altura táctil de 44 px.
+La actividad muestra textos humanos, responsable y fecha, con acceso a las fichas y sin
+exponer JSON técnico.

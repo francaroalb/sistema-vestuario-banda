@@ -205,9 +205,9 @@ Antes de fase 5 se ha aplicado el refinamiento visual solicitado: tokens comunes
 neutras, navegación inferior burdeos y lateral claro, controles y jerarquía consistentes.
 Ver `docs/sistema-visual.md`. Esta revisión no modifica modelos, RPC ni flujos funcionales.
 
-9 Productividad · 10 QA y producción.
+9 Productividad implementada · 10 QA y producción pendiente.
 
-Se requiere aprobación expresa entre fases. No comenzar fase 9 sin autorización.
+Se requiere aprobación expresa entre fases. No comenzar fase 10 sin autorización.
 
 
 ## Fase 7 — recomendador y preparación asistida
@@ -277,7 +277,7 @@ Se requiere aprobación expresa entre fases. No comenzar fase 9 sin autorizació
   La resolución utiliza las operaciones existentes con sus versiones y auditoría.
 - Migración 20261005001000_conflicts.sql aplicada al Supabase independiente de Vestuario.
   No se alteran datos físicos ni reservas preexistentes al aplicar la migración.
-- Fase 9 pendiente de autorización: no se añaden importaciones, duplicados ni acciones masivas.
+- Las importaciones y copias de agenda se incorporan después en fase 9.
 
 ## Reutilización de prendas propias al añadir participantes
 
@@ -297,3 +297,31 @@ Se aplica al registrar participación; no hace una asignación implícita al con
 Validación: 83 comprobaciones de base de datos aprobadas, incluidos ausencia de nuevas
 entregas, ambigüedad, solapamiento, conservación de asignaciones y propagación por serie.
 Aplicada en Supabase y comprobada con el caso existente reportado, sin nuevos movimientos.
+
+
+## Fase 9 — productividad
+
+- Migración `20261005001200_productivity.sql`, aplicada al proyecto independiente.
+  `preview_import` revisa hasta 200 altas de personas o prendas. `apply_import` repite la
+  validación, exige la vista previa íntegra y crea el lote en una transacción. Se reutilizan
+  save_person/save_garment y sus auditorías. Sin sobrescritura ni detección de identidad
+  automática por nombre; las coincidencias se rechazan para revisión manual.
+- CSV UTF-8 desde Excel u otra hoja: comas/punto y coma, BOM, campos entrecomillados,
+  comillas escapadas y saltos dentro de campos. Tamaño máximo 1 MB. Cabeceras cerradas;
+  el servidor también valida contenido, límites, tipos activos, estados y duplicados.
+  XLSX no se interpreta: exportar a CSV evita añadir una dependencia de hojas de cálculo.
+- `preview_series_copy` deriva la agenda desplazando días de calendario de Madrid.
+  Incluye versiones de serie, actuaciones y uniformes. `apply_series_copy` recalcula la
+  vista previa bajo el bloqueo de planificación y reutiliza plan_series/plan_event.
+  Conserva los títulos, notas y horarios, usa uniformes actuales y omite canceladas.
+  Copia únicamente la agenda; participantes y prendas deben prepararse para el nuevo periodo.
+- Aplicaciones idempotentes por UUID guardado en planning_requests; misma petición devuelve
+  el resultado anterior, distinto contenido/actor con el mismo UUID se rechaza. Solo ADMIN;
+  funciones con search_path cerrado, EXECUTE revocado a PUBLIC/anon. No se abre escritura
+  directa sobre las tablas. Importaciones coordinadas con ediciones mediante bloqueo de
+  tablas y con otros planes mediante el bloqueo existente. Sin movimientos físicos.
+- Actividad reciente consulta audit_log con su RLS existente, orden estable y páginas de 24.
+  Muestra acciones legibles, actor, fecha y enlace a la ficha, sin renderizar JSON técnico.
+- Inicio diario, búsquedas y agrupaciones de inventario/personas completados en las revisiones
+  previas se mantienen. No se incorporan otras modificaciones masivas sin un caso concreto.
+- Versión 0.9.0. La fase 10 de QA general y producción requiere nueva autorización.
