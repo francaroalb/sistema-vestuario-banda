@@ -390,3 +390,7 @@ el catch-all de `_redirects` porque el fallback lo gestiona Workers sin reescrib
 - Dominio: `trajes.bmlapalma.com`, asociado al Worker desde Cloudflare.
 
 La configuración queda en Git y debe subirse para que la use Workers Builds.
+
+Con la integración de GitHub conectada, los pushes a `main` deben iniciar una
+compilación automática. Comprueba en Cloudflare que el commit del build coincide
+con el último commit subido.
