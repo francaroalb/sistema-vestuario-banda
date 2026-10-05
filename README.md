@@ -2,11 +2,10 @@
 
 Aplicación privada de la Banda Municipal Ntra. Sra. del Valle de La Palma del Condado.
 
-**Fase 3 completada:** acceso privado, inventario y gestión de personas conectados a Supabase.
-Personas permite buscar, filtrar, crear, consultar, editar, archivar y reactivar las fichas de
-músicos de la Banda y refuerzos. Cambiar de tipo conserva la misma identidad y su auditoría.
-Cesiones y Actuaciones siguen pendientes de sus fases. No se ha desplegado en Cloudflare ni
-se ha configurado el dominio.
+**Fase 4 completada:** acceso privado, inventario, personas y cesiones reales con firma presencial.
+Permite entregar varias prendas, devolver solo una parte, cambiar una prenda dentro de la misma
+cesión y consultar sus movimientos. No se almacena ni transmite el dibujo de la firma.
+Actuaciones y series siguen pendientes. No se ha desplegado en Cloudflare ni configurado el dominio.
 
 ## Arrancar en este equipo
 
@@ -66,7 +65,39 @@ Nombre y tipo son los datos necesarios. Instrumento, teléfono y observaciones s
 Los nombres no son únicos: se permiten homónimos, sin fusionar ni sobrescribir sus fichas.
 Busca antes de crear para evitar altas repetidas de la misma persona.
 No se introduce una talla habitual manual ni se inventa un historial de préstamos. El UUID
-estable y la auditoría dejan preparado el histórico; las cesiones y movimientos llegan en fase 4.
+estable y la auditoría dejan preparado el histórico; las cesiones y movimientos de fase 4 lo utilizan.
+
+## Probar la fase 4
+
+1. Crear una persona y al menos tres prendas activas: dos del mismo tipo y otra adicional.
+   Deben estar en estado Disponible y físicamente en la Banda.
+2. Pulsar **Nueva cesión**, seleccionar la persona y dos prendas. La devolución prevista es
+   opcional, siempre en hora de Madrid. Dejarla vacía crea una cesión sin fecha prevista.
+3. Pulsar **Revisar y firmar**. Comprobar el resumen. Con firma vacía o un simple toque no
+   se habilita Confirmar; dibujar con el dedo o el ratón. Limpiar permite repetir la firma.
+4. Confirmar la entrega. En Inventario aparece quién tiene las prendas; su estado físico sigue
+   siendo independiente. En Personas y en cada prenda aparecen accesos al histórico de cesiones.
+5. Abrir la cesión → **Devolver prendas**. Seleccionar solo una, indicar Disponible, Pendiente de
+   lavandería o Dañada, revisar y firmar. La cesión permanece activa mientras queden prendas pendientes.
+6. Pulsar **Cambiar prenda**: seleccionar la prenda que devuelve, su estado y una disponible del
+   mismo tipo que recibe. Una sola firma confirma devolución y entrega en la misma cesión.
+7. Devolver la última prenda: la cesión pasa a Finalizada. Revisar sus movimientos con fechas,
+   administrador, prendas y confirmación de firma.
+8. Consultar Cesiones: Activas, Devolución vencida, Finalizadas o Todas. Buscar por el nombre
+   registrado al entregar. Las fichas conservan código, tipo y talla originales del movimiento.
+9. Probar dos sesiones entregando una misma prenda: solo una puede confirmar. Un formulario de
+   devolución desactualizado debe pedir recargar. Sin internet se impide confirmar.
+
+La firma es una comprobación presencial: el dibujo vive únicamente en el canvas y se descarta
+al confirmar, volver a la selección o salir. Solo se guarda `signature_confirmed`, el responsable
+y la fecha/hora. No se usa Storage ni se guardan trazos/base64. Cambiar la selección exige firmar de nuevo.
+Si se pierde la respuesta de una operación, reintentar desde el mismo formulario recupera el movimiento
+sin duplicarlo. No se puede archivar una persona o prenda con prendas físicamente pendientes.
+
+Las horas de devolución se convierten en el servidor desde Europe/Madrid. Se rechazan fechas pasadas
+y horas inexistentes o repetidas en el cambio horario para que la fecha prevista no resulte ambigua.
+
+Estas operaciones son reales: para terminar una prueba manual hay que devolver sus prendas.
 
 ## Probar la PWA
 
@@ -116,7 +147,7 @@ los permisos SQL prohíben que el navegador cree, modifique o elimine administra
 
 Las migraciones de `supabase/migrations/` están aplicadas y registradas en
 `supabase_migrations.schema_migrations`: acceso ADMIN, inventario y respuesta HTTP 409 a
-conflictos de edición, más la migración de Personas. Las escrituras de inventario y personas pasan
+conflictos de edición, más Personas y Cesiones. Las escrituras de inventario, personas y cesiones pasan
 por RPC transaccionales que verifican el administrador y la versión. El navegador no puede borrar
 prendas/personas ni modificar la auditoría.
 
@@ -165,7 +196,7 @@ REAL_AUTH=1 npm run test:e2e -- --grep 'Supabase real'
 
 El archivo local necesita `email`, `password`, `display_name` e `id`. No se guarda ningún estado de
 sesión, traza ni contraseña en el repositorio. Las capturas se guardan en `.local/screenshots/`.
-Las pruebas reales de inventario y personas crean registros temporales y eliminan exclusivamente sus UUID
+Las pruebas reales de inventario, personas y cesiones crean registros temporales y eliminan exclusivamente sus UUID
 al finalizar. Para esa limpieza requieren la sesión Supabase CLI de este equipo en el llavero
 macOS; el token se usa internamente y no se imprime ni se guarda en el repositorio. Ejecutarlas solo en el proyecto independiente de Vestuario.
 
@@ -174,7 +205,7 @@ macOS; el token se usa internamente y no se imprime ni se guarda en el repositor
 - `src/app/core`: configuración, cliente tipado, autenticación, guards y conectividad.
 - `src/app/shared/ui`: iconos y ayuda de instalación.
 - `src/app/layout`: shell y navegación responsive.
-- `src/app/features`: login, inicio operativo, inventario, personas y espacios reservados.
+- `src/app/features`: login, inicio operativo, inventario, personas, cesiones y espacios reservados.
 - `src/styles.scss`: tokens heredados de Entradas, botones, campos, tarjetas y accesibilidad.
 - `supabase/migrations`: cambios de base de datos versionados.
 
@@ -185,7 +216,9 @@ No se publica nada automáticamente desde este proyecto.
 Los logotipos y las tipografías conservan la identidad de Entradas. Los iconos PWA de Vestuario
 se generan desde el SVG propio con `node scripts/generate-icons.mjs` (requiere Chrome).
 
-Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 4.**
+Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 5.**
 Ver [validación de fase 2](docs/qa-fase2.md).
 
 Ver [validación de fase 3](docs/qa-fase3.md).
+
+Ver [validación de fase 4](docs/qa-fase4.md).

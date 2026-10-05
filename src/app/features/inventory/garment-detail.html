@@ -2,137 +2,161 @@
   ><app-icon name="back" />Volver al inventario</a
 >
 @if (loading()) {
-<p class="loading-state" role="status">Cargando prenda…</p>
+  <p class="loading-state" role="status">Cargando prenda…</p>
 } @else if (error()) {
-<div class="notice notice-error" role="alert">
-  {{ error() }}<button class="text-button" type="button" (click)="load()">
-    Reintentar
-  </button>
-</div>
-} @else if (garment(); as item) {
-<div class="page-heading">
-  <div>
-    <p class="eyebrow">{{ item.garment_types?.name }}</p>
-    <h1>{{ item.code }}</h1>
-  </div>
-  @if (!item.archived_at) {
-  <a
-    class="btn btn-primary"
-    [routerLink]="['/inventario', item.id, 'editar']"
-    [queryParams]="{ volver: returnTo }"
-    ><app-icon name="edit" />Editar prenda</a
-  >
-  }
-</div>
-@if (item.archived_at) {
-<p class="notice">
-  <strong>Prenda archivada.</strong> Su información se conserva. Puedes
-  reactivarla si vuelve a utilizarse.
-</p>
-}
-<section class="garment-detail card" aria-label="Ficha de la prenda">
-  <div class="detail-overview">
-    <span class="detail-symbol"><app-icon name="hanger" /></span>
-    <div>
-      <span class="detail-label">Talla</span
-      ><strong class="detail-size">{{ item.size }}</strong>
-    </div>
-    <app-garment-status [state]="item.physical_state" />
-  </div>
-  <dl class="detail-data">
-    <div>
-      <dt>Código</dt>
-      <dd>{{ item.code }}</dd>
-    </div>
-    <div>
-      <dt>Tipo de prenda</dt>
-      <dd>{{ item.garment_types?.name }}</dd>
-    </div>
-    <div>
-      <dt>Inventario</dt>
-      <dd>{{ item.archived_at ? 'Archivada' : 'Activa' }}</dd>
-    </div>
-  </dl>
-  <div class="detail-notes">
-    <h2>Observaciones</h2>
-    <p>{{ item.notes || 'Sin observaciones.' }}</p>
-  </div>
-  <dl class="detail-timestamps">
-    <div>
-      <dt>Añadida</dt>
-      <dd>{{ timestamp(item.created_at) }}</dd>
-    </div>
-    <div>
-      <dt>Última actualización</dt>
-      <dd>{{ timestamp(item.updated_at) }}</dd>
-    </div>
-    @if (item.archived_at) {
-    <div>
-      <dt>Archivada</dt>
-      <dd>{{ timestamp(item.archived_at) }}</dd>
-    </div>
-    }
-  </dl>
-</section>
-<div class="archive-action">
-  <p>
-    {{ item.archived_at ? 'Devuélvela al inventario activo cuando vuelva a
-    utilizarse.' : 'Si deja de utilizarse, archívala para conservar su
-    información.' }}
-  </p>
-  <button
-    class="btn btn-secondary"
-    type="button"
-    (click)="confirmArchive()"
-    [disabled]="!connection.online()"
-  >
-    <app-icon name="archive" />{{ item.archived_at ? 'Reactivar prenda' :
-    'Archivar prenda' }}
-  </button>
-</div>
-<dialog
-  #archiveDialog
-  class="confirmation"
-  aria-labelledby="archive-title"
-  (cancel)="cancelDialog($event)"
->
-  <h2 id="archive-title">
-    {{ item.archived_at ? 'Reactivar' : 'Archivar' }} {{ item.code }}
-  </h2>
-  <p>
-    {{ item.archived_at ? 'La prenda volverá a aparecer en el inventario activo
-    con su estado físico actual.' : 'Dejará de aparecer en el inventario activo.
-    Su información e histórico se conservarán y podrás reactivarla.' }}
-  </p>
-  @if (!connection.online()) {
-  <p class="notice" role="status">Necesitas conexión para confirmar.</p>
-  } @if (actionError()) {
   <div class="notice notice-error" role="alert">
-    {{ actionError() }}@if (conflict()) {
-    <button class="text-button" type="button" (click)="reload()">
-      Recargar ficha
+    {{ error()
+    }}<button class="text-button" type="button" (click)="load()">
+      Reintentar
     </button>
+  </div>
+} @else if (garment(); as item) {
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">{{ item.garment_types?.name }}</p>
+      <h1>{{ item.code }}</h1>
+    </div>
+    @if (!item.archived_at) {
+      <a
+        class="btn btn-primary"
+        [routerLink]="['/inventario', item.id, 'editar']"
+        [queryParams]="{ volver: returnTo }"
+        ><app-icon name="edit" />Editar prenda</a
+      >
     }
   </div>
+  @if (item.archived_at) {
+    <p class="notice">
+      <strong>Prenda archivada.</strong> Su información se conserva. Puedes
+      reactivarla si vuelve a utilizarse.
+    </p>
   }
-  <div class="dialog-actions">
+  @if (item.loan_id) {
+    <p class="notice">
+      <strong>En poder de {{ item.holder_name }}</strong> ·
+      <a [routerLink]="['/cesiones', item.loan_id]">Abrir cesión</a>
+    </p>
+  }
+  <section class="garment-detail card" aria-label="Ficha de la prenda">
+    <div class="detail-overview">
+      <span class="detail-symbol"><app-icon name="hanger" /></span>
+      <div>
+        <span class="detail-label">Talla</span
+        ><strong class="detail-size">{{ item.size }}</strong>
+      </div>
+      <app-garment-status [state]="item.physical_state" />
+    </div>
+    <dl class="detail-data">
+      <div>
+        <dt>Código</dt>
+        <dd>{{ item.code }}</dd>
+      </div>
+      <div>
+        <dt>Tipo de prenda</dt>
+        <dd>{{ item.garment_types?.name }}</dd>
+      </div>
+      <div>
+        <dt>Inventario</dt>
+        <dd>{{ item.archived_at ? "Archivada" : "Activa" }}</dd>
+      </div>
+    </dl>
+    <div class="detail-notes">
+      <h2>Observaciones</h2>
+      <p>{{ item.notes || "Sin observaciones." }}</p>
+    </div>
+    <dl class="detail-timestamps">
+      <div>
+        <dt>Añadida</dt>
+        <dd>{{ timestamp(item.created_at) }}</dd>
+      </div>
+      <div>
+        <dt>Última actualización</dt>
+        <dd>{{ timestamp(item.updated_at) }}</dd>
+      </div>
+      @if (item.archived_at) {
+        <div>
+          <dt>Archivada</dt>
+          <dd>{{ timestamp(item.archived_at) }}</dd>
+        </div>
+      }
+    </dl>
+  </section>
+  <div class="archive-action">
+    <p>
+      {{
+        item.archived_at
+          ? "Devuélvela al inventario activo cuando vuelva a
+    utilizarse."
+          : "Si deja de utilizarse, archívala para conservar su
+    información."
+      }}
+    </p>
     <button
       class="btn btn-secondary"
       type="button"
-      (click)="cancelDialog()"
-      [disabled]="saving()"
-      autofocus
+      (click)="confirmArchive()"
+      [disabled]="!connection.online()"
     >
-      Cancelar</button
-    ><button
-      class="btn btn-primary"
-      type="button"
-      (click)="archive()"
-      [disabled]="saving() || !connection.online()"
-    >
-      {{ saving() ? 'Guardando…' : item.archived_at ? 'Confirmar reactivación' :
-      'Confirmar archivado' }}
+      <app-icon name="archive" />{{
+        item.archived_at ? "Reactivar prenda" : "Archivar prenda"
+      }}
     </button>
   </div>
-</dialog>
+  <app-loan-history [garment]="item.id" />
+  <dialog
+    #archiveDialog
+    class="confirmation"
+    aria-labelledby="archive-title"
+    (cancel)="cancelDialog($event)"
+  >
+    <h2 id="archive-title">
+      {{ item.archived_at ? "Reactivar" : "Archivar" }} {{ item.code }}
+    </h2>
+    <p>
+      {{
+        item.archived_at
+          ? "La prenda volverá a aparecer en el inventario activo
+    con su estado físico actual."
+          : "Dejará de aparecer en el inventario activo.
+    Su información e histórico se conservarán y podrás reactivarla."
+      }}
+    </p>
+    @if (!connection.online()) {
+      <p class="notice" role="status">Necesitas conexión para confirmar.</p>
+    }
+    @if (actionError()) {
+      <div class="notice notice-error" role="alert">
+        {{ actionError() }}
+        @if (conflict()) {
+          <button class="text-button" type="button" (click)="reload()">
+            Recargar ficha
+          </button>
+        }
+      </div>
+    }
+    <div class="dialog-actions">
+      <button
+        class="btn btn-secondary"
+        type="button"
+        (click)="cancelDialog()"
+        [disabled]="saving()"
+        autofocus
+      >
+        Cancelar</button
+      ><button
+        class="btn btn-primary"
+        type="button"
+        (click)="archive()"
+        [disabled]="saving() || !connection.online()"
+      >
+        {{
+          saving()
+            ? "Guardando…"
+            : item.archived_at
+              ? "Confirmar reactivación"
+              : "Confirmar archivado"
+        }}
+      </button>
+    </div>
+  </dialog>
 }

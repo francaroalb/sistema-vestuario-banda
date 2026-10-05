@@ -1,3 +1,4 @@
+import { LoanHistory } from '../loans/loan-history';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -21,7 +22,7 @@ import { PeopleRepository } from '../../core/people/people-repository';
 import { Icon } from '../../shared/ui/icon';
 @Component({
   selector: 'app-person-detail',
-  imports: [RouterLink, Icon],
+  imports: [LoanHistory, RouterLink, Icon],
   templateUrl: './person-detail.html',
   styleUrls: ['../inventory/inventory.scss', './people.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

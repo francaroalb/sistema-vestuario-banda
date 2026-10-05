@@ -1,3 +1,4 @@
+import { LoanHistory } from '../loans/loan-history';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -21,7 +22,7 @@ import { Icon } from '../../shared/ui/icon';
 import { GarmentStatus } from '../../shared/ui/garment-status';
 @Component({
   selector: 'app-garment-detail',
-  imports: [RouterLink, Icon, GarmentStatus],
+  imports: [LoanHistory, RouterLink, Icon, GarmentStatus],
   templateUrl: './garment-detail.html',
   styleUrl: './inventory.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

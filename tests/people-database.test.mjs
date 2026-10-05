@@ -19,7 +19,7 @@ test('Personas y continuidad del histórico en PostgreSQL', async (t) => {
     const files = (await readdir('supabase/migrations'))
       .filter((f) => f.endsWith('.sql'))
       .sort();
-    for (const file of files.filter((f) => !f.endsWith('_people.sql')))
+    for (const file of files.filter((f) => f < '20261005000400'))
       await db.exec(await readFile('supabase/migrations/' + file, 'utf8'));
     await db.exec(
       `insert into public.admin_profiles(user_id,display_name) values('${admin}','Fran'),('${second}','Manuel');`,
@@ -47,6 +47,9 @@ test('Personas y continuidad del histórico en PostgreSQL', async (t) => {
     );
     await db.exec(
       await readFile('supabase/migrations/20261005000400_people.sql', 'utf8'),
+    );
+    await db.exec(
+      await readFile('supabase/migrations/20261005000500_loans.sql', 'utf8'),
     );
     const save = (id, version, input = {}, actor = admin) =>
       asUser(actor, 'select * from public.save_person($1,$2,$3,$4,$5,$6,$7)', [

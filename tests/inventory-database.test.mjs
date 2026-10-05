@@ -21,6 +21,7 @@ test('Integridad y autorización del inventario en PostgreSQL', async (t) => {
       '20261005000200_inventory.sql',
       '20261005000300_inventory_conflict_response.sql',
       '20261005000400_people.sql',
+      '20261005000500_loans.sql',
     ]) {
       await db.exec(await readFile('supabase/migrations/' + file, 'utf8'));
     }

@@ -87,7 +87,55 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/people/people-list').then((m) => m.PeopleList),
       },
-      ...['actuaciones', 'cesiones'].map((path) => ({
+      {
+        path: 'cesiones/nueva',
+        title: 'Nueva cesión · Gestión de trajes',
+        data: { kind: 'ENTREGA' },
+        canDeactivate: [
+          (component: { canLeave(): boolean }) => component.canLeave(),
+        ],
+        loadComponent: () =>
+          import('./features/loans/loan-operation').then(
+            (m) => m.LoanOperation,
+          ),
+      },
+      {
+        path: 'cesiones/:id/devolver',
+        title: 'Devolver prendas · Gestión de trajes',
+        data: { kind: 'DEVOLUCION' },
+        canDeactivate: [
+          (component: { canLeave(): boolean }) => component.canLeave(),
+        ],
+        loadComponent: () =>
+          import('./features/loans/loan-operation').then(
+            (m) => m.LoanOperation,
+          ),
+      },
+      {
+        path: 'cesiones/:id/cambiar',
+        title: 'Cambiar prenda · Gestión de trajes',
+        data: { kind: 'CAMBIO' },
+        canDeactivate: [
+          (component: { canLeave(): boolean }) => component.canLeave(),
+        ],
+        loadComponent: () =>
+          import('./features/loans/loan-operation').then(
+            (m) => m.LoanOperation,
+          ),
+      },
+      {
+        path: 'cesiones/:id',
+        title: 'Detalle de cesión · Gestión de trajes',
+        loadComponent: () =>
+          import('./features/loans/loan-detail').then((m) => m.LoanDetail),
+      },
+      {
+        path: 'cesiones',
+        title: 'Cesiones · Gestión de trajes',
+        loadComponent: () =>
+          import('./features/loans/loan-list').then((m) => m.LoanList),
+      },
+      ...['actuaciones'].map((path) => ({
         path,
         title:
           path.charAt(0).toUpperCase() + path.slice(1) + ' · Gestión de trajes',

@@ -31,8 +31,8 @@ export class InventoryRepository {
   }
   async list(filters: InventoryFilters, signal: AbortSignal) {
     let query = this.client
-      .from('garments')
-      .select('*, garment_types(name)', { count: 'exact' });
+      .from('garment_inventory')
+      .select('*', { count: 'exact' });
     if (filters.archive === 'active') query = query.is('archived_at', null);
     if (filters.archive === 'archived')
       query = query.not('archived_at', 'is', null);
@@ -41,6 +41,8 @@ export class InventoryRepository {
         'code',
         '%' + literalSearch(filters.q.slice(0, 60)) + '%',
       );
+    if (filters.location === 'held') query = query.not('loan_id', 'is', null);
+    if (filters.location === 'in_band') query = query.is('loan_id', null);
     if (filters.type) query = query.eq('garment_type_id', filters.type);
     if (filters.size.trim())
       query = query.eq('size', filters.size.trim().toUpperCase());
@@ -52,7 +54,13 @@ export class InventoryRepository {
       .range(start, start + PAGE_SIZE - 1)
       .abortSignal(signal);
     if (error) throw inventoryError(error);
-    return { rows: (data ?? []) as Garment[], count: count ?? 0 };
+    return {
+      rows: (data ?? []).map((row) => ({
+        ...row,
+        garment_types: { name: row.type_name },
+      })),
+      count: count ?? 0,
+    };
   }
   async get(id: string): Promise<Garment> {
     if (
@@ -64,8 +72,8 @@ export class InventoryRepository {
         'No encontramos esta prenda. Vuelve al inventario.',
       );
     const { data, error } = await this.client
-      .from('garments')
-      .select('*, garment_types(name)')
+      .from('garment_inventory')
+      .select('*')
       .eq('id', id)
       .maybeSingle();
     if (error) throw inventoryError(error);
@@ -73,7 +81,7 @@ export class InventoryRepository {
       throw new InventoryError(
         'No encontramos esta prenda o ya no tienes acceso. Vuelve al inventario.',
       );
-    return data as Garment;
+    return { ...data, garment_types: { name: data.type_name } };
   }
   async save(id: string, version: number | null, input: GarmentInput) {
     const { data, error } = await this.client

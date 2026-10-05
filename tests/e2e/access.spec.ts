@@ -77,6 +77,14 @@ async function mockSupabase(
                 updated_at: new Date().toISOString(),
               },
       });
+    if (url.includes('/loan_overview'))
+      return route.fulfill({
+        headers: {
+          'content-range': '*/0',
+          'access-control-expose-headers': 'content-range',
+        },
+        json: [],
+      });
     if (url.includes('/people'))
       return route.fulfill({
         headers: {
@@ -86,7 +94,7 @@ async function mockSupabase(
         json: [],
       });
     if (url.includes('/garment_types')) return route.fulfill({ json: [] });
-    if (url.includes('/garments'))
+    if (url.includes('/garment_inventory'))
       return route.fulfill({
         headers: {
           'content-range': '*/0',
@@ -97,6 +105,7 @@ async function mockSupabase(
     if (url.includes('/inventory_summary'))
       return route.fulfill({
         json: {
+          held_count: 0,
           active_count: 0,
           available_count: 0,
           laundry_count: 0,
@@ -217,7 +226,7 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
     await mockSupabase(page);
     let fail = true;
     const requests: string[] = [];
-    await page.route('**/rest/v1/garments?*', async (route) => {
+    await page.route('**/rest/v1/garment_inventory?*', async (route) => {
       const url = new URL(route.request().url());
       requests.push(url.searchParams.get('code') ?? '');
       if (fail)
@@ -289,7 +298,7 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
   }) => {
     await mockSupabase(page);
     const code = 'W'.repeat(60);
-    await page.route('**/rest/v1/garments?*', (route) =>
+    await page.route('**/rest/v1/garment_inventory?*', (route) =>
       route.fulfill({
         json: {
           id: userId,
@@ -413,6 +422,71 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
         ),
       ).toBe(true);
     }
+  });
+  test('cesiones: listado paginado, vencidas, filtros persistentes y error recuperable', async ({
+    page,
+  }) => {
+    await mockSupabase(page);
+    let fail = true;
+    const seen: URL[] = [];
+    await page.route('**/rest/v1/loan_overview?*', (route) => {
+      const url = new URL(route.request().url());
+      seen.push(url);
+      if (fail)
+        return route.fulfill({ status: 400, json: { code: 'TEST_FAILURE' } });
+      const offset = Number(url.searchParams.get('offset') ?? '0');
+      const count = Math.min(24, 25 - offset);
+      const closed = url.searchParams.get('closed_at') === 'not.is.null';
+      return route.fulfill({
+        headers: {
+          'content-range': `${offset}-${offset + count - 1}/25`,
+          'access-control-expose-headers': 'content-range',
+        },
+        json: Array.from({ length: count }, (_, i) => ({
+          id: userId.slice(0, -2) + String(offset + i).padStart(2, '0'),
+          person_id: userId,
+          person_name: 'Músico ' + (offset + i + 1),
+          opened_at: '2026-01-01T12:00:00Z',
+          due_at: '2026-01-02T12:00:00Z',
+          closed_at: closed ? '2026-01-02T12:00:00Z' : null,
+          held_count: closed ? 0 : 2,
+          item_count: 2,
+          garment_ids: [],
+        })),
+      });
+    });
+    await page.goto('/cesiones');
+    await enter(page);
+    await expect(page.getByRole('alert')).toContainText(
+      'Comprueba tu conexión',
+    );
+    fail = false;
+    await page.getByRole('button', { name: 'Reintentar' }).click();
+    await expect(page.locator('.loan-card')).toHaveCount(24);
+    expect(seen.at(-1)?.searchParams.get('order')).toBe(
+      'closed_at.desc.nullsfirst,opened_at.desc,id.asc',
+    );
+    await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
+    await expect(page.getByText('Página 2 de 2')).toBeVisible();
+    await expect(page.locator('.loan-card')).toHaveCount(1);
+    await page.getByLabel('Mostrar cesiones').selectOption('overdue');
+    await expect(page.locator('.loan-card')).toHaveCount(24);
+    await expect
+      .poll(() => seen.at(-1)?.searchParams.get('due_at')?.startsWith('lt.'))
+      .toBe(true);
+    await page.getByLabel('Buscar por persona').fill('Juan');
+    await expect(page).toHaveURL(/buscar=Juan/);
+    await page.reload();
+    await expect(page.getByLabel('Buscar por persona')).toHaveValue('Juan');
+    await expect(page.getByLabel('Mostrar cesiones')).toHaveValue('overdue');
+    await page.getByLabel('Mostrar cesiones').selectOption('closed');
+    await expect
+      .poll(() => seen.at(-1)?.searchParams.get('closed_at'))
+      .toBe('not.is.null');
+    await page.goto('/cesiones/no-existe');
+    await expect(page.getByRole('alert')).toContainText(
+      'No encontramos esta cesión',
+    );
   });
   test('usuario autenticado sin perfil activo no accede', async ({ page }) => {
     await mockSupabase(page, 'inactive');

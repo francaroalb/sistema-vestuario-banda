@@ -19,10 +19,10 @@ import { Icon } from '../../shared/ui/icon';
       <p>¿Qué necesitas hacer?</p>
     </div>
     <div class="quick-actions">
-      <a class="quick-action add" routerLink="/inventario/nueva"
+      <a class="quick-action add" routerLink="/cesiones/nueva"
         ><app-icon name="plus" /><span
-          ><strong>Nueva prenda</strong
-          ><small>Añadir al inventario</small></span
+          ><strong>Nueva cesión</strong
+          ><small>Entregar prendas y firmar</small></span
         ><app-icon name="arrow"
       /></a>
       <a class="quick-action search" routerLink="/inventario"
@@ -32,7 +32,13 @@ import { Icon } from '../../shared/ui/icon';
         ><app-icon name="arrow"
       /></a>
     </div>
-    <div class="people-actions" aria-label="Accesos a personas">
+    <div class="people-actions" aria-label="Accesos rápidos">
+      <a class="btn btn-secondary" routerLink="/inventario/nueva"
+        ><app-icon name="plus" />Nueva prenda</a
+      >
+      <a class="btn btn-secondary" routerLink="/cesiones"
+        ><app-icon name="exchange" />Cesiones activas</a
+      >
       <a class="btn btn-secondary" routerLink="/personas/nueva"
         ><app-icon name="plus" />Nueva persona</a
       >
@@ -55,6 +61,13 @@ import { Icon } from '../../shared/ui/icon';
       </div>
     } @else if (summary(); as stats) {
       <div class="stats">
+        <a
+          class="stat held"
+          routerLink="/inventario"
+          [queryParams]="{ situacion: 'held' }"
+          ><app-icon name="people" /><strong>{{ stats.held_count }}</strong
+          ><span>Cedidas</span></a
+        >
         <a class="stat total" routerLink="/inventario"
           ><app-icon name="hanger" /><strong>{{ stats.active_count }}</strong
           ><span>Prendas activas</span></a
@@ -62,7 +75,7 @@ import { Icon } from '../../shared/ui/icon';
         <a
           class="stat available"
           routerLink="/inventario"
-          [queryParams]="{ estado: 'DISPONIBLE' }"
+          [queryParams]="{ estado: 'DISPONIBLE', situacion: 'in_band' }"
           ><app-icon name="check" /><strong>{{ stats.available_count }}</strong
           ><span>Disponibles</span></a
         >
@@ -225,7 +238,8 @@ import { Icon } from '../../shared/ui/icon';
         align-self: end;
       }
     }
-    .total {
+    .total,
+    .held {
       background: var(--color-primary-soft);
       color: var(--color-primary-dark);
       border-color: #d9b3ac;
@@ -282,7 +296,7 @@ import { Icon } from '../../shared/ui/icon';
         grid-template-columns: 1fr 1fr;
       }
       .stats {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
       }
       .quick-action {
         padding: 1.75rem;

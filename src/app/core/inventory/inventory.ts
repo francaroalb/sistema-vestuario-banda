@@ -1,5 +1,10 @@
 import { GarmentRow, PhysicalState } from '../config/database.types';
-export type Garment = GarmentRow & { garment_types: { name: string } | null };
+export type Garment = GarmentRow & {
+  loan_id?: string | null;
+  holder_id?: string | null;
+  holder_name?: string | null;
+  garment_types: { name: string } | null;
+};
 export interface GarmentInput {
   code: string;
   garment_type_id: string;
@@ -8,6 +13,7 @@ export interface GarmentInput {
   notes: string;
 }
 export interface InventoryFilters {
+  location?: '' | 'held' | 'in_band';
   q: string;
   type: string;
   size: string;
@@ -58,6 +64,10 @@ export class InventoryError extends Error {
 export function inventoryError(error: unknown): InventoryError {
   if (error instanceof InventoryError) return error;
   const failure = error as { code?: string; message?: string } | null;
+  if (failure?.message === 'GARMENT_IN_CUSTODY')
+    return new InventoryError(
+      'Esta prenda está cedida. Registra su devolución antes de archivarla.',
+    );
   if (failure?.code === '23505')
     return new InventoryError(
       'Ya existe una prenda con ese código. Comprueba también las prendas archivadas.',

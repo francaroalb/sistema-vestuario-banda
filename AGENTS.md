@@ -4,9 +4,9 @@ Aplicación independiente de `../sistema-entradas-banda`. Usar Entradas solo com
 
 ## Trabajo por fases
 
-- Fases 0, 1 y 2 completadas y aprobadas. Fase 3 autorizada: Personas e histórico base.
-- NO comenzar fase 4 ni funcionalidades posteriores sin autorización expresa del usuario.
-- Actuaciones y Cesiones siguen como espacios reservados. Inventario y Personas son operativos al terminar fase 3.
+- Fases 0 a 3 completadas y aprobadas. Fase 4 implementada y validada: Cesiones, movimientos y firma; pendiente de revisión del usuario.
+- NO comenzar fase 5 ni funcionalidades posteriores sin autorización expresa del usuario.
+- Actuaciones sigue reservada. Implementar cesiones reales sin adelantar actuaciones, series, reservas ni recomendador.
 - Nombre visible: Gestión de trajes. Inicio operativo sin mensajes promocionales; navegación burdeos y logo de la Banda.
 - Al acabar cada fase: explicar cambios, pruebas, decisiones y detenerse.
 

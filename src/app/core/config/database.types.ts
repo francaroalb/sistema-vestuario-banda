@@ -1,3 +1,11 @@
+import type {
+  LoanRow,
+  LoanOverview,
+  LoanItem,
+  LoanMovement,
+  StockGarment,
+  LoanCommand,
+} from '../loans/models';
 export type PersonKind = 'BANDA' | 'REFUERZO';
 export type PersonRow = {
   id: string;
@@ -45,6 +53,7 @@ export type GarmentRow = {
   version: number;
 };
 export type InventorySummary = {
+  held_count: number;
   active_count: number;
   available_count: number;
   laundry_count: number;
@@ -54,6 +63,19 @@ export type InventorySummary = {
 export interface Database {
   public: {
     Tables: {
+      loans: { Row: LoanRow; Insert: never; Update: never; Relationships: [] };
+      loan_items: {
+        Row: LoanItem;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      loan_movements: {
+        Row: LoanMovement;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       people: {
         Row: PersonRow;
         Insert: Partial<PersonRow>;
@@ -91,6 +113,7 @@ export interface Database {
           entity_id: string;
           garment_id: string | null;
           person_id: string | null;
+          loan_id: string | null;
           before_data: Json;
           after_data: Json;
         };
@@ -124,8 +147,12 @@ export interface Database {
         Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      loan_overview: { Row: LoanOverview; Relationships: [] };
+      garment_inventory: { Row: StockGarment; Relationships: [] };
+    };
     Functions: {
+      record_loan_movement: { Args: LoanCommand; Returns: LoanRow[] };
       save_person: {
         Args: {
           p_id: string;

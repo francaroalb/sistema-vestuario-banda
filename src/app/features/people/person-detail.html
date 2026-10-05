@@ -75,6 +75,14 @@
       }
     </dl>
   </section>
+  @if (!item.archived_at) {
+    <a
+      class="btn btn-primary"
+      routerLink="/cesiones/nueva"
+      [queryParams]="{ persona: item.id }"
+      >Nueva cesión</a
+    >
+  }
   <div class="archive-action">
     <p>
       {{
@@ -94,6 +102,7 @@
       }}
     </button>
   </div>
+  <app-loan-history [person]="item.id" />
   <dialog
     #archiveDialog
     class="confirmation"

@@ -1,0 +1,263 @@
+<a class="back-link" [routerLink]="backLink"
+  ><app-icon name="back" />{{
+    kind === "ENTREGA" ? "Volver a Cesiones" : "Volver a la cesión"
+  }}</a
+>
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">
+      {{ review() ? "Revisar y firmar" : "Movimiento de prendas" }}
+    </p>
+    <h1>{{ title }}</h1>
+  </div>
+</div>
+@if (loading()) {
+  <p class="loading-state" role="status">Cargando datos…</p>
+} @else if (loadError()) {
+  <div class="notice notice-error" role="alert">
+    {{ loadError() }}
+    <button type="button" class="text-button" (click)="load()">
+      Reintentar
+    </button>
+  </div>
+} @else {
+  @if (!review()) {
+    <div class="operation-sections">
+      <section class="operation-card card">
+        <h2>Persona</h2>
+        @if (person(); as selected) {
+          <div class="selected-choice">
+            <div>
+              <strong>{{ selected.label }}</strong
+              ><small>{{ selected.subtitle }}</small>
+            </div>
+            @if (kind === "ENTREGA") {
+              <button
+                class="btn btn-quiet"
+                type="button"
+                (click)="person.set(null); dirty.set(true)"
+              >
+                Cambiar persona
+              </button>
+            }
+          </div>
+        } @else {
+          <app-choice-picker mode="person" (picked)="pickPerson($event)" />
+        }
+      </section>
+      @if (kind !== "ENTREGA") {
+        <section class="operation-card card">
+          <h2>
+            {{
+              kind === "CAMBIO" ? "Prenda que devuelve" : "Prendas que devuelve"
+            }}
+          </h2>
+          <p class="muted">
+            {{
+              kind === "CAMBIO"
+                ? "Selecciona una prenda y su estado al recibirla."
+                : "Selecciona solo las prendas que recibes ahora. Las demás seguirán cedidas."
+            }}
+          </p>
+          @for (item of items(); track item.id) {
+            <div class="return-row">
+              <label class="item-toggle"
+                ><input
+                  [type]="kind === 'CAMBIO' ? 'radio' : 'checkbox'"
+                  name="returned-items"
+                  [checked]="returns()[item.id] !== undefined"
+                  (change)="toggle(item, $any($event.target).checked)"
+                  [attr.aria-label]="'Devolver ' + item.code"
+                /><span
+                  ><strong>{{ item.code }}</strong
+                  ><small
+                    >{{ item.type_name }} · Talla {{ item.size }}</small
+                  ></span
+                ></label
+              >
+              @if (returns()[item.id] !== undefined) {
+                <div class="field">
+                  <label [for]="'state-' + item.id"
+                    >Estado al devolver {{ item.code }}</label
+                  ><select
+                    [id]="'state-' + item.id"
+                    [ngModel]="returns()[item.id]"
+                    (ngModelChange)="changeState(item.id, $event)"
+                  >
+                    @for (state of states; track state.value) {
+                      <option [value]="state.value">{{ state.label }}</option>
+                    }
+                  </select>
+                </div>
+              }
+            </div>
+          }
+        </section>
+      }
+      @if (
+        kind === "ENTREGA" || (kind === "CAMBIO" && selectedReturns().length)
+      ) {
+        <section class="operation-card card">
+          <h2>
+            {{
+              kind === "CAMBIO"
+                ? "Prenda nueva que recibe"
+                : "Prendas que recibe"
+            }}
+          </h2>
+          <p class="muted">
+            Solo se muestran prendas disponibles que están físicamente en la
+            Banda. {{ kind === "CAMBIO" ? "Elige una del mismo tipo." : "" }}
+          </p>
+          <ul class="selected-list">
+            @for (garment of garments(); track garment.id) {
+              <li>
+                <div>
+                  <strong>{{ garment.label }}</strong
+                  ><small>{{ garment.subtitle }}</small>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-quiet"
+                  (click)="removeGarment(garment.id)"
+                  [attr.aria-label]="'Quitar ' + garment.label"
+                >
+                  <app-icon name="close" />
+                </button>
+              </li>
+            }
+          </ul>
+          @if (garments().length < (kind === "CAMBIO" ? 1 : 30)) {
+            <app-choice-picker
+              [excluded]="selectedIds()"
+              [type]="kind === 'CAMBIO' ? replacementType() : ''"
+              (picked)="pickGarment($event)"
+            />
+          }
+        </section>
+      }
+      @if (kind === "ENTREGA") {
+        <section class="operation-card card">
+          <div class="field">
+            <label for="due-date"
+              >Devolución prevista
+              <span class="optional">opcional · hora de Madrid</span></label
+            ><input
+              id="due-date"
+              type="datetime-local"
+              [ngModel]="due()"
+              (ngModelChange)="due.set($event); dirty.set(true)"
+            /><small>Déjala vacía si no hay una fecha prevista.</small>
+          </div>
+          <div class="field notes-field">
+            <label for="loan-notes"
+              >Observaciones <span class="optional">opcional</span></label
+            ><textarea
+              id="loan-notes"
+              rows="3"
+              maxlength="2000"
+              [ngModel]="notes()"
+              (ngModelChange)="notes.set($event); dirty.set(true)"
+            ></textarea>
+          </div>
+        </section>
+      }
+    </div>
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="!canReview() || !connection.online()"
+        (click)="prepare()"
+      >
+        Revisar y firmar<app-icon name="arrow" /></button
+      ><a class="btn btn-quiet" [routerLink]="backLink">Cancelar</a>
+    </div>
+  } @else {
+    <section class="operation-card card review-card">
+      <h2>{{ person()?.label }}</h2>
+      <p>
+        {{ movementLabel(kind) }} ·
+        {{
+          kind === "ENTREGA"
+            ? due()
+              ? "Con devolución prevista: " +
+                due().replace("T", " ") +
+                " (Madrid)"
+              : "Sin devolución prevista"
+            : "En la misma cesión"
+        }}
+      </p>
+      @if (selectedReturns().length) {
+        <h3>Devuelve</h3>
+        <ul class="review-list">
+          @for (item of selectedReturns(); track item.id) {
+            <li>
+              <strong>{{ item.code }}</strong> · {{ item.type_name }} · Talla
+              {{ item.size }}<small>{{ stateLabel(returns()[item.id]) }}</small>
+            </li>
+          }
+        </ul>
+      }
+      @if (garments().length) {
+        <h3>Recibe</h3>
+        <ul class="review-list">
+          @for (item of garments(); track item.id) {
+            <li>
+              <strong>{{ item.label }}</strong
+              ><small>{{ item.subtitle }}</small>
+            </li>
+          }
+        </ul>
+      }
+      @if (kind === "ENTREGA" && notes()) {
+        <p class="preserve-text">{{ notes() }}</p>
+      }
+      <app-signature-pad [disabled]="saving()" (signed)="signed.set($event)" />
+      @if (error()) {
+        <div class="notice notice-error" role="alert">
+          {{ error() }}
+          @if (conflict()) {
+            <a [routerLink]="'/cesiones/' + loanId">Consultar cesión</a>
+            @if (kind !== "ENTREGA") {
+              <button type="button" class="text-button" (click)="reload()">
+                Recargar cesión
+              </button>
+            }
+          }
+        </div>
+      }
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="!signed() || saving() || !connection.online()"
+          (click)="confirm()"
+        >
+          {{
+            saving()
+              ? "Confirmando…"
+              : kind === "ENTREGA"
+                ? "Confirmar entrega"
+                : kind === "CAMBIO"
+                  ? "Confirmar cambio"
+                  : "Confirmar devolución"
+          }}</button
+        ><button
+          class="btn btn-quiet"
+          type="button"
+          [disabled]="saving()"
+          (click)="edit()"
+        >
+          Volver a la selección
+        </button>
+      </div>
+    </section>
+  }
+  @if (!connection.online()) {
+    <p class="notice" role="status">
+      Sin conexión. Conservamos la selección mientras siga abierta esta página.
+      Necesitas internet para confirmar.
+    </p>
+  }
+}

@@ -32,16 +32,24 @@
   <details [open]="advanced()">
     <summary>
       <app-icon name="filter" />Filtros<span class="filter-hint"
-        >Tipo, talla, estado y archivo</span
+        >Tipo, talla, estado y situación</span
       >
     </summary>
     <div class="filters">
+      <div class="field">
+        <label for="filter-location">Situación</label
+        ><select id="filter-location" formControlName="location">
+          <option value="">Todas</option>
+          <option value="in_band">En la Banda</option>
+          <option value="held">Cedidas</option>
+        </select>
+      </div>
       <div class="field">
         <label for="filter-type">Tipo de prenda</label
         ><select id="filter-type" formControlName="type">
           <option value="">Todos los tipos</option>
           @for (type of types(); track type.id) {
-          <option [value]="type.id">{{ type.name }}</option>
+            <option [value]="type.id">{{ type.name }}</option>
           }
         </select>
       </div>
@@ -59,7 +67,7 @@
         ><select id="filter-state" formControlName="state">
           <option value="">Todos los estados</option>
           @for (state of states; track state.value) {
-          <option [value]="state.value">{{ state.label }}</option>
+            <option [value]="state.value">{{ state.label }}</option>
           }
         </select>
       </div>
@@ -78,85 +86,104 @@
   </details>
 </form>
 @if (typeError()) {
-<div class="notice" role="alert">
-  {{ typeError() }}
-  <button type="button" class="text-button" (click)="loadTypes()">
-    Reintentar
-  </button>
-</div>
-} @if (loading()) {
-<p class="loading-state" role="status">
-  <span class="spinner" aria-hidden="true"></span>Cargando prendas…
-</p>
-} @else if (error()) {
-<div class="notice notice-error" role="alert">
-  {{ error() }}
-  <button class="text-button" type="button" (click)="load()">Reintentar</button>
-</div>
-} @else {
-<div class="results-heading">
-  <p role="status">{{ total() }} {{ total() === 1 ? 'prenda' : 'prendas' }}</p>
-  <span
-    >{{ form.controls.archive.value === 'active' ? 'Inventario activo' :
-    form.controls.archive.value === 'archived' ? 'Archivo' : 'Inventario
-    completo' }}</span
-  >
-</div>
-@if (garments().length) {
-<ul class="inventory-grid">
-  @for (garment of garments(); track garment.id) {
-  <li>
-    <a
-      class="garment-card card"
-      [routerLink]="['/inventario', garment.id]"
-      [queryParams]="{ volver: router.url }"
-      [attr.aria-label]="'Ver prenda ' + garment.code"
-    >
-      <div class="garment-card-top">
-        <span class="garment-type">{{ garment.garment_types?.name }}</span
-        ><span class="size-badge">{{ garment.size }}</span>
-      </div>
-      <h2>{{ garment.code }}</h2>
-      <div class="garment-card-bottom">
-        <app-garment-status [state]="garment.physical_state" /><app-icon
-          name="arrow"
-        />
-      </div>
-      @if (garment.archived_at) {
-      <span class="archived-label"><app-icon name="archive" />Archivada</span> }
-    </a>
-  </li>
-  }
-</ul>
-} @else {
-<section class="empty-state card">
-  <app-icon name="hanger" />
-  <h2>No hay prendas en esta vista</h2>
-  <p>
-    Prueba otro código o cambia los filtros. Si aún no has añadido ninguna,
-    empieza con una nueva prenda.
+  <div class="notice" role="alert">
+    {{ typeError() }}
+    <button type="button" class="text-button" (click)="loadTypes()">
+      Reintentar
+    </button>
+  </div>
+}
+@if (loading()) {
+  <p class="loading-state" role="status">
+    <span class="spinner" aria-hidden="true"></span>Cargando prendas…
   </p>
-  <button class="btn btn-secondary" type="button" (click)="clear()">
-    Limpiar búsqueda y filtros
-  </button>
-</section>
-} @if (pages() > 1) {
-<nav class="pagination" aria-label="Páginas del inventario">
-  <button
-    class="btn btn-secondary"
-    type="button"
-    [disabled]="page() <= 1"
-    (click)="navigate(page() - 1)"
-  >
-    <app-icon name="back" />Anterior</button
-  ><span>Página {{ page() }} de {{ pages() }}</span
-  ><button
-    class="btn btn-secondary"
-    type="button"
-    [disabled]="page() >= pages()"
-    (click)="navigate(page() + 1)"
-  >
-    Siguiente<app-icon name="arrow" />
-  </button>
-</nav>
-} }
+} @else if (error()) {
+  <div class="notice notice-error" role="alert">
+    {{ error() }}
+    <button class="text-button" type="button" (click)="load()">
+      Reintentar
+    </button>
+  </div>
+} @else {
+  <div class="results-heading">
+    <p role="status">
+      {{ total() }} {{ total() === 1 ? "prenda" : "prendas" }}
+    </p>
+    <span>{{
+      form.controls.archive.value === "active"
+        ? "Inventario activo"
+        : form.controls.archive.value === "archived"
+          ? "Archivo"
+          : "Inventario
+    completo"
+    }}</span>
+  </div>
+  @if (garments().length) {
+    <ul class="inventory-grid">
+      @for (garment of garments(); track garment.id) {
+        <li>
+          <a
+            class="garment-card card"
+            [routerLink]="['/inventario', garment.id]"
+            [queryParams]="{ volver: router.url }"
+            [attr.aria-label]="'Ver prenda ' + garment.code"
+          >
+            <div class="garment-card-top">
+              <span class="garment-type">{{ garment.garment_types?.name }}</span
+              ><span class="size-badge">{{ garment.size }}</span>
+            </div>
+            <h2>{{ garment.code }}</h2>
+            <div class="garment-card-bottom">
+              <app-garment-status [state]="garment.physical_state" /><app-icon
+                name="arrow"
+              />
+            </div>
+            @if (garment.loan_id) {
+              <span class="archived-label"
+                ><app-icon name="people" />En poder de
+                {{ garment.holder_name }}</span
+              >
+            }
+            @if (garment.archived_at) {
+              <span class="archived-label"
+                ><app-icon name="archive" />Archivada</span
+              >
+            }
+          </a>
+        </li>
+      }
+    </ul>
+  } @else {
+    <section class="empty-state card">
+      <app-icon name="hanger" />
+      <h2>No hay prendas en esta vista</h2>
+      <p>
+        Prueba otro código o cambia los filtros. Si aún no has añadido ninguna,
+        empieza con una nueva prenda.
+      </p>
+      <button class="btn btn-secondary" type="button" (click)="clear()">
+        Limpiar búsqueda y filtros
+      </button>
+    </section>
+  }
+  @if (pages() > 1) {
+    <nav class="pagination" aria-label="Páginas del inventario">
+      <button
+        class="btn btn-secondary"
+        type="button"
+        [disabled]="page() <= 1"
+        (click)="navigate(page() - 1)"
+      >
+        <app-icon name="back" />Anterior</button
+      ><span>Página {{ page() }} de {{ pages() }}</span
+      ><button
+        class="btn btn-secondary"
+        type="button"
+        [disabled]="page() >= pages()"
+        (click)="navigate(page() + 1)"
+      >
+        Siguiente<app-icon name="arrow" />
+      </button>
+    </nav>
+  }
+}

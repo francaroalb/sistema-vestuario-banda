@@ -96,9 +96,36 @@ dañadas, lavandería o en conflicto no serán primeras recomendaciones automát
   referenciarán `people.id`; no se crean préstamos, movimientos ni tallas inferidas antes de fase 4.
   La consulta general de auditoría sigue reservada para fase 9.
 
+## Fase 4 implementada
+
+- `loans`: persona y nombre al entregar, fecha real, devolución prevista opcional, notas, cierre y versión.
+- `loan_items`: una línea por entrega física, con código/tipo/talla originales. Devolución y estado
+  final por línea. Índice único parcial impide dos posesiones abiertas de una misma prenda.
+- `loan_movements`: ENTREGA/DEVOLUCION/CAMBIO con instantáneas de líneas, persona, actor, hora y
+  confirmación de firma. No existe columna de imagen ni trazos. Escrituras y borrado denegados al navegador.
+- Una RPC transaccional bloquea persona, cesión y prendas en orden estable, valida los datos y
+  registra movimiento y auditoría. Cambio devuelve una línea y entrega otra del mismo tipo sin
+  cerrar la cesión. Solo cerrar cuando todas las líneas estén devueltas.
+- Cada formulario mantiene UUID de cesión/operación. Reintentos del mismo contenido devuelven la
+  operación ya confirmada; un UUID reutilizado con distinto contenido produce conflicto HTTP 409.
+- Nuevas entregas solo de prendas activas, disponibles físicamente en la Banda y con persona activa.
+  Archivo de personas/prendas bloqueado si mantienen posesión pendiente. Se permite registrar
+  devoluciones aunque la persona no participase ya: la realidad física queda en los movimientos.
+- La fecha prevista se recibe como fecha/hora local, se valida y convierte en PostgreSQL con
+  Europe/Madrid; se rechazan horas inexistentes/repetidas y fechas pasadas. Sin fecha no hay vencimiento.
+- Firma canvas por Pointer Events, ratón o táctil. Validación mínima de trazo; solo transmitir
+  confirmación booleana. Limpiar, cambiar selección y destruir eliminan el dibujo; redimensionar solo escala el canvas en memoria.
+  El servidor exige confirmación; no verifica identidad biométrica ni firma digital.
+- Vistas con `security_invoker` para cesiones y situación del inventario, con RLS en tablas base.
+  «Cedida» es una posesión derivada, nunca un estado físico. Disponibles del inicio excluye cedidas.
+- Fichas de persona/prenda muestran seis cesiones recientes (activas primero) y enlace al listado
+  completo filtrado; la ficha de cesión contiene líneas y movimientos. No hay recomendaciones ni reservas.
+- Auditoría ampliada a cesión con clave foránea generada y restricción de borrado, conservando las
+  auditorías anteriores. Los movimientos tienen autor y hora propios; no se reescriben al editar fichas.
+
 ## Fases pendientes
 
-4 Cesiones/movimientos/firma · 5 Actuaciones/uniformes ·
+5 Actuaciones/uniformes ·
 6 Series · 7 Recomendador · 8 Conflictos · 9 Productividad · 10 QA y producción.
 
-Se requiere aprobación expresa entre fases. No comenzar fase 4 sin autorización.
+Se requiere aprobación expresa entre fases. No comenzar fase 5 sin autorización.

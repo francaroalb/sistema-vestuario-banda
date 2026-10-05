@@ -49,6 +49,7 @@ export class InventoryList {
     size: '',
     state: '',
     archive: 'active',
+    location: '',
   });
   readonly advanced = signal(false);
   private controller?: AbortController;
@@ -58,6 +59,7 @@ export class InventoryList {
     size: '',
     state: '',
     archive: 'active',
+    location: '',
     page: 1,
   };
 
@@ -69,6 +71,12 @@ export class InventoryList {
       const archive = params.get('archivo');
       const page = Number(params.get('pagina'));
       this.filters = {
+        location:
+          params.get('situacion') === 'held'
+            ? 'held'
+            : params.get('situacion') === 'in_band'
+              ? 'in_band'
+              : '',
         q: (params.get('buscar') ?? '').slice(0, 60),
         size: (params.get('talla') ?? '').slice(0, 20),
         type: /^[0-9a-f-]{36}$/i.test(type) ? type : '',
@@ -83,6 +91,7 @@ export class InventoryList {
       this.page.set(this.filters.page);
       this.advanced.set(
         Boolean(
+          this.filters.location ||
           this.filters.type ||
           this.filters.state ||
           this.filters.size ||
@@ -137,6 +146,7 @@ export class InventoryList {
       queryParams: {
         buscar: filters.q.trim() || null,
         tipo: filters.type || null,
+        situacion: filters.location || null,
         talla: filters.size.trim() || null,
         estado: filters.state || null,
         archivo: filters.archive === 'active' ? null : filters.archive,
@@ -151,6 +161,7 @@ export class InventoryList {
       size: '',
       state: '',
       archive: 'active',
+      location: '',
     });
   }
 }
