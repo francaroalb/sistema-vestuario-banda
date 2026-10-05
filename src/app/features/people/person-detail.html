@@ -1,0 +1,151 @@
+<a class="back-link" [routerLink]="backLink"
+  ><app-icon name="back" />Volver a Personas</a
+>
+@if (loading()) {
+  <p class="loading-state" role="status">Cargando persona…</p>
+} @else if (error()) {
+  <div class="notice notice-error" role="alert">
+    {{ error() }}
+    <button class="text-button" type="button" (click)="load()">
+      Reintentar
+    </button>
+  </div>
+} @else if (person(); as item) {
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Persona</p>
+      <h1>{{ item.full_name }}</h1>
+    </div>
+    @if (!item.archived_at) {
+      <a
+        class="btn btn-primary"
+        [routerLink]="['/personas', item.id, 'editar']"
+        [queryParams]="{ volver: returnTo }"
+        ><app-icon name="edit" />Editar persona</a
+      >
+    }
+  </div>
+  @if (item.archived_at) {
+    <p class="notice">
+      <strong>Persona archivada.</strong> Su información se conserva. Puedes
+      reactivarla cuando vuelva a participar.
+    </p>
+  }
+  <section class="garment-detail card" aria-label="Ficha de la persona">
+    <div class="detail-overview">
+      <span class="detail-symbol"><app-icon name="people" /></span
+      ><span
+        class="person-badge"
+        [class.reinforcement]="item.kind === 'REFUERZO'"
+        >{{ kindLabel(item.kind) }}</span
+      >
+    </div>
+    <dl class="detail-data">
+      <div>
+        <dt>Instrumento</dt>
+        <dd>{{ item.instrument || "Sin indicar" }}</dd>
+      </div>
+      <div>
+        <dt>Teléfono</dt>
+        <dd>{{ item.phone || "Sin indicar" }}</dd>
+      </div>
+      <div>
+        <dt>Ficha</dt>
+        <dd>{{ item.archived_at ? "Archivada" : "Activa" }}</dd>
+      </div>
+    </dl>
+    <div class="detail-notes">
+      <h2>Observaciones</h2>
+      <p>{{ item.notes || "Sin observaciones." }}</p>
+    </div>
+    <dl class="detail-timestamps">
+      <div>
+        <dt>Añadida</dt>
+        <dd>{{ timestamp(item.created_at) }}</dd>
+      </div>
+      <div>
+        <dt>Última actualización</dt>
+        <dd>{{ timestamp(item.updated_at) }}</dd>
+      </div>
+      @if (item.archived_at) {
+        <div>
+          <dt>Archivada</dt>
+          <dd>{{ timestamp(item.archived_at) }}</dd>
+        </div>
+      }
+    </dl>
+  </section>
+  <div class="archive-action">
+    <p>
+      {{
+        item.archived_at
+          ? "Reactiva esta misma ficha cuando vuelva a participar."
+          : "Si deja de participar, archiva su ficha para conservar su información."
+      }}
+    </p>
+    <button
+      class="btn btn-secondary"
+      type="button"
+      (click)="confirmArchive()"
+      [disabled]="!connection.online()"
+    >
+      <app-icon name="archive" />{{
+        item.archived_at ? "Reactivar persona" : "Archivar persona"
+      }}
+    </button>
+  </div>
+  <dialog
+    #archiveDialog
+    class="confirmation"
+    aria-labelledby="archive-title"
+    (cancel)="cancelDialog($event)"
+  >
+    <h2 id="archive-title">
+      {{ item.archived_at ? "Reactivar" : "Archivar" }} {{ item.full_name }}
+    </h2>
+    <p>
+      {{
+        item.archived_at
+          ? "Volverá a aparecer en Personas activas con los datos de su misma ficha."
+          : "Dejará de aparecer en Personas activas. Su información se conservará y podrás reactivarla."
+      }}
+    </p>
+    @if (!connection.online()) {
+      <p class="notice" role="status">Necesitas conexión para confirmar.</p>
+    }
+    @if (actionError()) {
+      <div class="notice notice-error" role="alert">
+        {{ actionError() }}
+        @if (conflict()) {
+          <button class="text-button" type="button" (click)="reload()">
+            Recargar ficha
+          </button>
+        }
+      </div>
+    }
+    <div class="dialog-actions">
+      <button
+        class="btn btn-secondary"
+        type="button"
+        (click)="cancelDialog()"
+        [disabled]="saving()"
+        autofocus
+      >
+        Cancelar</button
+      ><button
+        class="btn btn-primary"
+        type="button"
+        (click)="archive()"
+        [disabled]="saving() || !connection.online()"
+      >
+        {{
+          saving()
+            ? "Guardando…"
+            : item.archived_at
+              ? "Confirmar reactivación"
+              : "Confirmar archivado"
+        }}
+      </button>
+    </div>
+  </dialog>
+}

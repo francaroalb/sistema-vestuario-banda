@@ -32,6 +32,14 @@ import { Icon } from '../../shared/ui/icon';
         ><app-icon name="arrow"
       /></a>
     </div>
+    <div class="people-actions" aria-label="Accesos a personas">
+      <a class="btn btn-secondary" routerLink="/personas/nueva"
+        ><app-icon name="plus" />Nueva persona</a
+      >
+      <a class="btn btn-secondary" routerLink="/personas"
+        ><app-icon name="people" />Buscar persona</a
+      >
+    </div>
     <div class="inventory-heading">
       <h2>El inventario, de un vistazo</h2>
       <a routerLink="/inventario">Ver todo<app-icon name="arrow" /></a>
@@ -91,6 +99,16 @@ import { Icon } from '../../shared/ui/icon';
     }
   `,
   styles: `
+    .people-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+      a {
+        flex: 1;
+        white-space: nowrap;
+      }
+    }
     .home-heading {
       margin-bottom: 1.5rem;
     }

@@ -1,0 +1,159 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">Músicos y refuerzos</p>
+    <h1>Personas</h1>
+  </div>
+  <a
+    class="btn btn-primary"
+    routerLink="/personas/nueva"
+    [queryParams]="{ volver: router.url }"
+    ><app-icon name="plus" />Nueva persona</a
+  >
+</div>
+<form
+  class="search-panel card"
+  [formGroup]="form"
+  (ngSubmit)="navigate(1)"
+  role="search"
+  aria-label="Buscar personas"
+>
+  <div class="search-box">
+    <app-icon name="search" /><label class="sr-only" for="people-search"
+      >Buscar por nombre</label
+    ><input
+      id="people-search"
+      type="search"
+      formControlName="q"
+      maxlength="120"
+      placeholder="Buscar por nombre…"
+      autocomplete="off"
+    />
+  </div>
+  <details [open]="advanced()">
+    <summary>
+      <app-icon name="filter" />Filtros<span class="filter-hint"
+        >Tipo, instrumento y archivo</span
+      >
+    </summary>
+    <div class="filters people-filters">
+      <div class="field">
+        <label for="filter-kind">Tipo de persona</label
+        ><select id="filter-kind" formControlName="kind">
+          <option value="">Todos los tipos</option>
+          @for (kind of kinds; track kind.value) {
+            <option [value]="kind.value">{{ kind.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="filter-instrument">Instrumento</label
+        ><input
+          id="filter-instrument"
+          formControlName="instrument"
+          maxlength="80"
+          placeholder="Por ejemplo, Clarinete"
+        />
+      </div>
+      <div class="field">
+        <label for="filter-archive">Mostrar personas</label
+        ><select id="filter-archive" formControlName="archive">
+          <option value="active">Activas</option>
+          <option value="archived">Archivadas</option>
+          <option value="all">Todas</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-quiet" type="button" (click)="clear()">
+      Limpiar filtros
+    </button>
+  </details>
+</form>
+@if (loading()) {
+  <p class="loading-state" role="status">
+    <span class="spinner" aria-hidden="true"></span>Cargando personas…
+  </p>
+} @else if (error()) {
+  <div class="notice notice-error" role="alert">
+    {{ error() }}
+    <button class="text-button" type="button" (click)="load()">
+      Reintentar
+    </button>
+  </div>
+} @else {
+  <div class="results-heading">
+    <p role="status">
+      {{ total() }} {{ total() === 1 ? "persona" : "personas" }}
+    </p>
+    <span>{{
+      form.controls.archive.value === "active"
+        ? "Personas activas"
+        : form.controls.archive.value === "archived"
+          ? "Archivo"
+          : "Todas las personas"
+    }}</span>
+  </div>
+  @if (people().length) {
+    <ul class="inventory-grid">
+      @for (person of people(); track person.id) {
+        <li>
+          <a
+            class="person-card garment-card card"
+            [routerLink]="['/personas', person.id]"
+            [queryParams]="{ volver: router.url }"
+            [attr.aria-label]="'Ver persona ' + person.full_name"
+          >
+            <span
+              class="person-badge"
+              [class.reinforcement]="person.kind === 'REFUERZO'"
+              >{{ kindLabel(person.kind) }}</span
+            >
+            <h2>{{ person.full_name }}</h2>
+            <div class="garment-card-bottom">
+              <span class="instrument">{{
+                person.instrument || "Sin instrumento indicado"
+              }}</span
+              ><app-icon name="arrow" />
+            </div>
+            @if (person.archived_at) {
+              <span class="archived-label"
+                ><app-icon name="archive" />Archivada</span
+              >
+            }
+          </a>
+        </li>
+      }
+    </ul>
+  } @else {
+    <section class="empty-state card">
+      <app-icon name="people" />
+      <h2>No hay personas en esta vista</h2>
+      <p>
+        Prueba otro nombre o cambia los filtros. Si todavía no existe su ficha,
+        puedes añadir una nueva persona.
+      </p>
+      <button class="btn btn-secondary" type="button" (click)="clear()">
+        Limpiar búsqueda y filtros
+      </button>
+    </section>
+  }
+  @if (pages() > 1) {
+    <nav class="pagination" aria-label="Páginas de personas">
+      <button
+        class="btn btn-secondary"
+        type="button"
+        [disabled]="page() <= 1"
+        (click)="navigate(page() - 1)"
+      >
+        <app-icon name="back" />Anterior</button
+      ><span>Página {{ page() }} de {{ pages() }}</span
+      ><button
+        class="btn btn-secondary"
+        type="button"
+        [disabled]="page() >= pages()"
+        (click)="navigate(page() + 1)"
+      >
+        Siguiente<app-icon name="arrow" />
+      </button>
+    </nav>
+  }
+}

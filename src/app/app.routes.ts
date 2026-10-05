@@ -57,7 +57,37 @@ export const routes: Routes = [
             (m) => m.InventoryList,
           ),
       },
-      ...['actuaciones', 'personas', 'cesiones'].map((path) => ({
+      {
+        path: 'personas/nueva',
+        title: 'Nueva persona · Gestión de trajes',
+        canDeactivate: [
+          (component: { canLeave(): boolean }) => component.canLeave(),
+        ],
+        loadComponent: () =>
+          import('./features/people/person-form').then((m) => m.PersonForm),
+      },
+      {
+        path: 'personas/:id/editar',
+        title: 'Editar persona · Gestión de trajes',
+        canDeactivate: [
+          (component: { canLeave(): boolean }) => component.canLeave(),
+        ],
+        loadComponent: () =>
+          import('./features/people/person-form').then((m) => m.PersonForm),
+      },
+      {
+        path: 'personas/:id',
+        title: 'Ficha de persona · Gestión de trajes',
+        loadComponent: () =>
+          import('./features/people/person-detail').then((m) => m.PersonDetail),
+      },
+      {
+        path: 'personas',
+        title: 'Personas · Gestión de trajes',
+        loadComponent: () =>
+          import('./features/people/people-list').then((m) => m.PeopleList),
+      },
+      ...['actuaciones', 'cesiones'].map((path) => ({
         path,
         title:
           path.charAt(0).toUpperCase() + path.slice(1) + ' · Gestión de trajes',

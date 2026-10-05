@@ -75,9 +75,30 @@ dañadas, lavandería o en conflicto no serán primeras recomendaciones automát
 - Desconexión: sin escrituras y conservando el borrador actual en memoria. Salir o recargar un
   formulario modificado requiere confirmación; no se promete persistencia local del borrador.
 
+## Fase 3 implementada
+
+- `people`: UUID permanente, nombre completo, tipo BANDA/REFUERZO mutable, instrumento,
+  teléfono y observaciones opcionales, archivo independiente, versión y autor/fechas del servidor.
+- No hay nombre único ni identidad basada en nombre/teléfono: se admiten homónimos.
+  El nombre y el instrumento conservan las mayúsculas y acentos introducidos; se eliminan espacios
+  exteriores y se agrupan espacios repetidos. No se exige catálogo de instrumentos en esta fase.
+- Alta/edición y archivo/reactivación por RPC. Reintentos de alta con el mismo UUID se serializan
+  con un bloqueo transaccional y no duplican ni la ficha ni su auditoría. Ediciones desactualizadas
+  devuelven HTTP 409 y mantienen el borrador del formulario.
+- Auditoría ampliada sin perder entradas de prendas: `entity_type`/`entity_id` se conservan y
+  columnas generadas `garment_id`/`person_id` mantienen claves foráneas reales con borrado restringido.
+  Cada cambio de tipo conserva la identidad, autor y estado anterior/posterior.
+- RLS ADMIN y prohibición de escrituras directas, borrados y manipulación de auditoría desde navegador.
+- Listado paginado de 24 personas, búsqueda parcial por nombre y filtros de tipo, instrumento
+  (parcial) y archivo. Una última página vacía tras archivar redirige a la última página existente.
+- Accesos Nueva persona / Buscar persona en Inicio. Se reutiliza el estilo de fichas del inventario.
+- Base histórica preparada mediante UUID estable y auditoría protegida. Las futuras cesiones
+  referenciarán `people.id`; no se crean préstamos, movimientos ni tallas inferidas antes de fase 4.
+  La consulta general de auditoría sigue reservada para fase 9.
+
 ## Fases pendientes
 
-3 Personas · 4 Cesiones/movimientos/firma · 5 Actuaciones/uniformes ·
+4 Cesiones/movimientos/firma · 5 Actuaciones/uniformes ·
 6 Series · 7 Recomendador · 8 Conflictos · 9 Productividad · 10 QA y producción.
 
-Se requiere aprobación expresa entre fases. No comenzar fase 3 sin autorización.
+Se requiere aprobación expresa entre fases. No comenzar fase 4 sin autorización.

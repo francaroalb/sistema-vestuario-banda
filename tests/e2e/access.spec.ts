@@ -77,6 +77,14 @@ async function mockSupabase(
                 updated_at: new Date().toISOString(),
               },
       });
+    if (url.includes('/people'))
+      return route.fulfill({
+        headers: {
+          'content-range': '*/0',
+          'access-control-expose-headers': 'content-range',
+        },
+        json: [],
+      });
     if (url.includes('/garment_types')) return route.fulfill({ json: [] });
     if (url.includes('/garments'))
       return route.fulfill({
@@ -300,6 +308,102 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
     await enter(page);
     await expect(
       page.getByRole('heading', { name: code, exact: true }),
+    ).toBeVisible();
+    for (const width of [320, 390, 768, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+  });
+  test('personas: paginación, errores, búsqueda literal y última página archivada', async ({
+    page,
+  }) => {
+    await mockSupabase(page);
+    let fail = true;
+    let total = 25;
+    let lastSearch = '';
+    await page.route('**/rest/v1/people?*', (route) => {
+      const url = new URL(route.request().url());
+      const start = Number(url.searchParams.get('offset') ?? '0');
+      lastSearch = url.searchParams.get('full_name') ?? '';
+      if (fail)
+        return route.fulfill({ status: 400, json: { code: 'TEST_FAILURE' } });
+      if (start >= total && start > 0)
+        return route.fulfill({ status: 416, json: { code: 'PGRST103' } });
+      const count = Math.min(
+        Number(url.searchParams.get('limit') ?? '24'),
+        Math.max(0, total - start),
+      );
+      return route.fulfill({
+        headers: {
+          'content-range': `${start}-${start + count - 1}/${total}`,
+          'access-control-expose-headers': 'content-range',
+        },
+        json: Array.from({ length: count }, (_, i) => ({
+          id: userId.slice(0, -2) + String(start + i).padStart(2, '0'),
+          full_name: 'Persona ' + String(start + i + 1).padStart(2, '0'),
+          kind: 'BANDA',
+          instrument: 'Clarinete',
+          archived_at: null,
+        })),
+      });
+    });
+    await page.goto('/personas');
+    await enter(page);
+    await expect(page.getByRole('alert')).toContainText(
+      'Comprueba tu conexión',
+    );
+    fail = false;
+    await page.getByRole('button', { name: 'Reintentar' }).click();
+    await expect(page.locator('.person-card')).toHaveCount(24);
+    await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
+    await expect(page.getByText('Página 2 de 2')).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Ver persona Persona 25', exact: true }),
+    ).toBeVisible();
+    total = 24;
+    await page.reload();
+    await expect(page.locator('.person-card')).toHaveCount(24);
+    await expect(page).toHaveURL(/\/personas$/);
+    await page.getByLabel('Buscar por nombre').fill('A%_');
+    await expect(page).toHaveURL(/buscar=/);
+    await expect.poll(() => lastSearch).toBe('ilike.%A\\%\\_%');
+    await page.goto('/personas/no-existe');
+    await expect(page.getByRole('alert')).toContainText(
+      'No encontramos esta persona',
+    );
+    await page.getByRole('link', { name: 'Volver a Personas' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Personas', exact: true }),
+    ).toBeVisible();
+  });
+  test('personas: nombres y observaciones largos caben en la ficha móvil', async ({
+    page,
+  }) => {
+    await mockSupabase(page);
+    const name = 'W'.repeat(120);
+    await page.route('**/rest/v1/people?*', (route) =>
+      route.fulfill({
+        json: {
+          id: userId,
+          full_name: name,
+          kind: 'REFUERZO',
+          instrument: 'W'.repeat(80),
+          phone: '1'.repeat(40),
+          notes: 'N'.repeat(2000),
+          archived_at: null,
+          created_at: '2026-10-05T00:00:00Z',
+          updated_at: '2026-10-05T00:00:00Z',
+        },
+      }),
+    );
+    await page.goto('/personas/' + userId);
+    await enter(page);
+    await expect(
+      page.getByRole('heading', { name, exact: true }),
     ).toBeVisible();
     for (const width of [320, 390, 768, 1280]) {
       await page.setViewportSize({ width, height: 900 });

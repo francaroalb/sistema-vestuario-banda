@@ -2,11 +2,11 @@
 
 Aplicación privada de la Banda Municipal Ntra. Sra. del Valle de La Palma del Condado.
 
-**Fase 2 completada:** acceso privado, inicio operativo e inventario conectado a Supabase.
-Permite crear, buscar, filtrar, consultar, editar, archivar y reactivar prendas individuales.
-Incluye auditoría de cambios, protección contra códigos duplicados y ediciones simultáneas.
-Personas, Cesiones y Actuaciones siguen pendientes de sus fases. No se ha desplegado en
-Cloudflare ni se ha configurado el dominio.
+**Fase 3 completada:** acceso privado, inventario y gestión de personas conectados a Supabase.
+Personas permite buscar, filtrar, crear, consultar, editar, archivar y reactivar las fichas de
+músicos de la Banda y refuerzos. Cambiar de tipo conserva la misma identidad y su auditoría.
+Cesiones y Actuaciones siguen pendientes de sus fases. No se ha desplegado en Cloudflare ni
+se ha configurado el dominio.
 
 ## Arrancar en este equipo
 
@@ -46,6 +46,27 @@ Si no utilizas nvm, instala una versión de Node compatible con `package.json`.
 
 Los cambios realizados manualmente son reales. Para retirar una prenda de prueba, archívala.
 Las pruebas automatizadas solo eliminan sus propios registros sintéticos identificados por UUID.
+
+## Probar la fase 3
+
+1. Entrar y pulsar **Nueva persona** en Inicio o Personas.
+2. Escribir nombre y apellidos; elegir **Refuerzo**. Añadir instrumento, teléfono y observaciones
+   si se conocen, y guardar. Recargar la ficha para comprobar que los datos persisten.
+3. Editar y cambiar a **Músico de la Banda**: debe mantenerse la misma ficha y dirección.
+4. En Personas, buscar parte del nombre y combinar filtros de tipo e instrumento. Los filtros
+   se conservan al entrar en una ficha y volver al listado. Las páginas contienen 24 personas.
+5. Archivar desde la ficha. Ya no aparece en Activas; consultar Archivadas y reactivarla.
+   Los datos y los cambios anteriores se conservan. Las fichas archivadas no son editables.
+6. Abrir una ficha en dos pestañas y guardar cambios en ambas: la segunda debe avisar del
+   conflicto y conservar el borrador. Recargar ficha solicita confirmación antes de descartarlo.
+7. Con un formulario modificado, pulsar Cancelar: debe pedir confirmación. Sin conexión se
+   deshabilita Guardar y se conserva el borrador en memoria mientras siga abierta la página.
+
+Nombre y tipo son los datos necesarios. Instrumento, teléfono y observaciones son opcionales.
+Los nombres no son únicos: se permiten homónimos, sin fusionar ni sobrescribir sus fichas.
+Busca antes de crear para evitar altas repetidas de la misma persona.
+No se introduce una talla habitual manual ni se inventa un historial de préstamos. El UUID
+estable y la auditoría dejan preparado el histórico; las cesiones y movimientos llegan en fase 4.
 
 ## Probar la PWA
 
@@ -95,8 +116,9 @@ los permisos SQL prohíben que el navegador cree, modifique o elimine administra
 
 Las migraciones de `supabase/migrations/` están aplicadas y registradas en
 `supabase_migrations.schema_migrations`: acceso ADMIN, inventario y respuesta HTTP 409 a
-conflictos de edición. Las escrituras de inventario pasan por RPC transaccionales que verifican
-el administrador y la versión. El navegador no puede borrar prendas ni modificar la auditoría.
+conflictos de edición, más la migración de Personas. Las escrituras de inventario y personas pasan
+por RPC transaccionales que verifican el administrador y la versión. El navegador no puede borrar
+prendas/personas ni modificar la auditoría.
 
 Para gestionar otro administrador desde Supabase:
 
@@ -143,16 +165,16 @@ REAL_AUTH=1 npm run test:e2e -- --grep 'Supabase real'
 
 El archivo local necesita `email`, `password`, `display_name` e `id`. No se guarda ningún estado de
 sesión, traza ni contraseña en el repositorio. Las capturas se guardan en `.local/screenshots/`.
-Las pruebas reales de inventario crean prendas temporales y eliminan exclusivamente sus UUID
+Las pruebas reales de inventario y personas crean registros temporales y eliminan exclusivamente sus UUID
 al finalizar. Para esa limpieza requieren la sesión Supabase CLI de este equipo en el llavero
-macOS; no extraen ni imprimen el token. Ejecutarlas solo en el proyecto independiente de Vestuario.
+macOS; el token se usa internamente y no se imprime ni se guarda en el repositorio. Ejecutarlas solo en el proyecto independiente de Vestuario.
 
 ## Estructura y mantenimiento
 
 - `src/app/core`: configuración, cliente tipado, autenticación, guards y conectividad.
 - `src/app/shared/ui`: iconos y ayuda de instalación.
 - `src/app/layout`: shell y navegación responsive.
-- `src/app/features`: login, inicio con recuentos, inventario y espacios reservados.
+- `src/app/features`: login, inicio operativo, inventario, personas y espacios reservados.
 - `src/styles.scss`: tokens heredados de Entradas, botones, campos, tarjetas y accesibilidad.
 - `supabase/migrations`: cambios de base de datos versionados.
 
@@ -163,5 +185,7 @@ No se publica nada automáticamente desde este proyecto.
 Los logotipos y las tipografías conservan la identidad de Entradas. Los iconos PWA de Vestuario
 se generan desde el SVG propio con `node scripts/generate-icons.mjs` (requiere Chrome).
 
-Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 3.**
+Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 4.**
 Ver [validación de fase 2](docs/qa-fase2.md).
+
+Ver [validación de fase 3](docs/qa-fase3.md).

@@ -1,3 +1,19 @@
+export type PersonKind = 'BANDA' | 'REFUERZO';
+export type PersonRow = {
+  id: string;
+  full_name: string;
+  kind: PersonKind;
+  instrument: string | null;
+  phone: string | null;
+  notes: string | null;
+  archived_at: string | null;
+  archived_by: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
+  version: number;
+};
 export type PhysicalState = 'DISPONIBLE' | 'PENDIENTE_LAVANDERIA' | 'DANADA';
 export type Json =
   | string
@@ -38,6 +54,12 @@ export type InventorySummary = {
 export interface Database {
   public: {
     Tables: {
+      people: {
+        Row: PersonRow;
+        Insert: Partial<PersonRow>;
+        Update: Partial<PersonRow>;
+        Relationships: [];
+      };
       garment_types: {
         Row: GarmentType;
         Insert: Partial<GarmentType> & { name: string };
@@ -67,6 +89,8 @@ export interface Database {
           action: string;
           entity_type: string;
           entity_id: string;
+          garment_id: string | null;
+          person_id: string | null;
           before_data: Json;
           after_data: Json;
         };
@@ -102,6 +126,22 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      save_person: {
+        Args: {
+          p_id: string;
+          p_expected_version: number | null;
+          p_full_name: string;
+          p_kind: PersonKind;
+          p_instrument: string | null;
+          p_phone: string | null;
+          p_notes: string | null;
+        };
+        Returns: PersonRow[];
+      };
+      set_person_archived: {
+        Args: { p_id: string; p_expected_version: number; p_archived: boolean };
+        Returns: PersonRow[];
+      };
       save_garment: {
         Args: {
           p_id: string;
@@ -123,7 +163,7 @@ export interface Database {
         Returns: InventorySummary[];
       };
     };
-    Enums: { garment_state: PhysicalState };
+    Enums: { garment_state: PhysicalState; person_kind: PersonKind };
     CompositeTypes: Record<string, never>;
   };
 }
