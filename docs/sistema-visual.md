@@ -111,3 +111,21 @@ casos de listado, ambos aprobados. Comprobación de desbordamiento horizontal en
 768, 1280 y 1440 px para once pantallas; capturas de escritorio y móvil emulado revisadas.
 Se comprobó que los cuerpos de las clases TypeScript modificadas no cambian. La revisión
 visual en dispositivos físicos sigue pendiente.
+
+## Rediseño del inicio tras fase 6
+
+Inicio organizado en tres bloques: gestiones frecuentes, estado del vestuario y preparación.
+La nueva cesión conserva el burdeos principal; devolver/cambiar y las búsquedas tienen una
+jerarquía secundaria clara. Altas de prendas/personas en una fila discreta. Los recuentos se
+agrupan en un solo panel con cifras y fondos semánticos; todos conservan sus filtros originales.
+Actuaciones y Series comparten una franja dorada suave con accesos directos.
+
+En escritorio, acciones e inventario se sitúan en paralelo; en móvil, las acciones y cifras
+mantienen dos columnas. Se eliminan textos redundantes y se conserva el saludo breve.
+No se añaden consultas ni se modifica la lógica de carga o el modelo de datos.
+
+Validación: compilación sin avisos, 22 casos existentes de acceso/navegación aprobados y
+revisión con datos ficticios en 320, 390, 768, 1280 y 1440 px sin desbordamiento horizontal.
+Capturas locales en `.local/screenshots/ui-home-redesign`, excluidas de Git.
+Se comprobaron también los ocho destinos de acciones, el inventario vacío y la recuperación
+mediante Reintentar tras un error de carga, en escritorio y móvil emulado.

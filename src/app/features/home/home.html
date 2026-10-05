@@ -1,0 +1,124 @@
+<header class="home-heading">
+  <h1>Hola, {{ auth.profile()?.display_name }}.</h1>
+</header>
+<div class="home-grid">
+  <section class="operations" aria-labelledby="operations-title">
+    <h2 id="operations-title" class="sr-only">Gestiones de vestuario</h2>
+    <div class="action-grid">
+      <a class="action-tile delivery" routerLink="/cesiones/nueva"
+        ><app-icon name="plus" /><strong>Nueva cesión</strong
+        ><small>Entregar prendas y firmar</small
+        ><app-icon class="action-arrow" name="arrow"
+      /></a>
+      <a class="action-tile returns" routerLink="/cesiones"
+        ><app-icon name="exchange" /><strong>Devolver o cambiar</strong
+        ><small>Abrir una cesión activa</small
+        ><app-icon class="action-arrow" name="arrow"
+      /></a>
+      <a class="lookup" routerLink="/inventario"
+        ><app-icon name="search" /><span
+          ><strong>Buscar prenda</strong
+          ><small>Código, talla o estado</small></span
+        ><app-icon name="arrow"
+      /></a>
+      <a class="lookup" routerLink="/personas"
+        ><app-icon name="people" /><span
+          ><strong>Buscar persona</strong
+          ><small>Ficha y prendas cedidas</small></span
+        ><app-icon name="arrow"
+      /></a>
+    </div>
+    <nav class="register-links" aria-label="Añadir al registro">
+      <span>Añadir al registro</span
+      ><a routerLink="/inventario/nueva"><app-icon name="plus" />Nueva prenda</a
+      ><a routerLink="/personas/nueva"><app-icon name="plus" />Nueva persona</a>
+    </nav>
+  </section>
+  <section class="stock-panel" aria-labelledby="stock-title">
+    <div class="section-heading">
+      <h2 id="stock-title">Así está el vestuario</h2>
+      <a
+        class="section-link"
+        routerLink="/inventario"
+        aria-label="Ver todo el inventario"
+        ><app-icon name="arrow"
+      /></a>
+    </div>
+    @if (loading()) {
+      <p class="loading-state" role="status">Consultando inventario…</p>
+    } @else if (error()) {
+      <div class="notice notice-error" role="alert">
+        {{ error() }}
+        <button class="text-button" type="button" (click)="load()">
+          Reintentar
+        </button>
+      </div>
+    } @else if (summary(); as stats) {
+      <a class="stock-total" routerLink="/inventario"
+        ><app-icon name="hanger" /><span>Prendas activas</span
+        ><strong>{{ stats.active_count }}</strong></a
+      >
+      <div class="stock-grid">
+        <a
+          class="stock-item available"
+          routerLink="/inventario"
+          [queryParams]="{ estado: 'DISPONIBLE', situacion: 'in_band' }"
+          ><app-icon name="check" /><strong>{{ stats.available_count }}</strong
+          ><span>Disponibles</span></a
+        >
+        <a
+          class="stock-item held"
+          routerLink="/inventario"
+          [queryParams]="{ situacion: 'held' }"
+          ><app-icon name="people" /><strong>{{ stats.held_count }}</strong
+          ><span>Cedidas</span></a
+        >
+        <a
+          class="stock-item laundry"
+          routerLink="/inventario"
+          [queryParams]="{ estado: 'PENDIENTE_LAVANDERIA' }"
+          ><app-icon name="wash" /><strong>{{ stats.laundry_count }}</strong
+          ><span>Lavandería</span></a
+        >
+        <a
+          class="stock-item damaged"
+          routerLink="/inventario"
+          [queryParams]="{ estado: 'DANADA' }"
+          ><app-icon name="warning" /><strong>{{ stats.damaged_count }}</strong
+          ><span>Dañadas</span></a
+        >
+      </div>
+      @if (stats.active_count === 0 && stats.archived_count === 0) {
+        <p class="empty-hint">
+          Añade tu primera prenda para empezar a organizar el vestuario.
+        </p>
+      }
+      <a
+        class="archive-link"
+        routerLink="/inventario"
+        [queryParams]="{ archivo: 'archived' }"
+        ><span>Archivadas</span><strong>{{ stats.archived_count }}</strong
+        ><app-icon name="arrow"
+      /></a>
+    }
+  </section>
+  <section class="planning-panel" aria-labelledby="planning-title">
+    <div class="planning-heading">
+      <h2 id="planning-title">Preparar vestuario</h2>
+    </div>
+    <div class="planning-links">
+      <a routerLink="/actuaciones"
+        ><app-icon name="calendar" /><span
+          ><strong>Actuaciones</strong
+          ><small>Participantes y prendas</small></span
+        ><app-icon name="arrow"
+      /></a>
+      <a routerLink="/actuaciones/series"
+        ><app-icon name="hanger" /><span
+          ><strong>Series</strong
+          ><small>Varias actuaciones, un plan</small></span
+        ><app-icon name="arrow"
+      /></a>
+    </div>
+  </section>
+</div>
