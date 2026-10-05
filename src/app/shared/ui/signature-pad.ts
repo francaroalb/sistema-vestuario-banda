@@ -32,6 +32,8 @@ import {
       width="1600"
       height="320"
       [id]="canvasId"
+      [class.signed]="valid()"
+      [class.disabled]="disabled()"
       role="img"
       aria-label="Área de firma"
       [attr.aria-describedby]="canvasId + '-help'"
@@ -40,7 +42,7 @@ import {
       (pointerup)="end($event)"
       (pointercancel)="cancel($event)"
     ></canvas>
-    <p class="signature-status" role="status">
+    <p class="signature-status" [class.confirmed]="valid()" role="status">
       {{ valid() ? 'Firma preparada.' : 'Dibuja la firma antes de confirmar.' }}
     </p>
   `,
@@ -52,7 +54,9 @@ import {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.5rem;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+      font-size: var(--text-sm);
       label {
         font-weight: 700;
       }
@@ -66,16 +70,30 @@ import {
       display: block;
       width: 100%;
       height: 10rem;
-      border: 2px dashed var(--color-primary);
+      border: 1px dashed var(--color-border-strong);
       border-radius: var(--radius-md);
-      background: white;
+      background: var(--color-surface-subtle);
       touch-action: none;
       scroll-margin-block: 6rem;
       cursor: crosshair;
+      transition:
+        border-color var(--duration-fast),
+        background-color var(--duration-fast);
+      &.signed {
+        border-color: var(--color-success);
+        background: var(--color-surface);
+      }
+      &.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     }
     .signature-status {
-      color: var(--color-primary);
+      color: var(--color-muted);
       font-weight: 600;
+      &.confirmed {
+        color: var(--color-success);
+      }
     }
   `,
 })

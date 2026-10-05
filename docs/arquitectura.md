@@ -127,6 +127,10 @@ dañadas, lavandería o en conflicto no serán primeras recomendaciones automát
 
 ## Fases pendientes
 
+Antes de fase 5 se ha aplicado el refinamiento visual solicitado: tokens comunes, superficies
+neutras, navegación inferior burdeos y lateral claro, controles y jerarquía consistentes.
+Ver `docs/sistema-visual.md`. Esta revisión no modifica modelos, RPC ni flujos funcionales.
+
 5 Actuaciones/uniformes ·
 6 Series · 7 Recomendador · 8 Conflictos · 9 Productividad · 10 QA y producción.
 

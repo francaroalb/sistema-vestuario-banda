@@ -217,6 +217,7 @@ Los logotipos y las tipografías conservan la identidad de Entradas. Los iconos 
 se generan desde el SVG propio con `node scripts/generate-icons.mjs` (requiere Chrome).
 
 Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 5.**
+Ver [sistema visual y refinamiento de la interfaz](docs/sistema-visual.md).
 Ver [validación de fase 2](docs/qa-fase2.md).
 
 Ver [validación de fase 3](docs/qa-fase3.md).

@@ -30,7 +30,7 @@ import { Icon } from '../../shared/ui/icon';
         ><app-icon name="plus" />Nueva cesión</a
       >
     </div>
-    <form class="search-panel card" (ngSubmit)="navigate(1)">
+    <form class="search-panel card loan-search" (ngSubmit)="navigate(1)">
       <div class="field">
         <label for="loan-search">Buscar por persona</label
         ><input

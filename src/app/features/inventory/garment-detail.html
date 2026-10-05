@@ -147,7 +147,9 @@
       >
         Cancelar</button
       ><button
-        class="btn btn-primary"
+        class="btn"
+        [class.btn-danger]="!item.archived_at"
+        [class.btn-primary]="!!item.archived_at"
         type="button"
         (click)="archive()"
         [disabled]="saving() || !connection.online()"

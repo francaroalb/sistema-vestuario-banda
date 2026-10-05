@@ -49,7 +49,7 @@ import { Icon } from '../../shared/ui/icon';
       }
     }
     h2 {
-      font: 500 2rem/1.15 var(--font-display);
+      font: 700 var(--text-section)/var(--leading-heading) var(--font-body);
       margin: 1.5rem 0 0.75rem;
     }
     p {

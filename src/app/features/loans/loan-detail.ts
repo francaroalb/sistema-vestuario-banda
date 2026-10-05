@@ -56,7 +56,7 @@ import { Icon } from '../../shared/ui/icon';
           >
         </div>
       }
-      <div class="operation-sections">
+      <div class="operation-sections loan-detail-grid">
         <section class="operation-card card">
           <a class="person-link" [routerLink]="['/personas', item.person_id]"
             >Abrir ficha de la persona</a

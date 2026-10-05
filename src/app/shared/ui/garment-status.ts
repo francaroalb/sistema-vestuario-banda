@@ -29,10 +29,12 @@ import { Icon } from './icon';
     .state {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: var(--space-2);
       border-radius: var(--radius-pill);
-      padding: 0.4rem 0.65rem;
-      font-size: 0.7rem;
+      min-height: var(--badge-height);
+      padding: var(--badge-padding);
+      line-height: 1.3;
+      font-size: var(--badge-font-size);
       font-weight: 700;
       background: var(--color-success-soft);
       color: var(--color-success);
@@ -43,23 +45,23 @@ import { Icon } from './icon';
       height: 1rem;
     }
     .laundry {
-      background: var(--color-accent-soft);
-      color: var(--color-accent-dark);
-      border-color: var(--color-accent-border);
+      background: var(--color-laundry-soft);
+      color: var(--color-laundry);
+      border-color: var(--color-laundry-border);
     }
     .damaged {
-      background: #fae7e5;
-      color: #941e24;
-      border-color: #e8b9b4;
+      background: var(--color-error-soft);
+      color: var(--color-error);
+      border-color: var(--color-error-border);
     }
     .held {
       background: var(--color-primary-soft);
       color: var(--color-primary-dark);
-      border-color: #d9b3ac;
+      border-color: var(--color-primary-border);
     }
     .condition {
       display: block;
-      margin-top: 0.4rem;
+      margin-top: var(--space-2);
       font-size: var(--text-xs);
       color: var(--color-muted);
     }

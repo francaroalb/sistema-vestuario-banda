@@ -64,16 +64,17 @@ import { formatTimestamp } from '../../core/inventory/inventory';
   styles: `
     :host {
       display: block;
-      max-width: 52rem;
-      margin: 1.5rem 0;
+      max-width: var(--reading-width);
+      margin: var(--space-6) 0;
     }
     .history-card {
-      padding: 1.5rem;
-      border-top: 3px solid var(--color-accent);
+      padding: var(--card-padding);
     }
     h2 {
-      font-size: 1.1rem;
-      margin: 0 0 1rem;
+      font-size: var(--text-section);
+      margin: 0 0 var(--space-4);
+      padding-bottom: var(--space-4);
+      border-bottom: 1px solid var(--color-border);
     }
     p {
       font-size: var(--text-sm);
@@ -82,21 +83,32 @@ import { formatTimestamp } from '../../core/inventory/inventory';
     ul {
       list-style: none;
       padding: 0;
+      margin: 0;
     }
     li {
       border-bottom: 1px solid var(--color-border);
     }
     li a {
       display: grid;
-      gap: 0.4rem;
-      padding: 0.9rem 0;
+      gap: var(--space-1);
+      padding: var(--space-4) var(--space-2);
+      border-radius: var(--radius-sm);
       text-decoration: none;
       color: var(--color-primary);
+      font-size: var(--text-sm);
       overflow-wrap: anywhere;
+    }
+    li a:hover {
+      background: var(--color-surface-subtle);
     }
     span {
       font-size: var(--text-xs);
       color: var(--color-muted);
+    }
+    .text-button {
+      font-size: var(--text-xs);
+      color: var(--color-primary);
+      margin-top: var(--space-3);
     }
   `,
 })

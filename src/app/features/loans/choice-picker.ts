@@ -19,6 +19,7 @@ import { Choice, loanError } from '../../core/loans/models';
     }}</label>
     <input
       [id]="id"
+      class="picker-input"
       type="search"
       [value]="query()"
       [attr.maxlength]="mode() === 'person' ? 120 : 60"
@@ -88,18 +89,7 @@ import { Choice, loanError } from '../../core/loans/models';
     }
     .picker-label {
       display: block;
-      font-weight: 600;
-      font-size: var(--text-sm);
-      margin-bottom: 0.6rem;
-    }
-    input {
-      width: 100%;
-      min-height: 3.25rem;
-      border: 1px solid var(--color-border-strong);
-      border-radius: var(--radius-md);
-      padding: 0.8rem;
-      font: inherit;
-      background: var(--color-surface);
+      margin-bottom: var(--space-2);
     }
     p,
     .picker-pages {
@@ -111,30 +101,37 @@ import { Choice, loanError } from '../../core/loans/models';
       padding: 0;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
-      gap: 0.6rem;
+      gap: var(--space-2);
       max-height: 22rem;
       overflow: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-border-strong) transparent;
     }
     li {
       min-width: 0;
     }
     li button {
       display: grid;
-      gap: 0.3rem;
+      gap: var(--space-1);
       width: 100%;
+      min-height: var(--control-height);
       text-align: left;
       cursor: pointer;
       border: 1px solid var(--color-border);
-      border-left: 3px solid var(--color-primary);
-      background: var(--color-surface);
+      background: var(--color-surface-subtle);
       color: var(--color-text);
-      border-radius: var(--radius-sm);
-      padding: 0.9rem;
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
       font: inherit;
+      font-size: var(--text-sm);
       overflow-wrap: anywhere;
     }
     li button:hover {
       background: var(--color-primary-soft);
+      border-color: var(--color-primary-border);
+    }
+    li button:active {
+      transform: translateY(1px);
     }
     span {
       font-size: var(--text-xs);
@@ -144,7 +141,9 @@ import { Choice, loanError } from '../../core/loans/models';
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.5rem;
+      gap: var(--space-2);
+      padding-top: var(--space-2);
+      border-top: 1px solid var(--color-border);
     }
   `,
 })

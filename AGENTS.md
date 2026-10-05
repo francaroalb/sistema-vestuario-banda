@@ -7,7 +7,8 @@ Aplicación independiente de `../sistema-entradas-banda`. Usar Entradas solo com
 - Fases 0 a 3 completadas y aprobadas. Fase 4 implementada y validada: Cesiones, movimientos y firma; pendiente de revisión del usuario.
 - NO comenzar fase 5 ni funcionalidades posteriores sin autorización expresa del usuario.
 - Actuaciones sigue reservada. Implementar cesiones reales sin adelantar actuaciones, series, reservas ni recomendador.
-- Nombre visible: Gestión de trajes. Inicio operativo sin mensajes promocionales; navegación burdeos y logo de la Banda.
+- Nombre visible: Gestión de trajes. Inicio operativo sin mensajes promocionales; navegación inferior burdeos, cabecera/lateral claros y logo de la Banda.
+- Refinamiento visual autorizado antes de fase 5: seguir los tokens de `src/styles.scss` y `docs/sistema-visual.md`; no alterar flujos ni arquitectura por cambios de UI.
 - Al acabar cada fase: explicar cambios, pruebas, decisiones y detenerse.
 
 ## Decisiones aprobadas
