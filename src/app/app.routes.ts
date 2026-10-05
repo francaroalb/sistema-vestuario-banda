@@ -15,12 +15,6 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'inicio' },
       {
-        path: 'actividad',
-        title: 'Actividad · Gestión de trajes',
-        loadComponent: () =>
-          import('./features/productivity/activity').then((m) => m.Activity),
-      },
-      {
         path: 'inventario/importar',
         title: 'Importar prendas · Gestión de trajes',
         data: { kind: 'garments' },

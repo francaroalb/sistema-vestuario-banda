@@ -92,7 +92,7 @@ test.describe('Supabase real · productividad', () => {
    commit;`);
     await client?.auth.signOut();
   });
-  test('importación confirmada, duplicados bloqueados, copia y actividad', async ({
+  test('importación confirmada, duplicados bloqueados, copia', async ({
     page,
   }) => {
     await page.goto('/login');
@@ -163,10 +163,5 @@ test.describe('Supabase real · productividad', () => {
     expect(
       (await client.from('loans').select('id').eq('person_id', person.id)).data,
     ).toEqual([]);
-    await page.goto('/actividad');
-    await page.getByLabel('Mostrar actividad de').selectOption('person');
-    await expect(
-      page.getByRole('link', { name: prefix + ' Persona', exact: true }),
-    ).toBeVisible();
   });
 });

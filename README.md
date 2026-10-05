@@ -371,9 +371,7 @@ Ver [validación y decisiones de fase 8](docs/qa-fase8.md).
   distancias entre actuaciones e intervalos de recogida/devolución. Confirma la copia.
   Se usan los uniformes actuales; no se copian actuaciones canceladas ni participaciones,
   asignaciones, cesiones o firmas. Prepara después los participantes de la nueva serie.
-- **Inicio → Agenda y seguimiento → Actividad reciente**: consulta quién hizo cada cambio,
-  cuándo y sobre qué ficha, con filtro de prendas, personas, cesiones, actuaciones, series
-  y uniformes. Permite abrir las fichas relacionadas; la auditoría no se modifica ni borra.
+
 
 Ver [validación y alcance de fase 9](docs/qa-fase9.md). La aplicación sigue ejecutándose
 localmente: Cloudflare, dominio y validación de producción corresponden a la fase 10.

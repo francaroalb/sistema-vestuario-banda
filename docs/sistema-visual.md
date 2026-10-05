@@ -266,5 +266,4 @@ incluyendo desplegables, búsqueda, recarga, paginación, errores y nombres larg
 Importación y copia usan paneles compactos con los tokens existentes. Las vistas previas
 separan revisión y confirmación. La tabla CSV conserva un ancho mínimo legible y desplaza
 solo su contenedor en móvil; el selector de archivo ofrece una altura táctil de 44 px.
-La actividad muestra textos humanos, responsable y fecha, con acceso a las fichas y sin
-exponer JSON técnico.
+La pantalla de Actividad reciente se retiró por petición del usuario.

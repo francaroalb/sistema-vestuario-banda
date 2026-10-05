@@ -320,8 +320,8 @@ Aplicada en Supabase y comprobada con el caso existente reportado, sin nuevos mo
   funciones con search_path cerrado, EXECUTE revocado a PUBLIC/anon. No se abre escritura
   directa sobre las tablas. Importaciones coordinadas con ediciones mediante bloqueo de
   tablas y con otros planes mediante el bloqueo existente. Sin movimientos físicos.
-- Actividad reciente consulta audit_log con su RLS existente, orden estable y páginas de 24.
-  Muestra acciones legibles, actor, fecha y enlace a la ficha, sin renderizar JSON técnico.
+- Actividad reciente retirada de la interfaz por petición del usuario. Se conserva audit_log
+  y su auditoría interna, sin pantalla ni acceso desde Inicio.
 - Inicio diario, búsquedas y agrupaciones de inventario/personas completados en las revisiones
   previas se mantienen. No se incorporan otras modificaciones masivas sin un caso concreto.
 - Versión 0.9.0. La fase 10 de QA general y producción requiere nueva autorización.

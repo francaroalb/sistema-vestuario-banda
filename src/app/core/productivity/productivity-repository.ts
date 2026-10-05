@@ -86,14 +86,4 @@ export class ProductivityRepository {
     if (r.error) throw r.error;
     return r.data as { id: string; count: number };
   }
-  async activity(kind: string, page: number) {
-    let q = this.client.from('audit_log').select('*', { count: 'exact' });
-    if (kind) q = q.eq('entity_type', kind);
-    const r = await q
-      .order('occurred_at', { ascending: false })
-      .order('id')
-      .range((page - 1) * 24, page * 24 - 1);
-    if (r.error) throw r.error;
-    return { rows: r.data, count: r.count ?? 0 };
-  }
 }

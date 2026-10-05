@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 
 export function safeReturnUrl(value: string | null): string {
   return value &&
-    /^\/(inicio|actuaciones|inventario|personas|cesiones|actividad|conflictos)(?:[/?#]|$)/.test(
+    /^\/(inicio|actuaciones|inventario|personas|cesiones|conflictos)(?:[/?#]|$)/.test(
       value,
     ) &&
     !value.includes('\\')

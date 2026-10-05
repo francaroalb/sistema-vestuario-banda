@@ -250,39 +250,4 @@ test.describe('Productividad · interfaz', () => {
       ).toBe(true);
     }
   });
-  test('actividad: actor, acción, enlace y filtro', async ({ page }) => {
-    await mockSupabase(page);
-    let kind: string | null = null;
-    await page.route('**/rest/v1/audit_log?*', (r) => {
-      kind = new URL(r.request().url()).searchParams.get('entity_type');
-      return r.fulfill({
-        json: [
-          {
-            id: 'a',
-            actor_name: 'Fran',
-            action: 'PRENDA_CREADA',
-            entity_type: 'garment',
-            entity_id: userId,
-            occurred_at: '2026-10-05T10:00:00Z',
-            after_data: { code: 'C01-40' },
-          },
-        ],
-        headers: {
-          'content-range': '0-0/1',
-          'access-control-expose-headers': 'content-range',
-        },
-      });
-    });
-    await page.goto('/actividad');
-    await enter(page);
-    await expect(
-      page.getByText('Prenda creada', { exact: true }),
-    ).toBeVisible();
-    await expect(page.getByRole('link', { name: 'C01-40' })).toHaveAttribute(
-      'href',
-      '/inventario/' + userId,
-    );
-    await page.getByLabel('Mostrar actividad de').selectOption('garment');
-    await expect.poll(() => kind).toBe('eq.garment');
-  });
 });

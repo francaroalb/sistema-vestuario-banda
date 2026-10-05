@@ -13,8 +13,8 @@ Implementada el 5 de octubre de 2026, versión 0.9.0. Pendiente de validación d
   locales de Madrid, distancias entre actuaciones e intervalos previstos. Revisión antes de
   confirmar. Usa uniformes actuales y omite actuaciones canceladas. No copia participantes,
   asignaciones, cesiones ni firmas.
-- Actividad reciente desde Inicio, con responsable, fecha, acción, ficha y filtro por entidad.
-  Paginación de 24 registros y permisos ADMIN existentes.
+- Actividad reciente retirada posteriormente por petición del usuario; la auditoría interna
+  se conserva.
 - Se mantienen el inicio operativo, los filtros y las agrupaciones incorporados anteriormente.
   No se añaden otras acciones masivas sin una necesidad concreta.
 
@@ -46,3 +46,11 @@ ni copia; las entregas reales conservan su flujo de firma.
 Las pruebas móviles usan emulación Chromium. No equivalen a validación en dispositivos
 físicos o Safari. La revisión general de QA, PWA y publicación de producción pertenece a
 la fase 10, todavía no iniciada.
+
+## Ajuste posterior solicitado
+
+Retirados el enlace del Inicio, la ruta, el componente y la consulta de Actividad reciente,
+así como sus pruebas de interfaz. Los resultados anteriores corresponden al cierre inicial
+de fase 9. Se conservan los registros y mecanismos internos de auditoría.
+
+Validación del ajuste: 30 pruebas unitarias aprobadas y compilación de producción correcta.
