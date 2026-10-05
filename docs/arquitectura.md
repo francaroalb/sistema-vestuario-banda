@@ -21,7 +21,7 @@ sin dependencia de ejecución sobre la aplicación de Entradas.
 - La operativa requiere conexión. PWA sin escrituras offline ni caché de datos privados.
 - Tabla mínima de administradores y RLS adelantadas a fase 1 para probar autorización real.
 
-## Modelo previsto (no implementado todavía)
+## Modelo global previsto (implementación parcial por fases)
 
 - Tipos de prendas y tallas comparables por sistema/tipo; códigos visibles únicos sin formato rígido.
 - Prenda física única, estado DISPONIBLE/PENDIENTE_LAVANDERIA/DANADA y archivado independiente.
@@ -52,9 +52,32 @@ disponibilidad de todo el intervalo y siguiente talla mayor comparable si es nec
 Nunca inventar talla ni recomendar automáticamente una menor. Prendas actualmente cedidas,
 dañadas, lavandería o en conflicto no serán primeras recomendaciones automáticas.
 
+## Fase 2 implementada
+
+- Nombre visible **Gestión de trajes**, inicio con acciones y recuentos reales, logo de la Banda,
+  navegación burdeos y acentos dorados. Sin mensajes promocionales.
+- Tablas `garment_types`, `garments` y `audit_log`. Tipos iniciales: Chaqueta, Camisa y Pantalón.
+- Código único global (también en archivadas), normalizado a mayúsculas y sin espacios exteriores.
+- Talla como texto libre normalizado, sin inferir orden ni equivalencias. Al abordar el recomendador
+  se definirá un catálogo comparable por tipo/sistema sin perder los valores originales.
+- Solo tres estados físicos; archivo independiente. No existe `CEDIDA` como estado físico.
+- Alta/edición y archivo/reactivación por RPC con bloqueo de fila y versión optimista. Un conflicto
+  devuelve `PT409`/HTTP 409; no utilizar `40001`, reservado a errores de serialización transitorios.
+  La migración correctiva es aditiva y mantiene el historial de migraciones aplicado.
+- Un UUID de alta se conserva en los reintentos del formulario para evitar duplicados tras una
+  respuesta perdida. Las operaciones sin cambios no generan auditoría adicional.
+- Auditoría transaccional con actor y fecha del servidor y fotografías JSON de antes/después.
+  Consulta restringida a ADMIN; escritura/borrado desde navegador prohibidos. Su vista de gestión
+  corresponde a fase 9. El historial de movimientos se incorporará con las cesiones en fase 4.
+- Listado de 24 prendas por página, código por coincidencia parcial literal y filtros combinables
+  por tipo, talla exacta, estado y archivo. Los filtros permanecen en la URL al abrir/volver de una ficha.
+- Recuentos agregados en servidor. No hay datos de muestra permanentes.
+- Desconexión: sin escrituras y conservando el borrador actual en memoria. Salir o recargar un
+  formulario modificado requiere confirmación; no se promete persistencia local del borrador.
+
 ## Fases pendientes
 
-2 Inventario · 3 Personas · 4 Cesiones/movimientos/firma · 5 Actuaciones/uniformes ·
+3 Personas · 4 Cesiones/movimientos/firma · 5 Actuaciones/uniformes ·
 6 Series · 7 Recomendador · 8 Conflictos · 9 Productividad · 10 QA y producción.
 
-Se requiere aprobación expresa entre fases. En fase 1 solo existe el acceso y el shell.
+Se requiere aprobación expresa entre fases. No comenzar fase 3 sin autorización.

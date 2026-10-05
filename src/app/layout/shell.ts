@@ -15,6 +15,7 @@ import { Connectivity } from '../core/connectivity';
 import { Icon } from '../shared/ui/icon';
 import { InstallApp } from '../shared/ui/install-app';
 import { navigation } from './navigation';
+import { Feedback } from '../core/feedback';
 @Component({
   selector: 'app-shell',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon, InstallApp],
@@ -26,6 +27,7 @@ export class Shell {
   readonly auth = inject(AuthService);
   readonly connection = inject(Connectivity);
   readonly navigation = navigation;
+  readonly feedback = inject(Feedback);
   private readonly router = inject(Router);
   constructor() {
     effect(() => {
@@ -34,6 +36,7 @@ export class Shell {
     });
   }
   async signOut(): Promise<void> {
+    this.feedback.dismiss();
     await this.auth.signOut();
     await this.router.navigate(['/login'], { replaceUrl: true });
   }

@@ -1,6 +1,6 @@
 {
   "name": "sistema-vestuario-banda",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -12,7 +12,7 @@
     "build:production": "node scripts/configure.mjs --required && ng build",
     "preview": "node scripts/serve-preview.mjs",
     "test": "ng test --watch=false",
-    "test:db": "node --test tests/database.test.mjs",
+    "test:db": "node --test tests/*database.test.mjs",
     "test:e2e": "playwright test",
     "qa": "npm test && npm run test:db && npm run build && npm run test:e2e"
   },

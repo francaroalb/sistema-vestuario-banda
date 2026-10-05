@@ -1,10 +1,12 @@
-# Vestuario BML
+# Gestión de trajes
 
 Aplicación privada de la Banda Municipal Ntra. Sra. del Valle de La Palma del Condado.
 
-**Fase 1:** Angular 22.2.1, identidad visual BML, login real con Supabase, sesión persistente,
-autorización ADMIN, logout, navegación responsive y base PWA. Las secciones de negocio todavía
-no están implementadas. No se ha desplegado en Cloudflare ni se ha configurado el dominio.
+**Fase 2 completada:** acceso privado, inicio operativo e inventario conectado a Supabase.
+Permite crear, buscar, filtrar, consultar, editar, archivar y reactivar prendas individuales.
+Incluye auditoría de cambios, protección contra códigos duplicados y ediciones simultáneas.
+Personas, Cesiones y Actuaciones siguen pendientes de sus fases. No se ha desplegado en
+Cloudflare ni se ha configurado el dominio.
 
 ## Arrancar en este equipo
 
@@ -23,18 +25,27 @@ en `.local/admin.json`, con permisos restringidos.
 `npm ci` solo es necesario al preparar un checkout o cambiar el lockfile.
 Si no utilizas nvm, instala una versión de Node compatible con `package.json`.
 
-## Probar la fase 1
+## Probar la fase 2
 
-1. Abrir `/inventario` sin sesión: debe mostrar el login.
-2. Enviar el formulario vacío: aparecen errores junto a los campos.
-3. Probar una contraseña incorrecta: aparece un mensaje comprensible.
-4. Entrar con la cuenta autorizada: se muestra el inicio y el nombre del administrador.
-5. Recargar la página: la sesión se conserva y se verifica el perfil activo.
-6. Recorrer las cinco secciones: las cuatro de negocio indican que están en preparación.
-7. Pulsar **Salir**, recargar o volver atrás: no debe mostrarse contenido privado.
-8. En herramientas de desarrollo, alternar móvil, tablet y escritorio: navegación inferior en
-   móvil/tablet y lateral a partir de 1024 px. No debe existir scroll horizontal.
-9. Desconectar la red una vez abierto el login: aviso visible y acceso deshabilitado.
+1. Iniciar sesión con el correo autorizado. El inicio muestra **Nueva prenda**, **Buscar prenda**
+   y los recuentos reales por estado físico.
+2. Crear una Chaqueta con un código propio único, talla y observaciones. Código y talla admiten
+   texto libre; se guardan sin espacios exteriores y en mayúsculas. No hay formato rígido de etiqueta.
+3. Abrir su ficha y recargar: la información debe persistir.
+4. Editar observaciones o cambiar entre Disponible, Pendiente de lavandería y Dañada.
+5. Buscar por parte del código, desplegar **Filtros** y combinar tipo, talla exacta y estado.
+   Al volver desde una ficha se conserva la búsqueda. Hay páginas de 24 prendas.
+6. Archivar desde la ficha y confirmar. Desaparece de Activas; puede consultarse en Archivadas
+   y reactivarse conservando su identidad e información. Su código sigue reservado.
+7. Intentar crear otra prenda con ese código: debe explicar el duplicado y conservar el formulario.
+8. Abrir una misma ficha en dos pestañas, editar y guardar en una, después guardar en la otra:
+   debe avisar del conflicto sin sobrescribir ni perder el borrador. **Recargar ficha** pide confirmación.
+9. Desconectar la red durante una edición: se conserva lo escrito y se deshabilita Guardar.
+10. Revisar móvil, tablet y escritorio: navegación inferior burdeos en móvil y lateral en escritorio.
+    Pulsar Salir y comprobar que las rutas privadas vuelven al login.
+
+Los cambios realizados manualmente son reales. Para retirar una prenda de prueba, archívala.
+Las pruebas automatizadas solo eliminan sus propios registros sintéticos identificados por UUID.
 
 ## Probar la PWA
 
@@ -82,9 +93,10 @@ El alta pública y el acceso anónimo de Auth están desactivados. Solo un usuar
 con un perfil propio activo y rol ADMIN entra en la aplicación. RLS impide acceso anónimo y
 los permisos SQL prohíben que el navegador cree, modifique o elimine administradores.
 
-La migración `supabase/migrations/20261005000100_admin_access.sql` ya está aplicada en este
-proyecto y registrada en `supabase_migrations.schema_migrations`. Incluye únicamente perfiles,
-RLS y una función privada de autorización para las siguientes fases.
+Las migraciones de `supabase/migrations/` están aplicadas y registradas en
+`supabase_migrations.schema_migrations`: acceso ADMIN, inventario y respuesta HTTP 409 a
+conflictos de edición. Las escrituras de inventario pasan por RPC transaccionales que verifican
+el administrador y la versión. El navegador no puede borrar prendas ni modificar la auditoría.
 
 Para gestionar otro administrador desde Supabase:
 
@@ -129,15 +141,18 @@ npm run test:e2e
 REAL_AUTH=1 npm run test:e2e -- --grep 'Supabase real'
 ```
 
-El archivo local necesita `email`, `password` y `display_name`. No se guarda ningún estado de
+El archivo local necesita `email`, `password`, `display_name` e `id`. No se guarda ningún estado de
 sesión, traza ni contraseña en el repositorio. Las capturas se guardan en `.local/screenshots/`.
+Las pruebas reales de inventario crean prendas temporales y eliminan exclusivamente sus UUID
+al finalizar. Para esa limpieza requieren la sesión Supabase CLI de este equipo en el llavero
+macOS; no extraen ni imprimen el token. Ejecutarlas solo en el proyecto independiente de Vestuario.
 
 ## Estructura y mantenimiento
 
 - `src/app/core`: configuración, cliente tipado, autenticación, guards y conectividad.
 - `src/app/shared/ui`: iconos y ayuda de instalación.
 - `src/app/layout`: shell y navegación responsive.
-- `src/app/features`: login, inicio vacío y espacios reservados.
+- `src/app/features`: login, inicio con recuentos, inventario y espacios reservados.
 - `src/styles.scss`: tokens heredados de Entradas, botones, campos, tarjetas y accesibilidad.
 - `supabase/migrations`: cambios de base de datos versionados.
 
@@ -148,4 +163,5 @@ No se publica nada automáticamente desde este proyecto.
 Los logotipos y las tipografías conservan la identidad de Entradas. Los iconos PWA de Vestuario
 se generan desde el SVG propio con `node scripts/generate-icons.mjs` (requiere Chrome).
 
-Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 2.**
+Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 3.**
+Ver [validación de fase 2](docs/qa-fase2.md).

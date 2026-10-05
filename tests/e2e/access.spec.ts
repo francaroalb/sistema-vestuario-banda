@@ -77,6 +77,25 @@ async function mockSupabase(
                 updated_at: new Date().toISOString(),
               },
       });
+    if (url.includes('/garment_types')) return route.fulfill({ json: [] });
+    if (url.includes('/garments'))
+      return route.fulfill({
+        headers: {
+          'content-range': '*/0',
+          'access-control-expose-headers': 'content-range',
+        },
+        json: [],
+      });
+    if (url.includes('/inventory_summary'))
+      return route.fulfill({
+        json: {
+          active_count: 0,
+          available_count: 0,
+          laundry_count: 0,
+          damaged_count: 0,
+          archived_count: 0,
+        },
+      });
     return route.fulfill({ status: 404 });
   });
 }
@@ -105,7 +124,7 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
     ]) {
       await page.goto(path);
       await expect(
-        page.getByRole('heading', { name: 'Gestión de vestuario' }),
+        page.getByRole('heading', { name: 'Gestión de trajes' }),
       ).toBeVisible();
       expect(new URL(page.url()).pathname).toBe('/login');
       expect(
@@ -177,12 +196,119 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
     ).toBe(true);
     await page.getByRole('button', { name: 'Salir' }).click();
     await expect(
-      page.getByRole('heading', { name: 'Gestión de vestuario' }),
+      page.getByRole('heading', { name: 'Gestión de trajes' }),
     ).toBeVisible();
     await page.goBack();
     await expect(
-      page.getByRole('heading', { name: 'Gestión de vestuario' }),
+      page.getByRole('heading', { name: 'Gestión de trajes' }),
     ).toBeVisible();
+  });
+  test('inventario paginado, recuperación de errores y búsqueda literal', async ({
+    page,
+  }) => {
+    await mockSupabase(page);
+    let fail = true;
+    const requests: string[] = [];
+    await page.route('**/rest/v1/garments?*', async (route) => {
+      const url = new URL(route.request().url());
+      requests.push(url.searchParams.get('code') ?? '');
+      if (fail)
+        return route.fulfill({
+          status: 400,
+          json: { code: 'TEST_FAILURE', message: 'Error simulado' },
+        });
+      const start = Number(url.searchParams.get('offset') ?? '0');
+      const total = url.searchParams.has('code') ? 1 : 25;
+      const rows = Array.from(
+        { length: Math.min(24, Math.max(0, total - start)) },
+        (_, index) => ({
+          id: `11111111-1111-4111-8111-${String(start + index + 1).padStart(12, '0')}`,
+          code: 'C-' + String(start + index + 1).padStart(2, '0'),
+          size: '48',
+          physical_state: 'DISPONIBLE',
+          archived_at: null,
+          garment_types: { name: 'Chaqueta' },
+        }),
+      );
+      return route.fulfill({
+        json: rows,
+        headers: {
+          'content-range': `${start}-${start + rows.length - 1}/${total}`,
+          'access-control-expose-headers': 'content-range',
+        },
+      });
+    });
+    await page.goto('/inventario');
+    await enter(page);
+    await expect(page.getByRole('alert')).toContainText(
+      'Comprueba tu conexión',
+    );
+    fail = false;
+    await page.getByRole('button', { name: 'Reintentar', exact: true }).click();
+    await expect(page.getByText('25 prendas', { exact: true })).toBeVisible();
+    await expect(page.locator('.garment-card')).toHaveCount(24);
+    await expect(
+      page.getByRole('button', { name: 'Anterior', exact: true }),
+    ).toBeDisabled();
+    await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
+    await expect(page.getByText('Página 2 de 2')).toBeVisible();
+    await expect(page.locator('.garment-card')).toHaveCount(1);
+    await expect(
+      page.getByRole('link', { name: 'Ver prenda C-25', exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Siguiente', exact: true }),
+    ).toBeDisabled();
+    await page.reload();
+    await expect(page.getByText('Página 2 de 2')).toBeVisible();
+    await page.getByRole('button', { name: 'Anterior', exact: true }).click();
+    await expect(page.locator('.garment-card')).toHaveCount(24);
+    await page.getByLabel('Buscar por código', { exact: true }).fill('C%_');
+    await expect(page.getByText('1 prenda', { exact: true })).toBeVisible();
+    expect(requests.at(-1)).toBe('ilike.%C\\%\\_%');
+    expect(new URL(page.url()).searchParams.get('pagina')).toBeNull();
+    await page.goto('/inventario/no-existe');
+    await expect(page.getByRole('alert')).toContainText(
+      'No encontramos esta prenda',
+    );
+    await page.getByRole('link', { name: 'Volver al inventario' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Inventario', exact: true }),
+    ).toBeVisible();
+  });
+  test('la ficha admite códigos y tallas largos sin desbordar en móvil', async ({
+    page,
+  }) => {
+    await mockSupabase(page);
+    const code = 'W'.repeat(60);
+    await page.route('**/rest/v1/garments?*', (route) =>
+      route.fulfill({
+        json: {
+          id: userId,
+          code,
+          size: 'W'.repeat(20),
+          physical_state: 'PENDIENTE_LAVANDERIA',
+          archived_at: null,
+          garment_types: { name: 'Chaqueta' },
+          notes: 'Nota larga '.repeat(100),
+          created_at: '2026-10-05T00:00:00Z',
+          updated_at: '2026-10-05T00:00:00Z',
+        },
+      }),
+    );
+    await page.goto('/inventario/' + userId);
+    await enter(page);
+    await expect(
+      page.getByRole('heading', { name: code, exact: true }),
+    ).toBeVisible();
+    for (const width of [320, 390, 768, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
   });
   test('usuario autenticado sin perfil activo no accede', async ({ page }) => {
     await mockSupabase(page, 'inactive');
@@ -192,7 +318,7 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
       'no tiene acceso activo',
     );
     await expect(
-      page.getByRole('heading', { name: 'Gestión de vestuario' }),
+      page.getByRole('heading', { name: 'Gestión de trajes' }),
     ).toBeVisible();
   });
   test('el estado sin conexión impide enviar el formulario', async ({
@@ -202,7 +328,7 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
     await mockSupabase(page);
     await page.goto('/login');
     await expect(
-      page.getByRole('heading', { name: 'Gestión de vestuario' }),
+      page.getByRole('heading', { name: 'Gestión de trajes' }),
     ).toBeVisible();
     await context.setOffline(true);
     await expect(
@@ -232,7 +358,7 @@ test.describe('Supabase real', () => {
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto('/');
     await expect(
-      page.getByRole('heading', { name: 'Gestión de vestuario' }),
+      page.getByRole('heading', { name: 'Gestión de trajes' }),
     ).toBeVisible();
     await page.screenshot({
       path: `.local/screenshots/login-${testInfo.project.name}.png`,
@@ -287,11 +413,11 @@ test.describe('Supabase real', () => {
       expect((await page.request.get(icon.src)).ok()).toBe(true);
     await page.getByRole('button', { name: 'Salir' }).click();
     await expect(
-      page.getByRole('heading', { name: 'Gestión de vestuario' }),
+      page.getByRole('heading', { name: 'Gestión de trajes' }),
     ).toBeVisible();
     await page.reload();
     await expect(
-      page.getByRole('heading', { name: 'Gestión de vestuario' }),
+      page.getByRole('heading', { name: 'Gestión de trajes' }),
     ).toBeVisible();
     expect(errors).toEqual([]);
   });

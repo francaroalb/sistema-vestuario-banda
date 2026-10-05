@@ -1,163 +1,273 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { InventoryRepository } from '../../core/inventory/inventory-repository';
+import { InventorySummary } from '../../core/config/database.types';
+import { inventoryError } from '../../core/inventory/inventory';
 import { Icon } from '../../shared/ui/icon';
-import { navigation } from '../../layout/navigation';
 @Component({
   selector: 'app-home',
-  imports: [Icon, RouterLink],
+  imports: [RouterLink, Icon],
   template: `
-    <p class="eyebrow">Tu espacio de trabajo</p>
-    <h1>Hola, {{ auth.profile()?.display_name }}.</h1>
-    <p class="page-intro">Bienvenido a la gestión de vestuario de la Banda.</p>
-    <section class="welcome-card card" aria-labelledby="welcome-title">
-      <div class="welcome-icon"><app-icon name="hanger" /></div>
-      <div>
-        <span class="eyebrow">Vestuario BML</span>
-        <h2 id="welcome-title">
-          Un espacio para cuidar<br />lo que nos identifica.
-        </h2>
-        <p>
-          El acceso ya está preparado. Aquí encontrarás las prendas, las
-          personas y el vestuario de cada actuación a medida que se habiliten
-          las secciones.
-        </p>
+    <div class="home-heading">
+      <h1>Hola, {{ auth.profile()?.display_name }}.</h1>
+      <p>¿Qué necesitas hacer?</p>
+    </div>
+    <div class="quick-actions">
+      <a class="quick-action add" routerLink="/inventario/nueva"
+        ><app-icon name="plus" /><span
+          ><strong>Nueva prenda</strong
+          ><small>Añadir al inventario</small></span
+        ><app-icon name="arrow"
+      /></a>
+      <a class="quick-action search" routerLink="/inventario"
+        ><app-icon name="search" /><span
+          ><strong>Buscar prenda</strong
+          ><small>Consultar o actualizar su ficha</small></span
+        ><app-icon name="arrow"
+      /></a>
+    </div>
+    <div class="inventory-heading">
+      <h2>El inventario, de un vistazo</h2>
+      <a routerLink="/inventario">Ver todo<app-icon name="arrow" /></a>
+    </div>
+    @if (loading()) {
+      <p class="loading-state" role="status">Consultando inventario…</p>
+    } @else if (error()) {
+      <div class="notice notice-error" role="alert">
+        {{ error() }}
+        <button class="text-button" type="button" (click)="load()">
+          Reintentar
+        </button>
       </div>
-      <span class="welcome-monogram" aria-hidden="true">BML</span>
-    </section>
-    <div class="section-heading">
-      <h2>Las secciones de tu espacio</h2>
-      <span>En preparación</span>
-    </div>
-    <div class="section-grid">
-      @for (item of sections; track item.path) {
-        <a class="section-card card" [routerLink]="item.path"
-          ><app-icon [name]="item.icon" />
-          <div>
-            <h3>{{ item.label }}</h3>
-            <p>{{ item.description }}</p>
-          </div>
-          <app-icon name="arrow"
-        /></a>
+    } @else if (summary(); as stats) {
+      <div class="stats">
+        <a class="stat total" routerLink="/inventario"
+          ><app-icon name="hanger" /><strong>{{ stats.active_count }}</strong
+          ><span>Prendas activas</span></a
+        >
+        <a
+          class="stat available"
+          routerLink="/inventario"
+          [queryParams]="{ estado: 'DISPONIBLE' }"
+          ><app-icon name="check" /><strong>{{ stats.available_count }}</strong
+          ><span>Disponibles</span></a
+        >
+        <a
+          class="stat laundry"
+          routerLink="/inventario"
+          [queryParams]="{ estado: 'PENDIENTE_LAVANDERIA' }"
+          ><app-icon name="wash" /><strong>{{ stats.laundry_count }}</strong
+          ><span>Lavandería</span></a
+        >
+        <a
+          class="stat damaged"
+          routerLink="/inventario"
+          [queryParams]="{ estado: 'DANADA' }"
+          ><app-icon name="warning" /><strong>{{ stats.damaged_count }}</strong
+          ><span>Dañadas</span></a
+        >
+      </div>
+      @if (stats.active_count === 0 && stats.archived_count === 0) {
+        <p class="inventory-hint">
+          Todavía no hay prendas. Pulsa <strong>Nueva prenda</strong> para
+          añadir la primera.
+        </p>
       }
-    </div>
+      <a
+        class="archive-link"
+        routerLink="/inventario"
+        [queryParams]="{ archivo: 'archived' }"
+        ><app-icon name="archive" />Prendas archivadas<span>{{
+          stats.archived_count
+        }}</span
+        ><app-icon name="arrow"
+      /></a>
+    }
   `,
   styles: `
-    .welcome-card {
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      gap: 1.5rem;
-      padding: 1.75rem;
-      margin: 2rem 0;
-      background: linear-gradient(120deg, #fffdf8, #faf1df);
-      border-color: var(--color-accent-border);
+    .home-heading {
+      margin-bottom: 1.5rem;
     }
-    .welcome-icon {
-      display: none;
+    h1 {
+      font: 700 clamp(1.4rem, 5vw, 1.8rem)/1.3 var(--font-body);
+      letter-spacing: -0.03em;
+      margin: 0 0 0.4rem;
     }
-    .welcome-card h2 {
-      font: 500 2.25rem/1.08 var(--font-display);
-      letter-spacing: -0.025em;
-      margin: 0.75rem 0 1rem;
-    }
-    .welcome-card p {
+    .home-heading p {
       font-size: var(--text-sm);
-      line-height: 1.8;
-      max-width: 32rem;
       color: var(--color-muted);
       margin: 0;
     }
-    .welcome-monogram {
-      display: none;
+    .quick-actions {
+      display: grid;
+      gap: 0.8rem;
     }
-    .section-heading {
+    .quick-action {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.5rem;
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      min-height: 6rem;
+      box-shadow: 0 0.5rem 1rem rgb(68 28 20 / 8%);
+      span {
+        flex: 1;
+      }
+      strong {
+        display: block;
+        font-size: 1.15rem;
+      }
+      small {
+        display: block;
+        font-size: var(--text-xs);
+        margin-top: 0.4rem;
+        line-height: 1.5;
+      }
+    }
+    .quick-action > app-icon:first-child {
+      width: 1.75rem;
+      height: 1.75rem;
+    }
+    .add {
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+    }
+    .add:hover {
+      background: var(--color-primary-dark);
+    }
+    .search {
+      background: var(--color-accent-light);
+      color: var(--color-primary-dark);
+      border: 1px solid var(--color-accent);
+    }
+    .search:hover {
+      background: #f0c778;
+    }
+    .inventory-heading {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1rem;
-      margin: 2.25rem 0 1rem;
-    }
-    .section-heading h2 {
-      font-size: var(--text-sm);
-      margin: 0;
-    }
-    .section-heading span {
-      font-size: 0.65rem;
-      color: var(--color-muted);
-    }
-    .section-grid {
-      display: grid;
-      gap: 0.85rem;
-    }
-    .section-card {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1.25rem;
-      text-decoration: none;
-      color: var(--color-text);
-      transition:
-        border-color 0.15s,
-        background 0.15s;
-    }
-    .section-card:hover {
-      border-color: var(--color-accent);
-      background: #fff;
-    }
-    .section-card > app-icon:first-child {
-      color: var(--color-primary);
-    }
-    .section-card > app-icon:last-child {
-      margin-left: auto;
-      width: 1rem;
-      color: var(--color-muted);
-    }
-    h3 {
-      font-size: var(--text-sm);
-      margin: 0 0 0.4rem;
-    }
-    .section-card p {
-      font-size: var(--text-xs);
-      color: var(--color-muted);
-      margin: 0;
-      line-height: 1.6;
-    }
-    @media (min-width: 44rem) {
-      .section-grid {
-        grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin: 2rem 0 1rem;
+      h2 {
+        font-size: var(--text-sm);
+        margin: 0;
       }
-      .welcome-card {
-        padding: 2.5rem;
-        gap: 1.75rem;
-      }
-      .welcome-icon {
-        display: grid;
-        place-items: center;
-        width: 4rem;
-        height: 4rem;
-        flex-shrink: 0;
-        border: 1px solid var(--color-accent-border);
-        border-radius: 50%;
+      a {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
         color: var(--color-primary);
+        font-weight: 700;
+        font-size: var(--text-xs);
+        min-height: 2.75rem;
+        text-decoration: none;
         app-icon {
-          height: 2rem;
-          width: 2rem;
+          width: 1rem;
         }
       }
-      .welcome-card h2 {
-        font-size: 2.75rem;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    .stat {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: start;
+      gap: 0.5rem;
+      padding: 1.15rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border-strong);
+      text-decoration: none;
+      min-height: 8rem;
+      app-icon {
+        grid-column: 2;
+        grid-row: 1;
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+      strong {
+        grid-row: 1;
+        font-size: 2.2rem;
+        line-height: 1.1;
+      }
+      span {
+        grid-column: 1/-1;
+        font-size: var(--text-xs);
+        font-weight: 600;
+        align-self: end;
       }
     }
-    @media (min-width: 80rem) {
-      .welcome-monogram {
-        display: block;
-        position: absolute;
-        right: 2.5rem;
-        bottom: 0.3rem;
-        font: 500 8rem var(--font-display);
-        color: rgb(196 129 19 / 10%);
-        pointer-events: none;
+    .total {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      border-color: #d9b3ac;
+    }
+    .available {
+      background: var(--color-success-soft);
+      color: var(--color-success);
+      border-color: var(--color-success-border);
+    }
+    .laundry {
+      background: var(--color-accent-soft);
+      color: var(--color-accent-dark);
+      border-color: var(--color-accent-border);
+    }
+    .damaged {
+      background: #fae7e5;
+      color: #941e24;
+      border-color: #e8b9b4;
+    }
+    .stat:hover {
+      box-shadow: 0 0.3rem 1rem rgb(68 28 20 / 10%);
+    }
+    .inventory-hint {
+      font-size: var(--text-sm);
+      line-height: 1.8;
+      color: var(--color-muted);
+      margin: 1.25rem 0;
+    }
+    .archive-link {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      min-height: 3.5rem;
+      border-bottom: 1px solid var(--color-border-strong);
+      color: var(--color-muted);
+      font-size: var(--text-xs);
+      text-decoration: none;
+      margin-top: 1rem;
+      span {
+        margin-left: auto;
+        background: var(--color-border);
+        border-radius: var(--radius-pill);
+        padding: 0.2rem 0.6rem;
+        color: var(--color-text);
+        font-weight: 700;
+      }
+      app-icon {
+        width: 1.1rem;
+        height: 1.1rem;
+      }
+    }
+    @media (min-width: 44rem) {
+      .quick-actions {
+        grid-template-columns: 1fr 1fr;
+      }
+      .stats {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .quick-action {
+        padding: 1.75rem;
       }
     }
   `,
@@ -165,5 +275,22 @@ import { navigation } from '../../layout/navigation';
 })
 export class Home {
   readonly auth = inject(AuthService);
-  readonly sections = navigation.slice(1);
+  private readonly repository = inject(InventoryRepository);
+  readonly summary = signal<InventorySummary | null>(null);
+  readonly loading = signal(true);
+  readonly error = signal('');
+  constructor() {
+    void this.load();
+  }
+  async load(): Promise<void> {
+    this.loading.set(true);
+    this.error.set('');
+    try {
+      this.summary.set(await this.repository.summary());
+    } catch (error) {
+      this.error.set(inventoryError(error).message);
+    } finally {
+      this.loading.set(false);
+    }
+  }
 }

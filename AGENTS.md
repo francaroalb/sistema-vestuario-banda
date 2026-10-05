@@ -1,12 +1,13 @@
-# Vestuario BML
+# Gestión de trajes
 
 Aplicación independiente de `../sistema-entradas-banda`. Usar Entradas solo como referencia; no modificarla.
 
 ## Trabajo por fases
 
-- La fase 0 está aprobada. La fase 1 es el alcance actual.
-- NO comenzar fase 2 (inventario) ni funcionalidades posteriores sin autorización expresa del usuario.
-- Las rutas Actuaciones, Inventario, Personas y Cesiones son únicamente espacios reservados en el shell de fase 1.
+- Fases 0 y 1 aprobadas. Fase 2 autorizada: inventario y ajustes visuales solicitados.
+- NO comenzar fase 3 ni funcionalidades posteriores sin autorización expresa del usuario.
+- Actuaciones, Personas y Cesiones siguen como espacios reservados. Inventario es operativo en fase 2.
+- Nombre visible: Gestión de trajes. Inicio operativo sin mensajes promocionales; navegación burdeos y logo de la Banda.
 - Al acabar cada fase: explicar cambios, pruebas, decisiones y detenerse.
 
 ## Decisiones aprobadas

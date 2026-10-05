@@ -8,7 +8,7 @@ import { Icon } from '../../shared/ui/icon';
   selector: 'app-section-placeholder',
   imports: [Icon, RouterLink],
   template: `
-    <p class="eyebrow">Gestión de vestuario</p>
+    <p class="eyebrow">Gestión de trajes</p>
     <h1>{{ section()?.label }}</h1>
     <p class="page-intro">{{ section()?.description }}</p>
     <section class="card empty-state">

@@ -1,0 +1,144 @@
+<a class="back-link" [routerLink]="backLink"
+  ><app-icon name="back" />{{ editing ? 'Volver a la prenda' : 'Volver al
+  inventario' }}</a
+>
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">Inventario</p>
+    <h1>{{ editing ? 'Editar prenda' : 'Nueva prenda' }}</h1>
+    <p class="page-intro">Una ficha para cada prenda física.</p>
+  </div>
+</div>
+@if (loading()) {
+<p class="loading-state" role="status">Cargando ficha…</p>
+} @else if (loadError()) {
+<div class="notice notice-error" role="alert">
+  {{ loadError() }}
+  <button class="text-button" type="button" (click)="load()">Reintentar</button>
+</div>
+} @else if (garment()?.archived_at) {
+<p class="notice">
+  Esta prenda está archivada. Reactívala desde su ficha antes de editarla.
+</p>
+} @else {
+<form
+  class="garment-form card"
+  [formGroup]="form"
+  (ngSubmit)="save()"
+  novalidate
+  [attr.aria-busy]="saving()"
+>
+  <fieldset [disabled]="saving()">
+    <legend class="sr-only">Datos de la prenda</legend>
+    <div class="form-grid">
+      <div class="field span-full">
+        <label for="garment-code"
+          >Código de la prenda <span aria-hidden="true">*</span></label
+        ><input
+          id="garment-code"
+          formControlName="code"
+          maxlength="60"
+          autocomplete="off"
+          placeholder="Por ejemplo, C-05-48"
+          aria-required="true"
+          [attr.aria-invalid]="form.controls.code.touched && form.controls.code.invalid"
+          aria-describedby="code-help code-error"
+        /><small id="code-help"
+          >El código de su etiqueta. No puede repetirse.</small
+        >@if (form.controls.code.touched && form.controls.code.invalid) {
+        <span class="field-error" id="code-error"
+          >Introduce el código de la prenda (máximo 60 caracteres).</span
+        >
+        }
+      </div>
+      <div class="field">
+        <label for="garment-type"
+          >Tipo de prenda <span aria-hidden="true">*</span></label
+        ><select
+          id="garment-type"
+          formControlName="garment_type_id"
+          aria-required="true"
+          [attr.aria-invalid]="form.controls.garment_type_id.touched && form.controls.garment_type_id.invalid"
+          aria-describedby="type-error"
+        >
+          <option value="" disabled>Selecciona un tipo</option>
+          @for (type of types(); track type.id) {
+          <option [value]="type.id">{{ type.name }}</option>
+          }</select
+        >@if (form.controls.garment_type_id.touched &&
+        form.controls.garment_type_id.invalid) {
+        <span class="field-error" id="type-error"
+          >Selecciona un tipo de prenda.</span
+        >
+        }
+      </div>
+      <div class="field">
+        <label for="garment-size">Talla <span aria-hidden="true">*</span></label
+        ><input
+          id="garment-size"
+          formControlName="size"
+          maxlength="20"
+          placeholder="48, M, XL…"
+          autocomplete="off"
+          aria-required="true"
+          [attr.aria-invalid]="form.controls.size.touched && form.controls.size.invalid"
+          aria-describedby="size-error"
+        />@if (form.controls.size.touched && form.controls.size.invalid) {
+        <span class="field-error" id="size-error"
+          >Introduce una talla (máximo 20 caracteres).</span
+        >
+        }
+      </div>
+      <div class="field span-full">
+        <label for="garment-state">Estado físico</label
+        ><select id="garment-state" formControlName="physical_state">
+          @for (state of states; track state.value) {
+          <option [value]="state.value">{{ state.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="field span-full">
+        <label for="garment-notes"
+          >Observaciones <span class="optional">opcional</span></label
+        ><textarea
+          id="garment-notes"
+          formControlName="notes"
+          rows="3"
+          maxlength="2000"
+          placeholder="Por ejemplo, le falta un botón."
+          aria-describedby="notes-help"
+        ></textarea
+        ><small id="notes-help"
+          >{{ form.controls.notes.value.length }}/2000 caracteres</small
+        >
+      </div>
+    </div>
+  </fieldset>
+  @if (!connection.online()) {
+  <p class="notice" role="status">
+    Sin conexión. Tus cambios siguen en el formulario; podrás guardarlos cuando
+    vuelva internet.
+  </p>
+  } @if (error()) {
+  <div class="notice notice-error" role="alert">
+    {{ error() }}@if (conflict()) {
+    <button type="button" class="text-button" (click)="reload()">
+      Recargar ficha
+    </button>
+    }
+  </div>
+  }
+  <div class="form-actions">
+    <button
+      class="btn btn-primary"
+      type="submit"
+      [disabled]="saving() || !connection.online()"
+    >
+      @if (saving()) {
+      <span class="spinner" aria-hidden="true"></span>Guardando… } @else {
+      <app-icon name="check" />{{ editing ? 'Guardar cambios' : 'Añadir prenda'
+      }} }</button
+    ><a class="btn btn-quiet" [routerLink]="backLink">Cancelar</a>
+  </div>
+</form>
+}

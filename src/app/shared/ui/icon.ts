@@ -1,5 +1,14 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 const paths = {
+  plus: 'M12 5v14M5 12h14',
+  search: 'M21 21l-6-6M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z',
+  back: 'M19 12H5m5-5-5 5 5 5',
+  edit: 'm16 3 5 5L8 21H3v-5L16 3ZM13 6l5 5',
+  archive: 'M3 3h18v5H3ZM5 8v13h14V8M10 12h4',
+  warning: 'M12 3 2 21h20L12 3ZM12 9v5M12 17v.1',
+  wash: 'M3 4h18v17H3ZM3 8h18M6 6h.1M9 6h.1M16 14a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM8 14c2-2 6 2 8 0',
+  close: 'm6 6 12 12M6 18 18 6',
+  filter: 'M4 7h16M7 12h10M10 17h4',
   home: 'M3 10 12 3l9 7M5 9v12h5v-7h4v7h5V9',
   calendar:
     'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2ZM7 14h2M15 14h2M7 17h2',
