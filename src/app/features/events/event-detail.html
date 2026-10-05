@@ -1,0 +1,357 @@
+<a class="back-link" routerLink="/actuaciones">Volver a Actuaciones</a>
+@if (error()) {
+  <p class="notice notice-error" role="alert">
+    {{ error() }}
+    <button class="text-button" [disabled]="saving()" (click)="load()">
+      Recargar datos
+    </button>
+  </p>
+}
+@if (loading()) {
+  <p class="loading-state" role="status">Cargando preparación…</p>
+} @else if (event(); as e) {
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Preparación de actuación</p>
+      <h1>{{ e.title }}</h1>
+    </div>
+    @if (!e.cancelled) {
+      <a class="btn btn-secondary" [routerLink]="['/actuaciones', id, 'editar']"
+        >Editar actuación</a
+      >
+    }
+  </div>
+  <div class="event-stack">
+    <section class="card event-card">
+      <h2>{{ e.uniform_name }}</h2>
+      <p>
+        <strong>Actuación:</strong> {{ time(e.starts_at) }} —
+        {{ time(e.ends_at) }}
+      </p>
+      <p>
+        <strong>Prendas reservadas:</strong> {{ time(e.planned_from) }} —
+        {{ time(e.planned_until) }}
+      </p>
+      <p class="event-help">
+        Todas las horas son de Madrid. Asignar una prenda no registra su
+        entrega.
+      </p>
+      @if (e.notes) {
+        <p class="preserve-text">{{ e.notes }}</p>
+      }
+      @if (e.cancelled) {
+        <p class="notice">
+          Actuación cancelada. Las reservas están liberadas; las cesiones reales
+          conservan sus devoluciones pendientes.
+        </p>
+      }
+    </section>
+    <section class="card event-card">
+      <h2>
+        Participantes y refuerzos <span class="muted">· {{ count() }}</span>
+      </h2>
+      <p class="event-help">
+        Busca la ficha existente para conservar su historial. Si no existe,
+        puedes crear un refuerzo con nombre e instrumento.
+      </p>
+      @if (!e.cancelled) {
+        <div class="event-actions">
+          <button
+            class="btn btn-primary"
+            [disabled]="saving() || !connection.online()"
+            (click)="adding.set(!adding())"
+          >
+            {{ adding() ? 'Cerrar búsqueda' : 'Añadir participante' }}</button
+          ><button class="btn btn-quiet" [disabled]="saving()" (click)="load()">
+            Actualizar disponibilidad
+          </button>
+        </div>
+        @if (adding()) {
+          <app-choice-picker mode="person" (picked)="add($event)" /><button
+            class="btn btn-secondary"
+            [disabled]="saving() || !connection.online()"
+            (click)="quick.set(true)"
+          >
+            No existe: crear refuerzo
+          </button>
+        }
+        @if (quick()) {
+          <form
+            #quickForm="ngForm"
+            class="event-picker"
+            (input)="dirty.set(true)"
+            (ngSubmit)="quickForm.valid && createPerson()"
+          >
+            <h3>Nuevo refuerzo</h3>
+            <div class="field">
+              <label for="quick-name">Nombre y apellidos</label
+              ><input
+                [disabled]="saving()"
+                id="quick-name"
+                name="name"
+                [(ngModel)]="name"
+                required
+                maxlength="160"
+              />
+            </div>
+            <div class="field">
+              <label for="quick-instrument">Instrumento</label
+              ><input
+                [disabled]="saving()"
+                id="quick-instrument"
+                name="instrument"
+                [(ngModel)]="instrument"
+                required
+                maxlength="100"
+              />
+            </div>
+            <div class="event-actions">
+              <button
+                class="btn btn-primary"
+                [disabled]="
+                  !quickForm.valid || saving() || !connection.online()
+                "
+              >
+                Crear y añadir</button
+              ><button
+                class="btn btn-quiet"
+                type="button"
+                [disabled]="saving()"
+                (click)="closeQuick()"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        }
+      }
+    </section>
+    @for (person of people(); track person.person_id) {
+      <section class="card event-card">
+        <h2>
+          <a [routerLink]="['/personas', person.person_id]">{{
+            person.full_name
+          }}</a>
+        </h2>
+        <p class="muted">
+          {{ person.instrument || 'Sin instrumento' }} ·
+          {{ person.kind === 'REFUERZO' ? 'Refuerzo' : 'Banda'
+          }}{{ person.archived_at ? ' · Persona archivada' : '' }}
+        </p>
+        @for (row of lines(person.person_id); track row.type_id) {
+          <div class="event-choice">
+            <div>
+              <strong
+                >{{ row.type_name }}
+                @if (row.code) {
+                  ·
+                  <a [routerLink]="['/inventario', row.garment_id]">{{
+                    row.code
+                  }}</a>
+                  · Talla {{ row.size }}
+                }</strong
+              ><span
+                class="event-status"
+                [class.warn]="
+                  row.status === 'CONFLICTO' ||
+                  row.status === 'PENDIENTE_DEVOLUCION'
+                "
+                [class.held]="row.status === 'EN_SU_PODER'"
+                >{{ label[row.status] }}</span
+              >
+              @if (row.holder_name && row.holder_id !== person.person_id) {
+                <small
+                  >Actualmente en poder de {{ row.holder_name }} ·
+                  {{
+                    row.due_at
+                      ? 'Devolución prevista: ' + time(row.due_at)
+                      : 'Sin devolución prevista'
+                  }}</small
+                >
+              }
+              @if (
+                row.holder_id === person.person_id &&
+                row.status !== 'EN_SU_PODER'
+              ) {
+                <small>Actualmente en su poder; necesita revisión.</small>
+              }
+              @if (row.status === 'CONFLICTO') {
+                <small
+                  >Comprueba estado físico, archivo y posesión actual. La
+                  asignación se mantiene hasta que la revises.</small
+                >
+              }
+            </div>
+            <div class="event-actions">
+              @if (row.loan_id) {
+                <a
+                  class="btn btn-secondary"
+                  [routerLink]="['/cesiones', row.loan_id, 'devolver']"
+                  >Devolver {{ row.code }}</a
+                >
+              }
+              @if (!e.cancelled) {
+                <button
+                  class="btn btn-secondary"
+                  [disabled]="saving() || !connection.online()"
+                  (click)="pick(row)"
+                >
+                  {{ row.garment_id ? 'Cambiar asignación' : 'Asignar prenda' }}
+                </button>
+                @if (row.garment_id) {
+                  <button
+                    class="btn btn-quiet"
+                    [disabled]="saving() || !connection.online()"
+                    (click)="assign(row, null)"
+                  >
+                    Quitar asignación
+                  </button>
+                }
+              }
+            </div>
+          </div>
+          @if (
+            picking()?.person_id === person.person_id &&
+            picking()?.type_id === row.type_id
+          ) {
+            <div class="event-picker">
+              <h3>Elegir {{ row.type_name }}</h3>
+              <form
+                class="event-actions"
+                (ngSubmit)="choicePage = 1; loadChoices()"
+              >
+                <div class="field">
+                  <label for="choice-code">Buscar por código</label
+                  ><input
+                    [disabled]="saving()"
+                    id="choice-code"
+                    name="query"
+                    [(ngModel)]="query"
+                    maxlength="60"
+                    type="search"
+                  />
+                </div>
+                <button class="btn btn-secondary">Buscar</button
+                ><button
+                  class="btn btn-quiet"
+                  type="button"
+                  (click)="picking.set(null)"
+                >
+                  Cerrar
+                </button>
+              </form>
+              @if (choicesLoading()) {
+                <p role="status">Comprobando disponibilidad…</p>
+              } @else if (choiceError()) {
+                <p class="notice notice-error" role="alert">
+                  {{ choiceError() }}
+                  <button class="text-button" (click)="loadChoices()">
+                    Reintentar
+                  </button>
+                </p>
+              } @else {
+                @for (g of choices(); track g.id) {
+                  <div class="event-choice">
+                    <div>
+                      <strong>{{ g.code }} · Talla {{ g.size }}</strong
+                      ><small>{{ g.blocked || g.situation }}</small>
+                    </div>
+                    <button
+                      class="btn btn-secondary"
+                      [disabled]="
+                        !!g.blocked || saving() || !connection.online()
+                      "
+                      (click)="assign(row, g.id)"
+                    >
+                      Elegir {{ g.code }}
+                    </button>
+                  </div>
+                } @empty {
+                  <p>
+                    No hay prendas de este tipo que coincidan con la búsqueda.
+                  </p>
+                }
+                @if (choiceCount() > 12) {
+                  <nav class="event-actions" aria-label="Páginas de prendas">
+                    <button
+                      class="btn btn-secondary"
+                      [disabled]="choicePage === 1"
+                      (click)="choicePage = choicePage - 1; loadChoices()"
+                    >
+                      Anteriores</button
+                    ><span>{{ choicePage }}</span
+                    ><button
+                      class="btn btn-secondary"
+                      [disabled]="choicePage * 12 >= choiceCount()"
+                      (click)="choicePage = choicePage + 1; loadChoices()"
+                    >
+                      Más prendas
+                    </button>
+                  </nav>
+                }
+              }
+            </div>
+          }
+        }
+        @if (!e.cancelled) {
+          <div class="event-actions">
+            @if (canDeliver(person.person_id)) {
+              <a
+                class="btn btn-primary"
+                routerLink="/cesiones/nueva"
+                [queryParams]="{ actuacion: id, persona: person.person_id }"
+                >Entregar prendas</a
+              >
+            }
+            <button
+              class="btn btn-quiet"
+              [disabled]="saving() || !connection.online()"
+              (click)="remove(person)"
+            >
+              Quitar participante
+            </button>
+          </div>
+        }
+      </section>
+    } @empty {
+      <div class="empty-state card">
+        <h2>Aún no hay participantes</h2>
+        <p>Añade a las personas que necesitan vestuario en esta actuación.</p>
+      </div>
+    }
+    @if (count() > 12) {
+      <nav class="event-actions" aria-label="Páginas de participantes">
+        <button
+          class="btn btn-secondary"
+          [disabled]="page === 1 || saving()"
+          (click)="go(page - 1)"
+        >
+          Anterior</button
+        ><span>Página {{ page }} · {{ count() }} participantes</span
+        ><button
+          class="btn btn-secondary"
+          [disabled]="page * 12 >= count() || saving()"
+          (click)="go(page + 1)"
+        >
+          Siguiente
+        </button>
+      </nav>
+    }
+    @if (!e.cancelled) {
+      <div class="event-actions">
+        <button
+          class="btn btn-danger"
+          [disabled]="saving() || !connection.online()"
+          (click)="cancel()"
+        >
+          Cancelar actuación
+        </button>
+      </div>
+    }
+  </div>
+}
+@if (!connection.online()) {
+  <p class="notice" role="status">
+    Necesitas conexión para modificar la preparación.
+  </p>
+}

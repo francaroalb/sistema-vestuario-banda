@@ -135,16 +135,40 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/loans/loan-list').then((m) => m.LoanList),
       },
-      ...['actuaciones'].map((path) => ({
-        path,
-        title:
-          path.charAt(0).toUpperCase() + path.slice(1) + ' · Gestión de trajes',
-        data: { section: path },
+      {
+        path: 'actuaciones/uniformes',
+        title: 'Uniformes · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
         loadComponent: () =>
-          import('./features/home/section-placeholder').then(
-            (m) => m.SectionPlaceholder,
-          ),
-      })),
+          import('./features/events/uniforms').then((m) => m.Uniforms),
+      },
+      {
+        path: 'actuaciones/nueva',
+        title: 'Nueva actuación · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/events/event-form').then((m) => m.EventForm),
+      },
+      {
+        path: 'actuaciones/:id/editar',
+        title: 'Editar actuación · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/events/event-form').then((m) => m.EventForm),
+      },
+      {
+        path: 'actuaciones/:id',
+        title: 'Preparación · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/events/event-detail').then((m) => m.EventDetail),
+      },
+      {
+        path: 'actuaciones',
+        title: 'Actuaciones · Gestión de trajes',
+        loadComponent: () =>
+          import('./features/events/event-list').then((m) => m.EventList),
+      },
     ],
   },
   { path: '**', redirectTo: 'inicio' },

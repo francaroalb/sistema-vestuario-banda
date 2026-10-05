@@ -125,13 +125,45 @@ dañadas, lavandería o en conflicto no serán primeras recomendaciones automát
 - Auditoría ampliada a cesión con clave foránea generada y restricción de borrado, conservando las
   auditorías anteriores. Los movimientos tienen autor y hora propios; no se reescriben al editar fichas.
 
+## Fase 5 implementada
+
+- Uniformes configurables con uno o varios tipos de prenda y archivo independiente. Cada actuación
+  conserva una instantánea del nombre y los tipos elegidos, evitando cambios silenciosos al editar el uniforme.
+- Actuaciones individuales con inicio/fin y periodo previsto de posesión que contiene todo el evento.
+  Conversión y validación de las cuatro fechas en PostgreSQL/Europe-Madrid; rechazo de horas DST ambiguas.
+- Participaciones persistentes con alta/baja lógica; búsqueda de personas existentes y alta rápida
+  atómica de refuerzo (nombre e instrumento) reutilizando el modelo de Personas.
+- Una asignación por actuación/persona/tipo, independiente del estado físico y de las cesiones.
+  Intervalos `[desde, hasta)`: una devolución a las 14:00 permite otra reserva desde las 14:00.
+  En esta fase se bloquean todos los solapamientos entre actuaciones, incluso para la misma persona;
+  la cesión continuada entre actuaciones se resolverá explícitamente en fase 6.
+- RPC `plan_event` con lista cerrada de comandos/campos, versión optimista y UUID estable de petición.
+  Bloqueo transaccional de planificación para evitar escritura concurrente incompatible entre eventos;
+  bloqueos de persona y prenda coordinados con los de cesiones. No se necesita una extensión nueva.
+- `planning_requests` deduplica reintentos. Auditoría general ampliada con FK reales de actuación/uniforme,
+  actor y hora de servidor y estado anterior (evento, participaciones y asignaciones). Ninguna escritura
+  directa del navegador; RLS ADMIN también en todas las tablas y vistas nuevas.
+- Disponibilidad básica comprueba estado, archivo, tipo, otras reservas y posesión actual. Una prenda
+  de otra persona sin devolución compatible no se asigna. Si hay fecha compatible, la reserva queda
+  marcada pendiente de devolución, sin prometer una entrega hasta que la prenda vuelva.
+- Preparación deriva «En su poder» de la cesión real, sin exigir otra entrega/firma si la persona ya la tiene.
+  Entrega desde la actuación revalida versión, selección, firma y periodo real desde ahora; usa la RPC
+  de cesiones en la misma transacción, registra vínculo a sus líneas y actualiza la preparación.
+- Devoluciones y cambios siguen en Cesiones. La preparación consulta la situación actual de las prendas;
+  no inventa entregas/devoluciones ni modifica una fecha de cesión al editar el plan.
+- Cancelar libera reservas conservando históricos y posesión real. Quitar un participante/asignación
+  tampoco registra una devolución. Cambios físicos posteriores muestran avisos sin borrar el plan.
+- Listados paginados: 24 actuaciones, 12 participantes/prendas candidatas, 6 reservas por ficha.
+  Consulta de reservas en inventario/personas y aviso en el selector de cesiones ordinarias.
+  Uniformes/tipos se gestionan dentro de Actuaciones; se mantiene la navegación de cinco secciones.
+- No se implementan series, matriz de participación, recomendador ni motor completo de conflictos.
+
 ## Fases pendientes
 
 Antes de fase 5 se ha aplicado el refinamiento visual solicitado: tokens comunes, superficies
 neutras, navegación inferior burdeos y lateral claro, controles y jerarquía consistentes.
 Ver `docs/sistema-visual.md`. Esta revisión no modifica modelos, RPC ni flujos funcionales.
 
-5 Actuaciones/uniformes ·
 6 Series · 7 Recomendador · 8 Conflictos · 9 Productividad · 10 QA y producción.
 
-Se requiere aprobación expresa entre fases. No comenzar fase 5 sin autorización.
+Se requiere aprobación expresa entre fases. No comenzar fase 6 sin autorización.

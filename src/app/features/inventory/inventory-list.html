@@ -148,6 +148,7 @@
                 ></span
               >
             }
+            @if (garment.next_assignee) {<span class="custody-label">Reserva prevista para {{garment.next_assignee}}</span>}
             @if (garment.archived_at) {
               <span class="archived-label"
                 ><app-icon name="archive" />Archivada</span

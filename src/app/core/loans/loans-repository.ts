@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from '../config/supabase';
-import { literalSearch } from '../inventory/inventory';
+import { literalSearch, formatTimestamp } from '../inventory/inventory';
 import {
   Choice,
   LoanCommand,
@@ -148,7 +148,17 @@ export class LoansRepository {
       rows: (data ?? []).map((g) => ({
         id: g.id,
         label: g.code,
-        subtitle: g.type_name + ' · Talla ' + g.size,
+        subtitle:
+          g.type_name +
+          ' · Talla ' +
+          g.size +
+          (g.next_assignee
+            ? ' · Reserva para ' +
+              g.next_assignee +
+              (g.next_reserved_from
+                ? ' desde ' + formatTimestamp(g.next_reserved_from)
+                : '')
+            : ''),
         type_id: g.garment_type_id,
       })),
       count: count ?? 0,

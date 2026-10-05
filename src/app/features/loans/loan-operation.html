@@ -1,6 +1,6 @@
 <a class="back-link" [routerLink]="backLink"
   ><app-icon name="back" />{{
-    kind === "ENTREGA" ? "Volver a Cesiones" : "Volver a la cesión"
+    eventId ? "Volver a la actuación" : kind === "ENTREGA" ? "Volver a Cesiones" : "Volver a la cesión"
   }}</a
 >
 <div class="page-heading">
@@ -31,7 +31,7 @@
               <strong>{{ selected.label }}</strong
               ><small>{{ selected.subtitle }}</small>
             </div>
-            @if (kind === "ENTREGA") {
+            @if (kind === "ENTREGA" && !eventId) {
               <button
                 class="btn btn-quiet"
                 type="button"
@@ -106,8 +106,7 @@
             }}
           </h2>
           <p class="muted">
-            Solo se muestran prendas disponibles que están físicamente en la
-            Banda. {{ kind === "CAMBIO" ? "Elige una del mismo tipo." : "" }}
+            {{ eventId ? 'Prendas asignadas para ' + event()?.title + '. Las que ya están en su poder no requieren otra entrega.' : 'Solo se muestran prendas disponibles que están físicamente en la Banda.' }} {{ kind === "CAMBIO" ? "Elige una del mismo tipo." : "" }}
           </p>
           <ul class="selected-list">
             @for (garment of garments(); track garment.id) {
@@ -127,7 +126,10 @@
               </li>
             }
           </ul>
-          @if (garments().length < (kind === "CAMBIO" ? 1 : 30)) {
+          @if (eventId) {
+            <button class="btn btn-quiet" type="button" (click)="reload()">Recuperar prendas asignadas</button>
+          }
+          @if (!eventId && garments().length < (kind === "CAMBIO" ? 1 : 30)) {
             <app-choice-picker
               [excluded]="selectedIds()"
               [type]="kind === 'CAMBIO' ? replacementType() : ''"
@@ -136,7 +138,7 @@
           }
         </section>
       }
-      @if (kind === "ENTREGA") {
+      @if (kind === "ENTREGA" && !eventId) {
         <section class="operation-card card">
           <div class="field">
             <label for="due-date"
@@ -218,10 +220,10 @@
         <div class="notice notice-error" role="alert">
           {{ error() }}
           @if (conflict()) {
-            <a [routerLink]="'/cesiones/' + loanId">Consultar cesión</a>
-            @if (kind !== "ENTREGA") {
+            <a [routerLink]="eventId ? '/actuaciones/' + eventId : '/cesiones/' + loanId">Consultar {{eventId ? 'actuación' : 'cesión'}}</a>
+            @if (kind !== "ENTREGA" || eventId) {
               <button type="button" class="text-button" (click)="reload()">
-                Recargar cesión
+                {{ eventId ? "Recargar preparación" : "Recargar cesión" }}
               </button>
             }
           }

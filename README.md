@@ -2,10 +2,10 @@
 
 Aplicación privada de la Banda Municipal Ntra. Sra. del Valle de La Palma del Condado.
 
-**Fase 4 completada:** acceso privado, inventario, personas y cesiones reales con firma presencial.
-Permite entregar varias prendas, devolver solo una parte, cambiar una prenda dentro de la misma
-cesión y consultar sus movimientos. No se almacena ni transmite el dibujo de la firma.
-Actuaciones y series siguen pendientes. No se ha desplegado en Cloudflare ni configurado el dominio.
+**Fase 5 completada:** acceso privado, inventario, personas, cesiones con firma y preparación
+individual de actuaciones. Incluye uniformes configurables, refuerzos y reservas por intervalos.
+La asignación futura y la posesión real se muestran por separado. No se almacena ni transmite el dibujo de la firma.
+Series y recomendador siguen pendientes. No se ha desplegado en Cloudflare ni configurado el dominio.
 
 ## Arrancar en este equipo
 
@@ -99,6 +99,44 @@ y horas inexistentes o repetidas en el cambio horario para que la fecha prevista
 
 Estas operaciones son reales: para terminar una prueba manual hay que devolver sus prendas.
 
+## Probar la fase 5
+
+1. Entrar en **Actuaciones → Uniformes → Nuevo uniforme**. Poner un nombre y marcar los tipos
+   requeridos, por ejemplo Chaqueta y Pantalón. No hay reglas fijas de verano/invierno.
+2. Crear una **Nueva actuación**, elegir uniforme e indicar inicio y fin en hora de Madrid.
+   Ajustar **Entrega prevista desde** y **Devolución prevista** para incluir la recogida anticipada
+   y el tiempo de devolución. Por defecto coinciden con el horario de la actuación.
+3. Abrir la preparación y pulsar **Añadir participante**. Buscar y seleccionar una persona existente.
+   Si no existe, **No existe: crear refuerzo** requiere nombre e instrumento y la añade a Personas
+   y a esta actuación dentro de la misma operación. Conserva su UUID e historial en futuras actuaciones.
+4. Cada participante muestra una línea por tipo requerido. Pulsar **Asignar prenda**, buscar su
+   código y elegir. Se muestran motivos concretos cuando una prenda no puede reservarse.
+5. Consultar Inventario: aparece la reserva prevista; sigue físicamente en la Banda hasta la entrega.
+   Las fichas de prendas y personas permiten consultar las asignaciones futuras y abrir su actuación.
+6. Probar dos actuaciones el mismo día: sus periodos de prendas pueden ser adyacentes, pero no
+   solaparse para una misma prenda. Se comprueba otra vez en servidor al guardar, incluso desde dos sesiones.
+7. En preparación, pulsar **Entregar prendas**, revisar y firmar. La persona y las prendas proceden
+   del plan; se puede quitar de esta entrega una prenda que aún no se recoge. Lo ya entregado cambia
+   a **En su poder**. Una prenda que la persona ya tiene no exige otra entrega ni otra firma.
+8. Pulsar **Devolver código** para registrar la devolución real, total o parcial, con el flujo de
+   cesiones. Volver a la actuación muestra la nueva situación. Las reservas posteriores se conservan.
+9. Editar horario o periodo vuelve a comprobar solapamientos. Cambiar el uniforme requiere quitar
+   primero las asignaciones. Editar un uniforme no modifica los requisitos de actuaciones ya creadas.
+10. **Cancelar actuación** libera sus reservas, conservando participantes, auditoría y cesiones reales.
+    Se consulta en la vista Canceladas. No registra devoluciones ficticias.
+
+Si una prenda está cedida a otra persona, solo admite reserva cuando su devolución prevista es futura
+pero anterior o igual al inicio del periodo. Se avisa **Pendiente de devolución**: la entrega seguirá
+bloqueada hasta recibirla realmente. Si cambian su estado físico, archivo o posesión, la preparación
+muestra **Revisar disponibilidad**, conservando la asignación para decidir qué hacer.
+Una recogida anticipada también comprueba las otras reservas desde el momento actual.
+
+La planificación no cambia retroactivamente la fecha prevista de una cesión real. Se conserva
+la registrada al entregar. Quitar una asignación o participante tampoco cierra cesiones.
+Las asignaciones de actuaciones individuales deben tener periodos separados; la gestión de cesiones
+continuadas entre varias actuaciones y la decisión mantener/dividir corresponden a fase 6.
+El recomendador y la resolución completa de conflictos no se adelantan.
+
 ## Probar la PWA
 
 El service worker está desactivado en desarrollo. Para comprobar instalación y caché:
@@ -147,7 +185,7 @@ los permisos SQL prohíben que el navegador cree, modifique o elimine administra
 
 Las migraciones de `supabase/migrations/` están aplicadas y registradas en
 `supabase_migrations.schema_migrations`: acceso ADMIN, inventario y respuesta HTTP 409 a
-conflictos de edición, más Personas y Cesiones. Las escrituras de inventario, personas y cesiones pasan
+conflictos de edición, más Personas, Cesiones y Actuaciones. Las escrituras de inventario, personas, cesiones y planificación pasan
 por RPC transaccionales que verifican el administrador y la versión. El navegador no puede borrar
 prendas/personas ni modificar la auditoría.
 
@@ -196,16 +234,16 @@ REAL_AUTH=1 npm run test:e2e -- --grep 'Supabase real'
 
 El archivo local necesita `email`, `password`, `display_name` e `id`. No se guarda ningún estado de
 sesión, traza ni contraseña en el repositorio. Las capturas se guardan en `.local/screenshots/`.
-Las pruebas reales de inventario, personas y cesiones crean registros temporales y eliminan exclusivamente sus UUID
-al finalizar. Para esa limpieza requieren la sesión Supabase CLI de este equipo en el llavero
-macOS; el token se usa internamente y no se imprime ni se guarda en el repositorio. Ejecutarlas solo en el proyecto independiente de Vestuario.
+Las pruebas reales de inventario, personas, cesiones y actuaciones crean registros temporales y eliminan exclusivamente sus UUID
+al finalizar. La limpieza administrativa está centralizada en `tests/e2e/admin-query.ts`. Por defecto
+utiliza la sesión Supabase CLI del llavero macOS; el token se usa internamente y no se imprime ni se guarda en el repositorio. Ejecutarlas solo en el proyecto independiente de Vestuario.
 
 ## Estructura y mantenimiento
 
 - `src/app/core`: configuración, cliente tipado, autenticación, guards y conectividad.
 - `src/app/shared/ui`: iconos y ayuda de instalación.
 - `src/app/layout`: shell y navegación responsive.
-- `src/app/features`: login, inicio operativo, inventario, personas, cesiones y espacios reservados.
+- `src/app/features`: login, inicio operativo, inventario, personas, cesiones, actuaciones y uniformes.
 - `src/styles.scss`: tokens heredados de Entradas, botones, campos, tarjetas y accesibilidad.
 - `supabase/migrations`: cambios de base de datos versionados.
 
@@ -216,10 +254,23 @@ No se publica nada automáticamente desde este proyecto.
 Los logotipos y las tipografías conservan la identidad de Entradas. Los iconos PWA de Vestuario
 se generan desde el SVG propio con `node scripts/generate-icons.mjs` (requiere Chrome).
 
-Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 5.**
+Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 6.**
 Ver [sistema visual y refinamiento de la interfaz](docs/sistema-visual.md).
 Ver [validación de fase 2](docs/qa-fase2.md).
 
 Ver [validación de fase 3](docs/qa-fase3.md).
 
 Ver [validación de fase 4](docs/qa-fase4.md).
+
+Ver [validación y decisiones de fase 5](docs/qa-fase5.md).
+
+En este equipo, si el llavero tarda demasiado, está disponible la alternativa SQL local con TLS verificado:
+
+```sh
+REAL_AUTH=1 VESTUARIO_QA_SQL_RUNNER=.local/query-db.mjs npm run test:e2e
+```
+
+Este ejecutor y sus credenciales están excluidos de Git. La variable indica un ejecutor Node local
+que recibe por stdin exclusivamente el SQL de limpieza de las pruebas. No se usa desde la aplicación.
+También se puede proporcionar `VESTUARIO_QA_MANAGEMENT_TOKEN` temporalmente al proceso de QA para
+usar la API de gestión sin acceder al llavero en cada limpieza. Ninguna de estas variables se copia al frontend.

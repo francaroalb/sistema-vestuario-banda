@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { readFileSync, existsSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { adminQuery } from './admin-query';
 import { randomUUID } from 'node:crypto';
 import { Database } from '../../src/app/core/config/database.types';
 import { LoanCommand, LoanRow } from '../../src/app/core/loans/models';
@@ -91,18 +91,6 @@ test.describe('Supabase real · cesiones fase 4', () => {
       if (people.length || garments.length) {
         const ref = JSON.parse(readFileSync('.local/project.json', 'utf8')).id;
         expect(ref).toBe('vbrtkmufrtfuanimmqyp');
-        const token = execFileSync(
-          'security',
-          [
-            'find-generic-password',
-            '-s',
-            'Supabase CLI',
-            '-a',
-            'supabase',
-            '-w',
-          ],
-          { encoding: 'utf8' },
-        ).trim();
         const sqlIds = (ids: string[]) =>
           ids.length
             ? ids
@@ -123,18 +111,7 @@ test.describe('Supabase real · cesiones fase 4', () => {
     delete from public.audit_log where person_id in(select id from qa_p) or garment_id in(select id from qa_g);
     delete from public.people where id in(select id from qa_p);
     delete from public.garments where id in(select id from qa_g);commit;`;
-        const response = await fetch(
-          `https://api.supabase.com/v1/projects/${ref}/database/query`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ query }),
-          },
-        );
-        expect(response.ok).toBe(true);
+        await adminQuery(query);
       }
     } finally {
       await client?.auth.signOut({ scope: 'local' });

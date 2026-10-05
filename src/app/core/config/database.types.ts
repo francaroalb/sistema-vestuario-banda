@@ -1,4 +1,11 @@
 import type {
+  Uniform,
+  BandEvent,
+  EventPerson,
+  Preparation,
+  Reservation,
+} from '../events/models';
+import type {
   LoanRow,
   LoanOverview,
   LoanItem,
@@ -63,6 +70,18 @@ export type InventorySummary = {
 export interface Database {
   public: {
     Tables: {
+      uniforms: {
+        Row: Uniform;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      events: {
+        Row: BandEvent;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       loans: { Row: LoanRow; Insert: never; Update: never; Relationships: [] };
       loan_items: {
         Row: LoanItem;
@@ -148,10 +167,33 @@ export interface Database {
       };
     };
     Views: {
+      event_people: { Row: EventPerson; Relationships: [] };
+      event_preparation: { Row: Preparation; Relationships: [] };
+      garment_reservations: { Row: Reservation; Relationships: [] };
       loan_overview: { Row: LoanOverview; Relationships: [] };
       garment_inventory: { Row: StockGarment; Relationships: [] };
     };
     Functions: {
+      plan_event: {
+        Args: {
+          p_request_id: string;
+          p_action: string;
+          p_id: string;
+          p_expected_version: number | null;
+          p_data: Json;
+        };
+        Returns: Json;
+      };
+      event_garment_choices: {
+        Args: {
+          p_event: string;
+          p_person: string;
+          p_type: string;
+          p_q: string;
+          p_page: number;
+        };
+        Returns: Json;
+      };
       record_loan_movement: { Args: LoanCommand; Returns: LoanRow[] };
       save_person: {
         Args: {

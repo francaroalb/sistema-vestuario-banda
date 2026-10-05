@@ -49,6 +49,8 @@ export type StockGarment = GarmentRow & {
   loan_id: string | null;
   holder_id: string | null;
   holder_name: string | null;
+  next_assignee?: string | null;
+  next_reserved_from?: string | null;
 };
 export type LoanCommand = {
   p_request_id: string;

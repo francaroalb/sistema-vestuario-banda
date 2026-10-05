@@ -33,6 +33,7 @@ import { Icon } from '../../shared/ui/icon';
       /></a>
     </div>
     <div class="people-actions" aria-label="Accesos rápidos">
+      <a class="btn btn-secondary" routerLink="/actuaciones"><app-icon name="calendar" />Preparar actuación</a>
       <a class="btn btn-secondary" routerLink="/inventario/nueva"
         ><app-icon name="plus" />Nueva prenda</a
       >

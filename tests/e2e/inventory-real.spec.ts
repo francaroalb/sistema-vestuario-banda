@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { readFileSync, existsSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { adminQuery } from './admin-query';
 import { randomUUID } from 'node:crypto';
 import { Database, GarmentRow } from '../../src/app/core/config/database.types';
 
@@ -50,18 +50,6 @@ test.describe('Supabase real · inventario fase 2', () => {
         // Delete only synthetic rows created by this test, never production inventory.
         const ref = JSON.parse(readFileSync('.local/project.json', 'utf8')).id;
         expect(ref).toBe('vbrtkmufrtfuanimmqyp');
-        const token = execFileSync(
-          'security',
-          [
-            'find-generic-password',
-            '-s',
-            'Supabase CLI',
-            '-a',
-            'supabase',
-            '-w',
-          ],
-          { encoding: 'utf8' },
-        ).trim();
         const ids = ownedIds
           .map((id) => {
             if (!/^[\da-f-]{36}$/.test(id)) throw new Error('Invalid test ID');
@@ -69,18 +57,7 @@ test.describe('Supabase real · inventario fase 2', () => {
           })
           .join(',');
         const query = `begin; create temporary table qa_cleanup_ids as select id from public.garments where id in (${ids}) and code like '${prefix}%'; delete from public.audit_log where entity_id in (select id from qa_cleanup_ids); delete from public.garments where id in (select id from qa_cleanup_ids); commit;`;
-        const response = await fetch(
-          `https://api.supabase.com/v1/projects/${ref}/database/query`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ query }),
-          },
-        );
-        expect(response.ok).toBe(true);
+        await adminQuery(query);
       }
     } finally {
       await client?.auth.signOut({ scope: 'local' });

@@ -1,3 +1,4 @@
+import { PlannedUses } from '../events/planned-uses';
 import { LoanHistory } from '../loans/loan-history';
 import {
   ChangeDetectionStrategy,
@@ -22,7 +23,7 @@ import { Icon } from '../../shared/ui/icon';
 import { GarmentStatus } from '../../shared/ui/garment-status';
 @Component({
   selector: 'app-garment-detail',
-  imports: [LoanHistory, RouterLink, Icon, GarmentStatus],
+  imports: [PlannedUses, LoanHistory, RouterLink, Icon, GarmentStatus],
   templateUrl: './garment-detail.html',
   styleUrl: './inventory.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

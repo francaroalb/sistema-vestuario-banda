@@ -1,3 +1,9 @@
+import { EventsRepository } from '../../core/events/events-repository';
+import {
+  BandEvent,
+  madridLocal,
+  planningError,
+} from '../../core/events/models';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -41,6 +47,9 @@ export class LoanOperation {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly repository = inject(LoansRepository);
+  private readonly events = inject(EventsRepository);
+  readonly eventId = this.route.snapshot.queryParamMap.get('actuacion');
+  readonly event = signal<BandEvent | null>(null);
   private readonly feedback = inject(Feedback);
   readonly connection = inject(Connectivity);
   readonly signature = viewChild(SignaturePad);
@@ -75,8 +84,11 @@ export class LoanOperation {
   readonly stateLabel = stateLabel;
   readonly timestamp = formatTimestamp;
   readonly movementLabel = movementLabel;
-  readonly backLink =
-    this.kind === 'ENTREGA' ? '/cesiones' : '/cesiones/' + this.loanId;
+  readonly backLink = this.eventId
+    ? '/actuaciones/' + this.eventId
+    : this.kind === 'ENTREGA'
+      ? '/cesiones'
+      : '/cesiones/' + this.loanId;
   readonly selectedIds = computed(() => this.garments().map((g) => g.id));
   readonly selectedReturns = computed(() =>
     this.items().filter((i) => Object.hasOwn(this.returns(), i.id)),
@@ -104,6 +116,26 @@ export class LoanOperation {
       if (this.kind === 'ENTREGA') {
         const person = this.route.snapshot.queryParamMap.get('persona');
         if (person) this.person.set(await this.repository.personChoice(person));
+        if (this.eventId && person) {
+          const [event, rows] = await Promise.all([
+            this.events.get(this.eventId),
+            this.events.preparation(this.eventId, person),
+          ]);
+          this.event.set(event);
+          const ready = rows.filter(
+            (r) => r.status === 'ASIGNADA' || r.status === 'DEVUELTA',
+          );
+          if (event.cancelled || !ready.length) throw new Error('PLAN_CHANGED');
+          this.garments.set(
+            ready.map((r) => ({
+              id: r.garment_id!,
+              label: r.code!,
+              subtitle: r.type_name + ' · Talla ' + r.size,
+            })),
+          );
+          this.due.set(madridLocal(event.planned_until));
+          this.notes.set('Actuación: ' + event.title);
+        } else if (this.eventId) throw new Error('PLAN_CHANGED');
       } else {
         const data = await this.repository.detail(this.loanId);
         this.loan.set(data.loan);
@@ -119,7 +151,9 @@ export class LoanOperation {
       this.loadError.set(
         this.loan()?.closed_at
           ? 'Esta cesión ya está finalizada. Consulta su ficha.'
-          : loanError(e).message,
+          : this.eventId
+            ? planningError(e)
+            : loanError(e).message,
       );
     } finally {
       this.loading.set(false);
@@ -156,6 +190,7 @@ export class LoanOperation {
   }
   prepare() {
     if (!this.canReview() || !this.connection.online()) return;
+    this.dirty.set(true);
     this.error.set('');
     this.signed.set(false);
     this.review.set(true);
@@ -187,17 +222,35 @@ export class LoanOperation {
       p_signature_confirmed: true,
     };
     try {
-      await this.repository.record(command);
+      if (this.eventId && this.event()) {
+        await this.events.command(
+          'DELIVER',
+          this.eventId,
+          this.event()!.version,
+          {
+            person_id: this.person()!.id,
+            loan_id: this.loanId,
+            garment_ids: this.selectedIds(),
+            signed: true,
+          },
+          this.requestId,
+        );
+      } else await this.repository.record(command);
       this.completed.set(true);
       this.dirty.set(false);
       this.signature()?.clear();
       this.feedback.success(this.movementLabel(this.kind) + ' registrada.');
-      await this.router.navigate(['/cesiones', this.loanId], {
-        replaceUrl: true,
-      });
+      await this.router.navigate(
+        this.eventId
+          ? ['/actuaciones', this.eventId]
+          : ['/cesiones', this.loanId],
+        {
+          replaceUrl: true,
+        },
+      );
     } catch (e) {
       const failure = loanError(e);
-      this.error.set(failure.message);
+      this.error.set(this.eventId ? planningError(e) : failure.message);
       this.conflict.set(failure.conflict);
     } finally {
       this.saving.set(false);

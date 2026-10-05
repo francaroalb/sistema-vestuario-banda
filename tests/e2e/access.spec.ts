@@ -488,6 +488,65 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
       'No encontramos esta cesión',
     );
   });
+  test('actuaciones: búsqueda literal, filtros persistentes, errores y página desaparecida', async ({
+    page,
+  }) => {
+    await mockSupabase(page);
+    let fail = true,
+      missing = false;
+    const seen: URL[] = [];
+    await page.route('**/rest/v1/events?*', (route) => {
+      const url = new URL(route.request().url());
+      seen.push(url);
+      if (fail)
+        return route.fulfill({ status: 400, json: { code: 'TEST_FAILURE' } });
+      const offset = Number(url.searchParams.get('offset') ?? 0);
+      if (missing && offset)
+        return route.fulfill({ status: 416, json: { code: 'PGRST103' } });
+      const count = Math.min(24, 25 - offset);
+      return route.fulfill({
+        headers: {
+          'content-range': `${offset}-${offset + count - 1}/25`,
+          'access-control-expose-headers': 'content-range',
+        },
+        json: Array.from({ length: count }, (_, i) => ({
+          id: userId.slice(0, -2) + String(offset + i).padStart(2, '0'),
+          title: 'Actuación ' + (offset + i + 1),
+          starts_at: '2090-01-10T11:00:00Z',
+          ends_at: '2090-01-10T12:00:00Z',
+          uniform_name: 'Invierno',
+          type_ids: [userId],
+          cancelled: false,
+        })),
+      });
+    });
+    await page.goto('/actuaciones');
+    await enter(page);
+    await expect(page.getByRole('alert')).toContainText(
+      'Comprueba tu conexión',
+    );
+    fail = false;
+    await page.getByRole('button', { name: 'Reintentar', exact: true }).click();
+    await expect(page.locator('article.event-card')).toHaveCount(24);
+    await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
+    await expect(page.locator('article.event-card')).toHaveCount(1);
+    missing = true;
+    await page.reload();
+    await expect(page.locator('article.event-card')).toHaveCount(24);
+    await expect(page).toHaveURL(/page=1/);
+    await page.getByLabel('Buscar actuación').fill('Semana %');
+    await page.getByLabel('Mostrar', { exact: true }).selectOption('cancelled');
+    await page.getByRole('button', { name: 'Buscar', exact: true }).click();
+    await expect
+      .poll(() => seen.at(-1)?.searchParams.get('cancelled'))
+      .toBe('eq.true');
+    expect(seen.at(-1)?.searchParams.get('title')).toBe('ilike.%Semana \\%%');
+    await page.reload();
+    await expect(page.getByLabel('Buscar actuación')).toHaveValue('Semana %');
+    await expect(page.getByLabel('Mostrar', { exact: true })).toHaveValue(
+      'cancelled',
+    );
+  });
   test('usuario autenticado sin perfil activo no accede', async ({ page }) => {
     await mockSupabase(page, 'inactive');
     await page.goto('/login');

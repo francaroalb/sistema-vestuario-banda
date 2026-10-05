@@ -3,6 +3,8 @@ export type Garment = GarmentRow & {
   loan_id?: string | null;
   holder_id?: string | null;
   holder_name?: string | null;
+  next_assignee?: string | null;
+  next_reserved_from?: string | null;
   garment_types: { name: string } | null;
 };
 export interface GarmentInput {
