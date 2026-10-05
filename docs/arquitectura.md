@@ -118,6 +118,8 @@ dañadas, lavandería o en conflicto no serán primeras recomendaciones automát
   El servidor exige confirmación; no verifica identidad biométrica ni firma digital.
 - Vistas con `security_invoker` para cesiones y situación del inventario, con RLS en tablas base.
   «Cedida» es una posesión derivada, nunca un estado físico. Disponibles del inicio excluye cedidas.
+  En listado y ficha, una posesión abierta tiene prioridad visual: etiqueta «Cedida» y nombre de
+  la persona. No mostrar «Disponible» mientras esté cedida; lavandería/daños se indican por separado.
 - Fichas de persona/prenda muestran seis cesiones recientes (activas primero) y enlace al listado
   completo filtrado; la ficha de cesión contiene líneas y movimientos. No hay recomendaciones ni reservas.
 - Auditoría ampliada a cesión con clave foránea generada y restricción de borrado, conservando las

@@ -159,7 +159,8 @@ summary {
   color: var(--color-primary);
   width: 1.1rem;
 }
-.archived-label {
+.archived-label,
+.custody-label {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -169,6 +170,15 @@ summary {
   app-icon {
     width: 1rem;
     height: 1rem;
+    flex-shrink: 0;
+  }
+}
+.custody-label {
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  span {
+    min-width: 0;
   }
 }
 .empty-state {

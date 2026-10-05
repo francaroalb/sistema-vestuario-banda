@@ -305,10 +305,25 @@ test.describe('Supabase real · cesiones fase 4', () => {
       .eq('loan_id', loanId);
     expect(first.data).toHaveLength(1);
     expect(requests[0]['p_request_id']).toBe(requests[1]['p_request_id']);
-    await page.goto('/inventario/' + a.id);
+    await page.goto('/inventario?buscar=' + a.code);
+    const cededCard = page.getByRole('link', {
+      name: 'Ver prenda ' + a.code,
+      exact: true,
+    });
+    await expect(cededCard.getByText('Cedida', { exact: true })).toBeVisible();
+    await expect(cededCard).toContainText('Cedida a ' + p.name);
     await expect(
-      page.getByText('En poder de ' + p.name, { exact: true }),
+      cededCard.getByText('Disponible', { exact: true }),
+    ).toHaveCount(0);
+    await cededCard.click();
+    await expect(
+      page.getByRole('heading', { name: a.code, exact: true, level: 1 }),
     ).toBeVisible();
+    await expect(
+      page.getByText('Cedida a ' + p.name, { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText('Cedida', { exact: true })).toBeVisible();
+    await expect(page.getByText('Disponible', { exact: true })).toHaveCount(0);
     await page
       .getByRole('button', { name: 'Archivar prenda', exact: true })
       .click();
@@ -437,6 +452,25 @@ test.describe('Supabase real · cesiones fase 4', () => {
         /data:image|base64|strokes|coordinates/,
       );
     }
+    await page.goto('/inventario?buscar=' + c.code);
+    const returnedCard = page.getByRole('link', {
+      name: 'Ver prenda ' + c.code,
+      exact: true,
+    });
+    await expect(
+      returnedCard.getByText('Disponible', { exact: true }),
+    ).toBeVisible();
+    await expect(returnedCard.getByText('Cedida', { exact: true })).toHaveCount(
+      0,
+    );
+    await returnedCard.click();
+    await expect(
+      page.getByRole('heading', { name: c.code, exact: true, level: 1 }),
+    ).toBeVisible();
+    await expect(page.getByText('Disponible', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText('Cedida a ' + p.name, { exact: true }),
+    ).toHaveCount(0);
     await page.goto('/personas/' + p.id);
     await expect(
       page.getByRole('heading', { name: 'Cesiones e histórico' }),

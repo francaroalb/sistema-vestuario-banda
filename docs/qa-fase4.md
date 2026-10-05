@@ -63,3 +63,14 @@ La emulación móvil no sustituye pruebas en Safari/iPhone o Android físicos. L
 una URL HTTPS y el despliegue público siguen pendientes de la fase de QA/producción.
 
 Ver [pasos manuales](../README.md#probar-la-fase-4). Esperar aprobación antes de fase 5.
+
+## Corrección de disponibilidad visual
+
+El listado y la ficha mostraban «Disponible» como etiqueta de estado físico incluso con una
+cesión abierta. Ahora muestran «Cedida» y «Cedida a [persona]» de forma destacada. Si la prenda
+presenta daños o requiere lavandería, se indica por separado. No cambian los datos ni las cesiones.
+
+Compilación correcta y dos recorridos reales aprobados con
+`REAL_AUTH=1 npm run test:e2e -- --grep 'entrega firmada'`: escritorio y móvil emulado.
+Se comprueba que listado y ficha no muestran «Disponible» durante la cesión y que vuelve a
+aparecer al devolver la prenda en ese estado. Los registros de prueba se eliminan al finalizar.

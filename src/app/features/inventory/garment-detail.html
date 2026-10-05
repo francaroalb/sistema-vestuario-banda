@@ -33,7 +33,7 @@
   }
   @if (item.loan_id) {
     <p class="notice">
-      <strong>En poder de {{ item.holder_name }}</strong> ·
+      <strong>Cedida a {{ item.holder_name }}</strong> ·
       <a [routerLink]="['/cesiones', item.loan_id]">Abrir cesión</a>
     </p>
   }
@@ -44,7 +44,10 @@
         <span class="detail-label">Talla</span
         ><strong class="detail-size">{{ item.size }}</strong>
       </div>
-      <app-garment-status [state]="item.physical_state" />
+      <app-garment-status
+        [state]="item.physical_state"
+        [held]="!!item.loan_id"
+      />
     </div>
     <dl class="detail-data">
       <div>

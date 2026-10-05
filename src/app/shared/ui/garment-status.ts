@@ -6,19 +6,25 @@ import { Icon } from './icon';
   selector: 'app-garment-status',
   imports: [Icon],
   template: `<span
-    class="state"
-    [class.laundry]="state() === 'PENDIENTE_LAVANDERIA'"
-    [class.damaged]="state() === 'DANADA'"
-    ><app-icon
-      [name]="
-        state() === 'DISPONIBLE'
-          ? 'check'
-          : state() === 'DANADA'
-            ? 'warning'
-            : 'wash'
-      "
-    />{{ label(state()) }}</span
-  >`,
+      class="state"
+      [class.held]="held()"
+      [class.laundry]="!held() && state() === 'PENDIENTE_LAVANDERIA'"
+      [class.damaged]="!held() && state() === 'DANADA'"
+      ><app-icon
+        [name]="
+          held()
+            ? 'people'
+            : state() === 'DISPONIBLE'
+              ? 'check'
+              : state() === 'DANADA'
+                ? 'warning'
+                : 'wash'
+        "
+      />{{ held() ? 'Cedida' : label(state()) }}</span
+    >
+    @if (held() && state() !== 'DISPONIBLE') {
+      <span class="condition">Estado físico: {{ label(state()) }}</span>
+    }`,
   styles: `
     .state {
       display: inline-flex;
@@ -46,10 +52,22 @@ import { Icon } from './icon';
       color: #941e24;
       border-color: #e8b9b4;
     }
+    .held {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      border-color: #d9b3ac;
+    }
+    .condition {
+      display: block;
+      margin-top: 0.4rem;
+      font-size: var(--text-xs);
+      color: var(--color-muted);
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GarmentStatus {
   readonly state = input.required<PhysicalState>();
+  readonly held = input(false);
   readonly label = stateLabel;
 }
