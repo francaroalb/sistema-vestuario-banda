@@ -226,6 +226,13 @@
                 [class.held]="row.status === 'EN_SU_PODER'"
                 >{{ label[row.status] }}</span
               >
+              @if (row.status === 'EN_SU_PODER') {
+                <small
+                  >Ya entregada en una cesión activa. Esta asignación no
+                  registra otra entrega ni requiere una nueva firma. Puedes
+                  consultar el registro en Ver cesión.</small
+                >
+              }
               @if (row.status === 'PENDIENTE_DEVOLUCION') {
                 <small
                   >Aviso: devolución prevista el {{ time(row.due_at!) }}. Nueva

@@ -204,3 +204,13 @@ siguen requiriendo revisión según las reglas existentes. La entrega física si
 la devolución real de una prenda que posee otra persona.
 Validación: 25 pruebas unitarias, 8 casos de base de datos de conflictos y permanencia,
 compilación y 2 pruebas de navegador en escritorio y móvil aprobadas.
+
+### Prenda ya entregada frente a una nueva asignación
+
+Las recomendaciones indican explícitamente cuando la prenda ya figura entregada a la misma
+persona en una cesión activa. Elegirla vincula su uso a la actuación sin crear otra cesión.
+La preparación individual y de series explica este estado y permite consultar Ver cesión.
+Para una prenda disponible, elegir reserva y Entregar exige la confirmación de firma.
+No se altera la posesión ni se devuelven prendas al quitar una asignación.
+Validación: compilación y ocho casos de base de datos del recomendador aprobados, incluido
+reutilizar una prenda propia sin generar una nueva cesión.

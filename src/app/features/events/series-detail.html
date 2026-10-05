@@ -493,8 +493,15 @@
                       >
                       @if (r.status === 'EN_SU_PODER') {
                         <small
-                          >Ya la conserva · devolución prevista
-                          {{ time(b.planned_until) }}</small
+                          >Ya entregada en una cesión activa · devolución
+                          prevista {{ time(b.planned_until) }}</small
+                        >
+                      }
+                      @if (r.status === 'EN_SU_PODER') {
+                        <small
+                          >Asignarla no registra otra entrega ni requiere una
+                          nueva firma. Consulta el registro en Ver
+                          cesión.</small
                         >
                       }
                       @if (r.status === 'PENDIENTE_DEVOLUCION') {

@@ -59,9 +59,15 @@ import { Connectivity } from '../../core/connectivity';
               c.size_step
                 ? 'Talla superior: comprobar cómo le queda'
                 : c.own_custody
-                  ? 'Ya está en su poder'
+                  ? 'Ya entregada en una cesión activa a esta persona'
                   : 'Disponible durante todo el periodo'
             }}</small>
+            @if (c.own_custody) {
+              <small
+                >Elegirla la vincula a esta actuación; no registra una nueva
+                entrega.</small
+              >
+            }
           </div>
           <button
             class="btn btn-secondary"
@@ -73,7 +79,11 @@ import { Connectivity } from '../../core/connectivity';
           </button>
         </div>
       }
-      <p class="manual">También puedes buscar y elegir manualmente debajo.</p>
+      <p class="manual">
+        Elegir una prenda reserva su uso. Si está disponible, después debes
+        pulsar Entregar y confirmar la firma. También puedes buscar manualmente
+        debajo.
+      </p>
     }
   </section>`,
   styles: `
