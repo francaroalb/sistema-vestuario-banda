@@ -1,8 +1,13 @@
+import { NgTemplateOutlet } from '@angular/common';
+import { summarizeParticipant } from './series-preparation';
 import { RecommendationPanel } from './recommendation-panel';
 import { AssistedPreparation } from './assisted-preparation';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
+  ElementRef,
+  viewChild,
   HostListener,
   inject,
   signal,
@@ -31,6 +36,7 @@ import { ChoicePicker } from '../loans/choice-picker';
   selector: 'app-series-detail',
   imports: [
     FormsModule,
+    NgTemplateOutlet,
     RouterLink,
     ChoicePicker,
     RecommendationPanel,
@@ -50,6 +56,7 @@ export class SeriesDetailPage {
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly assisting = signal(false);
+  readonly refreshing = signal(false);
   readonly error = signal('');
   readonly dirty = signal(false);
   readonly candidates = signal<BandEvent[]>([]);
@@ -72,7 +79,11 @@ export class SeriesDetailPage {
   readonly choiceLoading = signal(false);
   choiceQuery = '';
   choicePage = 1;
-  personPage = 1;
+  readonly activePersonId = signal<string | null>(null);
+  readonly editingPersonId = signal<string | null>(null);
+  readonly personQuery = signal('');
+  readonly personFilter = signal<'all' | 'pending' | 'ready'>('all');
+  readonly rail = viewChild<ElementRef<HTMLElement>>('participantRail');
   rename = false;
   seriesName = '';
   readonly time = formatTimestamp;
@@ -86,26 +97,36 @@ export class SeriesDetailPage {
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((p) => {
       this.id = p.get('id')!;
       this.detail.set(null);
+      this.activePersonId.set(null);
+      this.editingPersonId.set(null);
+      this.personQuery.set('');
+      this.personFilter.set('all');
       this.editor.set(false);
       this.dirty.set(false);
       void this.load();
     });
   }
-  async load() {
+  async load(background = false) {
     const g = ++this.generation;
-    this.loading.set(true);
+    if (!background) this.loading.set(true);
+    this.refreshing.set(background);
     this.error.set('');
     try {
       const d = await this.repo.seriesDetail(this.id);
       if (g !== this.generation) return;
       this.detail.set(d);
       this.seriesName = d.series.name;
-      if ((this.personPage - 1) * 12 >= this.people().length)
-        this.personPage = 1;
+      if (!this.people().some((p) => p.person_id === this.activePersonId()))
+        this.activePersonId.set(null);
+      this.closeHidden();
+      this.centerActive();
     } catch (e) {
       if (g === this.generation) this.error.set(planningError(e));
     } finally {
-      if (g === this.generation) this.loading.set(false);
+      if (g === this.generation) {
+        this.loading.set(false);
+        this.refreshing.set(false);
+      }
     }
   }
   async reload() {
@@ -127,11 +148,107 @@ export class SeriesDetailPage {
       ).values(),
     ];
   }
-  visiblePeople() {
-    return this.people().slice(
-      (this.personPage - 1) * 12,
-      this.personPage * 12,
+  private readonly summaries = computed(
+    () =>
+      new Map(
+        this.people().map((p) => [
+          p.person_id,
+          summarizeParticipant(
+            this.blocks(p.person_id),
+            this.detail()?.rows ?? [],
+          ),
+        ]),
+      ),
+  );
+  summary(person: string) {
+    return this.summaries().get(person) ?? summarizeParticipant([], []);
+  }
+  orderedPeople() {
+    return this.people().sort(
+      (a, b) =>
+        this.summary(a.person_id).priority -
+          this.summary(b.person_id).priority ||
+        a.full_name.localeCompare(b.full_name, 'es'),
     );
+  }
+  filteredPeople() {
+    const normalize = (s: string) =>
+      s
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+    const q = normalize(this.personQuery().trim());
+    return this.orderedPeople().filter(
+      (p) =>
+        (!q ||
+          normalize(p.full_name + ' ' + (p.instrument ?? '')).includes(q)) &&
+        (this.personFilter() === 'all' ||
+          (this.summary(p.person_id).state === 'ready') ===
+            (this.personFilter() === 'ready')),
+    );
+  }
+  readyCount() {
+    return this.people().filter(
+      (p) => this.summary(p.person_id).state === 'ready',
+    ).length;
+  }
+  activePerson() {
+    return (
+      this.people().find((p) => p.person_id === this.activePersonId()) ?? null
+    );
+  }
+  activeIndex() {
+    return this.filteredPeople().findIndex(
+      (p) => p.person_id === this.activePersonId(),
+    );
+  }
+  filterPeople(value: 'all' | 'pending' | 'ready') {
+    this.personFilter.set(value);
+    this.closeHidden();
+  }
+  searchPeople(value: string) {
+    this.personQuery.set(value);
+    this.closeHidden();
+  }
+  private closeHidden() {
+    if (
+      !this.filteredPeople().some((p) => p.person_id === this.activePersonId())
+    ) {
+      this.activePersonId.set(null);
+      this.picking.set(null);
+      this.choiceGeneration++;
+    }
+  }
+  selectPerson(id: string, toggle = true) {
+    if (!this.canLeave()) return;
+    this.dirty.set(false);
+    this.editor.set(false);
+    this.editingPersonId.set(null);
+    this.rename = false;
+    this.picking.set(null);
+    this.choiceGeneration++;
+    this.activePersonId.set(toggle && this.activePersonId() === id ? null : id);
+    this.centerActive();
+  }
+  stepPerson(direction: number) {
+    const people = this.filteredPeople(),
+      index = this.activeIndex();
+    const next =
+      index < 0 ? (direction > 0 ? 0 : people.length - 1) : index + direction;
+    if (people[next]) this.selectPerson(people[next].person_id, false);
+  }
+  centerActive() {
+    requestAnimationFrame(() => {
+      const rail = this.rail()?.nativeElement;
+      const card = rail?.querySelector<HTMLElement>(
+        '[data-person="' + this.activePersonId() + '"]',
+      );
+      if (rail && card)
+        rail.scrollTo({
+          left: card.offsetLeft - (rail.clientWidth - card.clientWidth) / 2,
+          behavior: 'instant',
+        });
+    });
   }
   blocks(person: string) {
     return this.detail()?.blocks.filter((b) => b.person_id === person) ?? [];
@@ -158,6 +275,7 @@ export class SeriesDetailPage {
       !this.detail() ||
       this.saving() ||
       this.assisting() ||
+      this.refreshing() ||
       !this.connection.online()
     )
       return false;
@@ -228,6 +346,8 @@ export class SeriesDetailPage {
   start() {
     if (this.dirty() && !confirm('¿Descartar los cambios sin guardar?'))
       return false;
+    this.editingPersonId.set(null);
+    this.activePersonId.set(null);
     this.selectedPerson.set(null);
     this.selected.set([]);
     this.gapChoice = '';
@@ -242,6 +362,13 @@ export class SeriesDetailPage {
   }
   choose(p: Choice) {
     this.selectedPerson.set(p);
+    if (this.blocks(p.id).length) {
+      this.activePersonId.set(p.id);
+      this.editingPersonId.set(p.id);
+      this.personFilter.set('all');
+      this.personQuery.set('');
+      this.centerActive();
+    }
     this.selected.set(this.blocks(p.id).flatMap((b) => b.event_ids));
     this.gapChoice = '';
     this.dirty.set(true);
@@ -253,9 +380,6 @@ export class SeriesDetailPage {
       label: b.full_name,
       subtitle: b.instrument ?? '',
     });
-    document
-      .getElementById('participation-editor')
-      ?.scrollIntoView({ behavior: 'smooth' });
   }
   toggle(id: string) {
     this.selected.update((ids) =>
@@ -283,6 +407,10 @@ export class SeriesDetailPage {
     };
     if (await this.command('ATTENDANCE', data)) {
       this.editor.set(false);
+      this.editingPersonId.set(null);
+      this.activePersonId.set(p?.id ?? this.personId);
+      this.personQuery.set('');
+      this.personFilter.set('all');
       this.dirty.set(false);
       await this.load();
     }
@@ -291,6 +419,7 @@ export class SeriesDetailPage {
     if (this.canLeave()) {
       this.editor.set(false);
       this.rename = false;
+      this.editingPersonId.set(null);
       this.dirty.set(false);
     }
   }
@@ -331,7 +460,7 @@ export class SeriesDetailPage {
       })
     ) {
       this.picking.set(null);
-      await this.load();
+      await this.load(true);
     }
   }
   canLeave() {

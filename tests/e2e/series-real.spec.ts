@@ -251,14 +251,10 @@ test.describe('Supabase real · series fase 6', () => {
       page.getByRole('button', { name: 'Guardar participación' }),
     ).toBeDisabled();
     mkdirSync('.local/screenshots', { recursive: true });
-    await page
-      .locator('#participation-editor')
-      .screenshot({
-        path:
-          '.local/screenshots/fase6-participacion-' +
-          info.project.name +
-          '.png',
-      });
+    await page.locator('#participation-editor').screenshot({
+      path:
+        '.local/screenshots/fase6-participacion-' + info.project.name + '.png',
+    });
     await page
       .getByRole('radio', {
         name: 'Mantener una única cesión entre la primera y la última',
@@ -371,6 +367,12 @@ test.describe('Supabase real · series fase 6', () => {
       page.getByText('Finalizada', { exact: true }).first(),
     ).toBeVisible();
     await page.goto('/actuaciones/series/' + sid);
+    await page
+      .getByRole('button', {
+        name: 'Preparar a ' + prefix + ' Refuerzo huecos',
+        exact: true,
+      })
+      .click();
     card = page.locator('article').filter({
       has: page.getByRole('heading', {
         name: prefix + ' Refuerzo huecos',

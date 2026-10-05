@@ -190,8 +190,11 @@ dañadas, lavandería o en conflicto no serán primeras recomendaciones automát
   retirar antes las participaciones. Así no se conserva una decisión de huecos ya invalidada.
   La interfaz explica esta restricción; los planes anteriores quedan en la auditoría.
 - `series_detail` devuelve una instantánea coherente, solo ADMIN. Series paginadas de 24,
-  participantes de 12, selector de prendas de 12. Límite por serie: 60 actuaciones y 200 personas.
-  Tarjetas en dos columnas cuando caben y casillas táctiles en lugar de una tabla horizontal.
+  selector de prendas de 12. Límite por serie: 60 actuaciones y 200 personas.
+  Tras el refinamiento de fase 8, los participantes sustituyen la paginación de 12 y las dos
+  columnas por una tira horizontal con búsqueda, filtros y una sola ficha abierta. Los
+  pendientes aparecen antes de los preparados; la edición de participación queda dentro
+  de la ficha. Se mantienen las casillas táctiles para elegir actuaciones y los mismos RPC.
 - Migración `20261005000800_series.sql` aplicada al proyecto independiente. Sin cambios de
   permisos de administradores, almacenamiento de firmas ni escrituras offline.
 - No se adelantan recomendador, preparación automática, duplicados de series ni motor de conflictos.

@@ -4,7 +4,7 @@ Aplicación independiente de `../sistema-entradas-banda`. Usar Entradas solo com
 
 ## Trabajo por fases
 
-- Fases 0 a 4 y refinamiento visual aprobados. Fase 5 y revisión de tarjetas aprobadas. Fase 6 y rediseño del inicio aprobados. Fase 7 aprobada. Fase 8 implementada y validada: conflictos y operativa avanzada; pendiente de revisión del usuario.
+- Fases 0 a 4 y refinamiento visual aprobados. Fase 5 y revisión de tarjetas aprobadas. Fase 6 y rediseño del inicio aprobados. Fase 7 aprobada. Fase 8 aprobada. Rediseño compacto de preparación de series autorizado, sin comenzar fase 9.
 - NO comenzar fase 9 ni funcionalidades posteriores sin autorización expresa del usuario.
 - Actuaciones individuales, uniformes, refuerzos y asignaciones básicas disponibles. Series y preparación por periodos disponibles en fase 6; recomendador disponible en fase 7; conflictos y permanencia de prendas disponibles en fase 8.
 - Nombre visible: Gestión de trajes. Inicio operativo sin mensajes promocionales; navegación inferior burdeos, cabecera/lateral claros y logo de la Banda.

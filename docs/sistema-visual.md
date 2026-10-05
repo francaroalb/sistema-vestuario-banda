@@ -129,3 +129,31 @@ revisión con datos ficticios en 320, 390, 768, 1280 y 1440 px sin desbordamient
 Capturas locales en `.local/screenshots/ui-home-redesign`, excluidas de Git.
 Se comprobaron también los ocho destinos de acciones, el inventario vacío y la recuperación
 mediante Reintentar tras un error de carga, en escritorio y móvil emulado.
+
+## Preparación compacta de series tras fase 8
+
+Los participantes se presentan en una tira horizontal de tarjetas pequeñas: nombre,
+instrumento y chaqueta asignada. Se puede desplazar con el dedo o navegar con flechas.
+Solo se abre una ficha a la vez; pulsarla de nuevo o usar Plegar la cierra. La edición
+de participación aparece dentro de esa ficha y conserva la confirmación antes de descartar
+cambios pendientes. El nombre completo permanece disponible en la ficha y en la etiqueta
+accesible de la tarjeta; los resúmenes largos se limitan a dos líneas.
+
+Se ordenan primero las personas con incidencias, después quienes necesitan chaqueta,
+después quienes necesitan otras prendas y finalmente quienes tienen todas las asignaciones
+preparadas. El verde identifica preparados, el ámbar revisión y el borde burdeos la selección.
+Preparado exige todas las prendas de todos los periodos, sin conflictos ni devoluciones
+pendientes. Los filtros y la búsqueda por nombre o instrumento permiten localizar personas.
+
+La agenda y la preparación asistida comienzan plegadas y comparten fila en escritorio.
+Las actuaciones de cada periodo también se consultan al desplegar su agenda. Asignar una
+prenda actualiza la ficha abierta sin sustituir toda la pantalla por un indicador de carga.
+No cambia el modelo de datos ni las operaciones de asignación; los datos manuales se conservan.
+
+Validación: 21 pruebas unitarias, compilación sin avisos de presupuesto y 12 pruebas de
+navegador aprobadas (10 con Supabase real y 2 de interfaz con 30 participantes ficticios).
+Tras los últimos ajustes se repitieron las dos pruebas de interfaz, también aprobadas.
+Se comprobó desplazamiento táctil emulado, edición dentro de la ficha, protección de
+borradores, orden tras asignar y ausencia de desbordamiento de página en 320, 390, 768,
+1280 y 1440 px. Capturas revisadas en `.local/screenshots/series-compacta-desktop.png`
+y `.local/screenshots/series-compacta-mobile.png`. Pendiente la valoración en dispositivo físico.

@@ -347,6 +347,12 @@ test.describe('Supabase real · conflictos fase 8', () => {
     });
     await card.getByRole('link', { name: 'Revisar asignación' }).click();
     await expect(page).toHaveURL(new RegExp('/actuaciones/series/' + sid));
+    await page
+      .getByRole('button', {
+        name: 'Preparar a ' + prefix + ' Persona 1',
+        exact: true,
+      })
+      .click();
     await page.getByRole('button', { name: 'Cambiar', exact: true }).click();
     await page
       .getByLabel('Buscar código para todo el periodo')

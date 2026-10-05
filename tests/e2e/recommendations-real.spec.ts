@@ -265,6 +265,7 @@ test.describe('Supabase real · recomendaciones fase 7', () => {
       page.getByRole('heading', { name: 'Sin histórico de vestuario' }),
     ).toBeVisible();
     await page.goto('/actuaciones/series/' + sid);
+    await page.locator('.series-assistant > summary').click();
     await page
       .getByRole('button', { name: 'Ver propuestas', exact: true })
       .click();
