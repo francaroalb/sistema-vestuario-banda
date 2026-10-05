@@ -413,6 +413,97 @@ test.describe('Supabase real · actuaciones fase 5', () => {
     );
     expect(errors).toEqual([]);
   });
+  test('reincorporar un participante tras reasignar su prenda permite añadirlo sin recuperar la reserva antigua', async ({
+    page,
+  }) => {
+    const first = await person('Reincorporado'),
+      second = await person('Con reserva'),
+      g = await garment('REJOIN'),
+      u = uuid(),
+      id = uuid();
+    uniforms.push(u);
+    events.push(id);
+    await plan('UNIFORM', u, null, {
+      name: prefix + ' Reincorporación',
+      type_ids: [type],
+      archived: false,
+    });
+    let e = await plan('EVENT', id, null, {
+      title: prefix + ' Reincorporación',
+      uniform_id: u,
+      starts: '2090-01-12T12:00',
+      ends: '2090-01-12T13:00',
+      from: '2090-01-12T11:00',
+      until: '2090-01-12T14:00',
+      notes: '',
+    });
+    e = await plan('PARTICIPANT', id, e.version, {
+      person_id: first.id,
+      active: true,
+    });
+    e = await plan('ASSIGN', id, e.version, {
+      person_id: first.id,
+      type_id: type,
+      garment_id: g.id,
+    });
+    e = await plan('PARTICIPANT', id, e.version, {
+      person_id: first.id,
+      active: false,
+    });
+    e = await plan('PARTICIPANT', id, e.version, {
+      person_id: second.id,
+      active: true,
+    });
+    await plan('ASSIGN', id, e.version, {
+      person_id: second.id,
+      type_id: type,
+      garment_id: g.id,
+    });
+    await page.goto('/actuaciones/' + id);
+    await page.getByLabel('Correo electrónico').fill(admin.email);
+    await page.getByLabel('Contraseña', { exact: true }).fill(admin.password);
+    await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+    await page
+      .getByRole('button', { name: 'Añadir participante', exact: true })
+      .click();
+    await page.getByLabel('Buscar persona', { exact: true }).fill(first.name);
+    await page
+      .getByRole('button', { name: 'Seleccionar ' + first.name, exact: true })
+      .click();
+    const returning = page
+      .locator('section')
+      .filter({
+        has: page.getByRole('heading', { name: first.name, exact: true }),
+      });
+    await expect(
+      returning.getByText('Pendiente de asignar', { exact: true }),
+    ).toBeVisible();
+    const assigned = page
+      .locator('section')
+      .filter({
+        has: page.getByRole('heading', { name: second.name, exact: true }),
+      });
+    await expect(
+      assigned.getByText('Asignada · pendiente de entrega', { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole('alert')).toHaveCount(0);
+    await page.reload();
+    await expect(
+      returning.getByText('Pendiente de asignar', { exact: true }),
+    ).toBeVisible();
+    const prep = await client
+      .from('event_preparation')
+      .select('*')
+      .eq('event_id', id);
+    expect(prep.error).toBeNull();
+    expect(prep.data).toHaveLength(2);
+    expect(
+      prep.data!.find((row) => row.person_id === first.id)?.garment_id,
+    ).toBeNull();
+    expect(
+      prep.data!.find((row) => row.person_id === second.id)?.garment_id,
+    ).toBe(g.id);
+  });
   test('dos reservas simultáneas compiten sin sobrescribir y los permisos remotos se mantienen', async () => {
     const p = await person('Concurrencia'),
       g = await garment('RACE'),

@@ -152,7 +152,9 @@ dañadas, lavandería o en conflicto no serán primeras recomendaciones automát
 - Devoluciones y cambios siguen en Cesiones. La preparación consulta la situación actual de las prendas;
   no inventa entregas/devoluciones ni modifica una fecha de cesión al editar el plan.
 - Cancelar libera reservas conservando históricos y posesión real. Quitar un participante/asignación
-  tampoco registra una devolución. Cambios físicos posteriores muestran avisos sin borrar el plan.
+  tampoco registra una devolución. Reincorporar un participante retirado limpia sus antiguas
+  asignaciones al pasar de inactivo a activo, conservándolas en la auditoría previa de la operación.
+  No restaura reservas automáticamente ni altera cesiones; añadir una persona ya activa conserva su plan. Cambios físicos posteriores muestran avisos sin borrar el plan.
 - Listados paginados: 24 actuaciones, 12 participantes/prendas candidatas, 6 reservas por ficha.
   Consulta de reservas en inventario/personas y aviso en el selector de cesiones ordinarias.
   Uniformes/tipos se gestionan dentro de Actuaciones; se mantiene la navegación de cinco secciones.

@@ -58,3 +58,21 @@ No se desactivó la verificación TLS ni se cambiaron permisos de la aplicación
 - Móvil emulado en Chromium; validación en Safari/iPhone físico y despliegue HTTPS siguen en fase de producción.
 
 Detenerse aquí y esperar aprobación antes de fase 6.
+
+
+## Corrección: reincorporación de participantes
+
+Una persona retirada conservaba las asignaciones inactivas para su histórico. Si se asignaba esa
+prenda a otra persona y se reincorporaba a la primera, se reactivaba también su reserva anterior,
+provocando `RESERVATION_OVERLAP` al añadirla.
+
+La migración aditiva `20261005000700_participant_rejoin.sql` reinicia únicamente las asignaciones
+al pasar de participación inactiva a activa. La reincorporación queda pendiente de asignar prendas;
+las cesiones reales, movimientos y auditoría se conservan. Una persona que ya estaba activa mantiene
+sus asignaciones, y asignar realmente la misma prenda a dos participantes sigue bloqueado.
+La migración cambia la lógica de la operación, sin modificar filas existentes al aplicarla.
+
+- Regresión reproducida antes de la corrección con el mismo error de solapamiento.
+- 55 pruebas de PostgreSQL correctas después del cambio, incluyendo reintentos, historial y posesión real.
+- Caso de reincorporación verificado contra Supabase desde la interfaz en escritorio y móvil emulado.
+- Los datos de la actuación del usuario se conservan; se eliminan únicamente los fixtures propios de QA.

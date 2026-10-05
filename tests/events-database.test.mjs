@@ -537,6 +537,151 @@ test('Actuaciones individuales: planificación, disponibilidad y entrega', async
       },
     );
     await t.test(
+      'reincorporar un participante no reactiva reservas antiguas ni borra cesiones',
+      async () => {
+        const isolated = uuid(),
+          reserved = uuid(),
+          held = uuid();
+        await call('EVENT', isolated, null, {
+          ...input,
+          title: 'Reincorporación',
+        });
+        for (const personId of [person, other])
+          await act(
+            'PARTICIPANT',
+            { person_id: personId, active: true },
+            isolated,
+          );
+        for (const [id, code] of [
+          [reserved, 'REJOIN-1'],
+          [held, 'REJOIN-2'],
+        ])
+          await user('select public.save_garment($1,null,$2,$3,$4,$5,null)', [
+            id,
+            code,
+            type,
+            '48',
+            'DISPONIBLE',
+          ]);
+        await act(
+          'ASSIGN',
+          { person_id: person, type_id: type, garment_id: reserved },
+          isolated,
+        );
+        await act(
+          'PARTICIPANT',
+          { person_id: person, active: false },
+          isolated,
+        );
+        await act(
+          'ASSIGN',
+          { person_id: other, type_id: type, garment_id: reserved },
+          isolated,
+        );
+        await act('PARTICIPANT', { person_id: person, active: true }, isolated);
+        const assignments = await user(
+          'select * from public.event_assignments where event_id=$1',
+          [isolated],
+        );
+        assert.equal(
+          assignments.find((a) => a.person_id === person).garment_id,
+          null,
+        );
+        assert.equal(
+          assignments.find((a) => a.person_id === other).garment_id,
+          reserved,
+        );
+        // Selecting an already active participant must not clear their current plan.
+        await act('PARTICIPANT', { person_id: other, active: true }, isolated);
+        assert.equal(
+          (
+            await user(
+              'select * from public.event_assignments where event_id=$1 and person_id=$2',
+              [isolated, other],
+            )
+          )[0].garment_id,
+          reserved,
+        );
+        await assert.rejects(
+          act(
+            'ASSIGN',
+            { person_id: person, type_id: type, garment_id: reserved },
+            isolated,
+          ),
+          /RESERVATION_OVERLAP/,
+        );
+        // Rejoining with a garment physically held resets planning, never custody or history.
+        await act(
+          'ASSIGN',
+          { person_id: person, type_id: type, garment_id: held },
+          isolated,
+        );
+        const loanId = uuid();
+        await act(
+          'DELIVER',
+          {
+            person_id: person,
+            loan_id: loanId,
+            garment_ids: [held],
+            signed: true,
+          },
+          isolated,
+        );
+        await act(
+          'PARTICIPANT',
+          { person_id: person, active: false },
+          isolated,
+        );
+        const request = uuid(),
+          version = (await row(isolated)).version;
+        const data = { person_id: person, active: true };
+        await call('PARTICIPANT', isolated, version, data, request);
+        await call('PARTICIPANT', isolated, version, data, request);
+        const assignment = (
+          await user(
+            'select * from public.event_assignments where event_id=$1 and person_id=$2',
+            [isolated, person],
+          )
+        )[0];
+        assert.equal(assignment.garment_id, null);
+        assert.equal(assignment.fulfilled_item_id, null);
+        const lines = await user(
+          'select * from public.loan_items where loan_id=$1',
+          [loanId],
+        );
+        assert.equal(lines.length, 1);
+        assert.equal(lines[0].returned_at, null);
+        assert.equal(
+          (
+            await user('select * from public.loan_movements where loan_id=$1', [
+              loanId,
+            ])
+          ).length,
+          1,
+        );
+        const audit = await user(
+          "select before_data from public.audit_log where event_id=$1 and action='PARTICIPANT'",
+          [isolated],
+        );
+        assert(
+          audit.some((a) =>
+            a.before_data.assignments.some(
+              (old) => old.fulfilled_item_id === lines[0].id,
+            ),
+          ),
+        );
+        assert.equal(
+          (
+            await user(
+              'select * from public.event_preparation where event_id=$1 and person_id=$2 and type_id=$3',
+              [isolated, person, type],
+            )
+          )[0].status,
+          'SIN_ASIGNAR',
+        );
+      },
+    );
+    await t.test(
       'auditoría con responsable de servidor y acceso revocado',
       async () => {
         const audit = await user(

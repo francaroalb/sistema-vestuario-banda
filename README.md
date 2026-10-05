@@ -131,6 +131,9 @@ bloqueada hasta recibirla realmente. Si cambian su estado físico, archivo o pos
 muestra **Revisar disponibilidad**, conservando la asignación para decidir qué hacer.
 Una recogida anticipada también comprueba las otras reservas desde el momento actual.
 
+Si retiras a un participante y luego vuelves a añadirlo, sus prendas quedan pendientes de asignar.
+Las antiguas reservas no se recuperan automáticamente; las cesiones y el historial se conservan.
+
 La planificación no cambia retroactivamente la fecha prevista de una cesión real. Se conserva
 la registrada al entregar. Quitar una asignación o participante tampoco cierra cesiones.
 Las asignaciones de actuaciones individuales deben tener periodos separados; la gestión de cesiones
