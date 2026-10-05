@@ -102,7 +102,9 @@ export class EventDetail {
   canDeliver(person: string) {
     if (
       !this.event() ||
-      new Date(this.event()!.planned_until).getTime() <= Date.now()
+      new Date(
+        this.lines(person)[0]?.block_until ?? this.event()!.planned_until,
+      ).getTime() <= Date.now()
     )
       return false;
     return this.lines(person).some(

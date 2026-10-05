@@ -137,6 +137,8 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
       '/inventario',
       '/personas',
       '/actuaciones',
+      '/actuaciones/series',
+      '/actuaciones/series/00000000-0000-0000-0000-000000000001',
       '/cesiones',
     ]) {
       await page.goto(path);

@@ -1,0 +1,501 @@
+<a class="back-link" routerLink="/actuaciones/series">Volver a Series</a>
+@if (error()) {
+  <p class="notice notice-error" role="alert">
+    {{ error() }}
+    <button class="text-button" (click)="reload()">Recargar datos</button>
+  </p>
+}
+@if (!connection.online()) {
+  <p class="notice" role="status">
+    Sin conexión. Conservamos el borrador mientras siga abierta esta página.
+  </p>
+}
+@if (loading()) {
+  <p role="status">Cargando serie…</p>
+} @else if (detail(); as d) {
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Preparación conjunta</p>
+      <h1>{{ d.series.name }}</h1>
+    </div>
+    <button
+      class="btn btn-secondary"
+      (click)="rename = !rename"
+      [disabled]="saving()"
+    >
+      Cambiar nombre
+    </button>
+  </div>
+  <fieldset class="series-work" [disabled]="saving() || !connection.online()">
+    @if (rename) {
+      <form class="card event-card" (ngSubmit)="saveName()">
+        <div class="field">
+          <label for="series-name">Nombre de la serie</label
+          ><input
+            id="series-name"
+            name="name"
+            [(ngModel)]="seriesName"
+            (ngModelChange)="dirty.set(true)"
+            required
+            maxlength="160"
+          />
+        </div>
+        <div class="event-actions">
+          <button class="btn btn-primary" [disabled]="!seriesName.trim()">
+            Guardar nombre</button
+          ><button type="button" class="btn btn-quiet" (click)="close()">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    }
+    <details class="card event-card series-agenda" [open]="!events().length">
+      <summary>
+        Actuaciones <span class="count-badge">{{ events().length }}</span>
+      </summary>
+      <p class="event-help">
+        Ordenadas por inicio y hora de Madrid. Completa la agenda antes de
+        preparar las participaciones.
+      </p>
+      <div class="series-events">
+        @for (e of d.events; track e.id) {
+          <div class="event-choice">
+            <div>
+              <strong
+                ><a [routerLink]="['/actuaciones', e.id]">{{
+                  e.title
+                }}</a></strong
+              ><small
+                >{{ time(e.starts_at) }} · {{ e.uniform_name
+                }}{{ e.cancelled ? ' · Cancelada' : '' }}</small
+              >
+            </div>
+            <button class="btn btn-quiet" (click)="membership(e, false)">
+              Sacar de la serie
+            </button>
+          </div>
+        }
+      </div>
+      <div class="event-actions">
+        <button
+          class="btn btn-secondary"
+          (click)="showEvents = !showEvents; showEvents && searchEvents()"
+        >
+          Incorporar actuación existente</button
+        ><a
+          class="btn btn-secondary"
+          routerLink="/actuaciones/nueva"
+          [queryParams]="{ serie: id }"
+          >Crear actuación para la serie</a
+        >
+      </div>
+      @if (showEvents) {
+        <form
+          class="event-filters"
+          (ngSubmit)="candidatePage = 1; searchEvents()"
+        >
+          <div class="field">
+            <label for="candidate-search">Buscar actuación existente</label
+            ><input
+              id="candidate-search"
+              name="q"
+              [(ngModel)]="candidateQuery"
+              maxlength="160"
+            />
+          </div>
+          <button class="btn btn-secondary">Buscar</button>
+        </form>
+        @if (searching()) {
+          <p role="status">Buscando…</p>
+        } @else {
+          @for (e of candidates(); track e.id) {
+            <div class="event-choice">
+              <div>
+                <strong>{{ e.title }}</strong
+                ><small
+                  >{{ time(e.starts_at)
+                  }}{{ e.series_id ? ' · Ya pertenece a una serie' : ''
+                  }}{{ e.cancelled ? ' · Cancelada' : '' }}</small
+                >
+              </div>
+              <button
+                class="btn btn-secondary"
+                [disabled]="!!e.series_id || e.cancelled"
+                (click)="membership(e, true)"
+              >
+                Incorporar
+              </button>
+            </div>
+          } @empty {
+            <p>No hay actuaciones con esa búsqueda.</p>
+          }
+          @if (candidateCount() > 24) {
+            <div class="event-actions">
+              <button
+                class="btn btn-secondary"
+                [disabled]="candidatePage === 1"
+                (click)="candidatePage = candidatePage - 1; searchEvents()"
+              >
+                Anteriores</button
+              ><span>Página {{ candidatePage }}</span
+              ><button
+                class="btn btn-secondary"
+                [disabled]="candidatePage * 24 >= candidateCount()"
+                (click)="candidatePage = candidatePage + 1; searchEvents()"
+              >
+                Siguientes
+              </button>
+            </div>
+          }
+        }
+      }
+    </details>
+    <div class="card event-card participant-tools">
+      <h2>
+        Participantes <span class="count-badge">{{ people().length }}</span>
+      </h2>
+      <p class="event-help">
+        Marca las actuaciones de cada persona. Las consecutivas forman un solo
+        periodo de vestuario.
+      </p>
+      <div class="event-actions">
+        <button
+          class="btn btn-primary"
+          [disabled]="!events().length"
+          (click)="start()"
+        >
+          Añadir participante
+        </button>
+      </div>
+    </div>
+    @if (editor()) {
+      <section class="card event-card" id="participation-editor">
+        <h2>Participación en la serie</h2>
+        @if (!selectedPerson() && !quick) {
+          <app-choice-picker mode="person" (picked)="choose($event)" /><button
+            class="btn btn-secondary"
+            (click)="quick = true; dirty.set(true)"
+          >
+            No existe: crear refuerzo
+          </button>
+        }
+        @if (quick || selectedPerson()) {
+          <form (ngSubmit)="saveAttendance()">
+            @if (selectedPerson(); as p) {
+              <h3>{{ p.label }}</h3>
+              <p>{{ p.subtitle }}</p>
+            } @else {
+              <div class="event-times">
+                <div class="field">
+                  <label for="person-name">Nombre del refuerzo</label
+                  ><input
+                    id="person-name"
+                    name="personName"
+                    [(ngModel)]="name"
+                    (ngModelChange)="dirty.set(true)"
+                    required
+                    maxlength="120"
+                  />
+                </div>
+                <div class="field">
+                  <label for="person-instrument">Instrumento</label
+                  ><input
+                    id="person-instrument"
+                    name="instrument"
+                    [(ngModel)]="instrument"
+                    (ngModelChange)="dirty.set(true)"
+                    required
+                    maxlength="80"
+                  />
+                </div>
+              </div>
+            }
+            <div class="event-actions">
+              <button
+                type="button"
+                class="btn btn-quiet"
+                (click)="
+                  selected.set(events().map(eventId));
+                  gapChoice = '';
+                  dirty.set(true)
+                "
+              >
+                Marcar todas</button
+              ><button
+                type="button"
+                class="btn btn-quiet"
+                (click)="selected.set([]); gapChoice = ''; dirty.set(true)"
+              >
+                Desmarcar todas
+              </button>
+            </div>
+            <div class="attendance-grid">
+              @for (e of events(); track e.id) {
+                <label
+                  class="attendance-option"
+                  [class.checked]="selected().includes(e.id)"
+                  ><input
+                    type="checkbox"
+                    [checked]="selected().includes(e.id)"
+                    (change)="toggle(e.id)"
+                  /><span
+                    ><strong>{{ e.title }}</strong
+                    ><small>{{ time(e.starts_at) }}</small></span
+                  ></label
+                >
+              }
+            </div>
+            @if (hasGap()) {
+              <fieldset class="gap-decision">
+                <legend>
+                  Hay actuaciones intermedias en las que no participa
+                </legend>
+                <p>Elige qué ocurrirá con las prendas durante el hueco.</p>
+                <label
+                  ><input
+                    type="radio"
+                    name="gap"
+                    value="KEEP"
+                    [(ngModel)]="gapChoice"
+                    required
+                  />
+                  Mantener una única cesión entre la primera y la última</label
+                ><label
+                  ><input
+                    type="radio"
+                    name="gap"
+                    value="SPLIT"
+                    [(ngModel)]="gapChoice"
+                    required
+                  />
+                  Dividir: devolver al terminar cada bloque y recoger de
+                  nuevo</label
+                >
+              </fieldset>
+            } @else if (selected().length) {
+              <p class="notice">
+                Un único periodo: conserva las prendas entre sus actuaciones
+                consecutivas.
+              </p>
+            }
+            @if (!selected().length) {
+              <p class="notice">
+                Sin actuaciones marcadas se retirará a esta persona de la
+                preparación de la serie.
+              </p>
+            }
+            <div class="form-actions">
+              <button
+                class="btn btn-primary"
+                [disabled]="
+                  (hasGap() && !gapChoice) ||
+                  (!selectedPerson() &&
+                    (!name.trim() || !instrument.trim() || !selected().length))
+                "
+              >
+                Guardar participación</button
+              ><button type="button" class="btn btn-quiet" (click)="close()">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        } @else {
+          <button class="btn btn-quiet" (click)="close()">Cerrar</button>
+        }
+      </section>
+    }
+    <div class="event-stack series-participants">
+      @for (person of visiblePeople(); track person.person_id) {
+        <article class="card event-card participant-card">
+          <header class="participant-header">
+            <div>
+              <h2>{{ person.full_name }}</h2>
+              <p>{{ person.instrument || 'Sin instrumento' }}</p>
+            </div>
+            <button class="btn btn-secondary" (click)="edit(person)">
+              Editar participación
+            </button>
+          </header>
+          @for (b of blocks(person.person_id); track b.id) {
+            <section class="series-period">
+              <div class="period-heading">
+                <div>
+                  <h3>Periodo {{ $index + 1 }}</h3>
+                  <p>
+                    {{ time(b.planned_from) }} — {{ time(b.planned_until) }}
+                  </p>
+                  <small>{{
+                    b.gap_choice === 'KEEP'
+                      ? 'Conserva las prendas durante los huecos'
+                      : b.gap_choice === 'SPLIT'
+                        ? 'Devolución al final de este bloque'
+                        : 'Actuaciones consecutivas'
+                  }}</small>
+                </div>
+                @if (canDeliver(b)) {
+                  <a
+                    class="btn btn-primary"
+                    routerLink="/cesiones/nueva"
+                    [queryParams]="{
+                      actuacion: b.event_ids[0],
+                      persona: b.person_id,
+                    }"
+                    >Entregar prendas</a
+                  >
+                }
+              </div>
+              <div class="participation-tags">
+                @for (id of b.event_ids; track id) {
+                  <a [routerLink]="['/actuaciones', id]">{{ eventName(id) }}</a>
+                }
+              </div>
+              @for (r of lines(b.id); track r.type_id) {
+                <div class="event-choice preparation-line">
+                  <div class="preparation-data">
+                    <strong
+                      >{{ r.type_name }}
+                      @if (r.code) {
+                        ·
+                        <a [routerLink]="['/inventario', r.garment_id]">{{
+                          r.code
+                        }}</a>
+                        · Talla {{ r.size }}
+                      }</strong
+                    ><span
+                      class="event-status"
+                      [class.ok]="r.status === 'EN_SU_PODER'"
+                      [class.assigned]="r.status === 'ASIGNADA'"
+                      [class.warn]="
+                        r.status === 'CONFLICTO' ||
+                        r.status === 'PENDIENTE_DEVOLUCION'
+                      "
+                      >{{ label[r.status] }}</span
+                    >
+                    @if (r.status === 'EN_SU_PODER') {
+                      <small
+                        >Ya la conserva · devolución prevista
+                        {{ time(b.planned_until) }}</small
+                      >
+                    }
+                    @if (r.holder_name && r.holder_id !== b.person_id) {
+                      <small>Actualmente en poder de {{ r.holder_name }}</small>
+                    }
+                  </div>
+                  <div class="event-actions">
+                    @if (r.loan_id && r.holder_id === b.person_id) {
+                      <a
+                        class="btn btn-secondary"
+                        [routerLink]="['/cesiones', r.loan_id, 'devolver']"
+                        >Devolver</a
+                      >
+                    }
+                    <button class="btn btn-secondary" (click)="pick(r)">
+                      {{ r.garment_id ? 'Cambiar' : 'Asignar prenda' }}
+                    </button>
+                    @if (r.garment_id) {
+                      <button class="btn btn-quiet" (click)="assign(r, null)">
+                        Quitar
+                      </button>
+                    }
+                  </div>
+                </div>
+                @if (
+                  picking()?.block_id === b.id &&
+                  picking()?.type_id === r.type_id
+                ) {
+                  <div class="series-picker">
+                    <form
+                      class="event-filters"
+                      (ngSubmit)="choicePage = 1; loadChoices()"
+                    >
+                      <div class="field">
+                        <label for="garment-search"
+                          >Buscar código para todo el periodo</label
+                        ><input
+                          id="garment-search"
+                          name="garment"
+                          [(ngModel)]="choiceQuery"
+                          maxlength="60"
+                        />
+                      </div>
+                      <button class="btn btn-secondary">Buscar</button
+                      ><button
+                        type="button"
+                        class="btn btn-quiet"
+                        (click)="picking.set(null)"
+                      >
+                        Cerrar
+                      </button>
+                    </form>
+                    @if (choiceLoading()) {
+                      <p role="status">Comprobando disponibilidad…</p>
+                    } @else {
+                      @for (c of choices(); track c.id) {
+                        <div class="event-choice">
+                          <div>
+                            <strong>{{ c.code }} · Talla {{ c.size }}</strong
+                            ><small>{{ c.blocked || c.situation }}</small>
+                          </div>
+                          <button
+                            class="btn btn-secondary"
+                            [disabled]="!!c.blocked"
+                            (click)="assign(r, c.id)"
+                            [attr.aria-label]="'Asignar ' + c.code"
+                          >
+                            Seleccionar
+                          </button>
+                        </div>
+                      } @empty {
+                        <p>No hay prendas con ese código y tipo.</p>
+                      }
+                      @if (choiceCount() > 12) {
+                        <div class="event-actions">
+                          <button
+                            class="btn btn-secondary"
+                            [disabled]="choicePage === 1"
+                            (click)="choicePage = choicePage - 1; loadChoices()"
+                          >
+                            Anteriores prendas</button
+                          ><span>Página {{ choicePage }}</span
+                          ><button
+                            class="btn btn-secondary"
+                            [disabled]="choicePage * 12 >= choiceCount()"
+                            (click)="choicePage = choicePage + 1; loadChoices()"
+                          >
+                            Siguientes prendas
+                          </button>
+                        </div>
+                      }
+                    }
+                  </div>
+                }
+              }
+            </section>
+          }
+        </article>
+      } @empty {
+        <p class="empty-state card">
+          Añade los participantes para preparar sus periodos y prendas.
+        </p>
+      }
+    </div>
+    @if (people().length > 12) {
+      <nav class="event-actions" aria-label="Páginas de participantes">
+        <button
+          class="btn btn-secondary"
+          [disabled]="personPage === 1"
+          (click)="personPage = personPage - 1"
+        >
+          Anterior</button
+        ><span>Página {{ personPage }}</span
+        ><button
+          class="btn btn-secondary"
+          [disabled]="personPage * 12 >= people().length"
+          (click)="personPage = personPage + 1"
+        >
+          Siguiente
+        </button>
+      </nav>
+    }
+  </fieldset>
+}

@@ -160,12 +160,48 @@ dañadas, lavandería o en conflicto no serán primeras recomendaciones automát
   Uniformes/tipos se gestionan dentro de Actuaciones; se mantiene la navegación de cinco secciones.
 - No se implementan series, matriz de participación, recomendador ni motor completo de conflictos.
 
+## Fase 6 — series y periodos
+
+- `event_series` agrupa actuaciones y mantiene versión optimista. `events.series_id` es opcional.
+  Las actuaciones individuales existentes conservan sus datos y comportamiento.
+- `series_blocks` materializa un periodo por persona con actuaciones, tipos requeridos, límites
+  horarios y decisión `CONSECUTIVE`, `KEEP` o `SPLIT`. Las participaciones enlazan el bloque.
+  Orden: inicio de actuación e identificador para empates; no se cuentan días del calendario.
+- `plan_series` valida ADMIN, RLS, comandos y campos cerrados. Usa el mismo bloqueo transaccional
+  de planificación que `plan_event`, versión de serie y UUID de petición. Crear y vincular una
+  actuación o crear un refuerzo y su participación son operaciones atómicas.
+- La decisión de huecos se exige también en servidor. `KEEP` ocupa desde la primera recogida
+  hasta la última devolución, incluyendo actuaciones no participadas. `SPLIT` materializa los
+  tramos consecutivos y rechaza periodos de posesión que se solapan entre sí.
+- Una reserva por tipo se propaga a todas las actuaciones del bloque. Si cambian los uniformes,
+  el bloque requiere la unión de tipos. `planning_occupancy` proporciona intervalos completos;
+  únicamente el mismo bloque/persona admite repetición de la reserva entre sus actuaciones.
+  Las comprobaciones de actuaciones individuales y sus selectores utilizan esos mismos intervalos.
+- La entrega reutiliza el movimiento firmado existente, usa el final del bloque y vincula la línea
+  real a todas sus actuaciones. Reintentos no duplican movimientos. La posesión actual manda:
+  no se crea otra cesión para prendas ya en su poder. Una devolución temprana o parcial real sigue
+  siendo posible; no se inventan devoluciones por fechas o cambios del plan.
+- No se altera retrospectivamente la devolución prevista de una cesión ya existente. Las nuevas
+  entregas desde una serie sí toman el final del bloque como previsión.
+- Las participaciones y asignaciones de actuaciones vinculadas se gestionan desde la serie.
+  Cambiar participación reemplaza periodos y libera reservas con aviso y auditoría; no registra
+  devolución física. Con líneas del bloque pendientes de devolver se bloquea el reemplazo.
+- Cambiar orden, pertenencia, fechas, uniforme o cancelar actuaciones con bloques preparados exige
+  retirar antes las participaciones. Así no se conserva una decisión de huecos ya invalidada.
+  La interfaz explica esta restricción; los planes anteriores quedan en la auditoría.
+- `series_detail` devuelve una instantánea coherente, solo ADMIN. Series paginadas de 24,
+  participantes de 12, selector de prendas de 12. Límite por serie: 60 actuaciones y 200 personas.
+  Tarjetas en dos columnas cuando caben y casillas táctiles en lugar de una tabla horizontal.
+- Migración `20261005000800_series.sql` aplicada al proyecto independiente. Sin cambios de
+  permisos de administradores, almacenamiento de firmas ni escrituras offline.
+- No se adelantan recomendador, preparación automática, duplicados de series ni motor de conflictos.
+
 ## Fases pendientes
 
 Antes de fase 5 se ha aplicado el refinamiento visual solicitado: tokens comunes, superficies
 neutras, navegación inferior burdeos y lateral claro, controles y jerarquía consistentes.
 Ver `docs/sistema-visual.md`. Esta revisión no modifica modelos, RPC ni flujos funcionales.
 
-6 Series · 7 Recomendador · 8 Conflictos · 9 Productividad · 10 QA y producción.
+7 Recomendador · 8 Conflictos · 9 Productividad · 10 QA y producción.
 
-Se requiere aprobación expresa entre fases. No comenzar fase 6 sin autorización.
+Se requiere aprobación expresa entre fases. No comenzar fase 7 sin autorización.

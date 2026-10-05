@@ -1,4 +1,5 @@
 import type {
+  EventSeries,
   Uniform,
   BandEvent,
   EventPerson,
@@ -70,6 +71,12 @@ export type InventorySummary = {
 export interface Database {
   public: {
     Tables: {
+      event_series: {
+        Row: EventSeries;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       uniforms: {
         Row: Uniform;
         Insert: never;
@@ -174,6 +181,18 @@ export interface Database {
       garment_inventory: { Row: StockGarment; Relationships: [] };
     };
     Functions: {
+      plan_series: {
+        Args: {
+          p_request_id: string;
+          p_action: string;
+          p_id: string;
+          p_expected_version: number | null;
+          p_data: Json;
+        };
+        Returns: Json;
+      };
+      series_detail: { Args: { p_id: string }; Returns: Json };
+
       plan_event: {
         Args: {
           p_request_id: string;

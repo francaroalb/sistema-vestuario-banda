@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EventsRepository } from '../../core/events/events-repository';
 import {
+  EventSeries,
   BandEvent,
   Uniform,
   madridLocal,
@@ -182,7 +183,13 @@ export class EventForm {
   readonly connection = inject(Connectivity);
   readonly editing = !!this.route.snapshot.paramMap.get('id');
   readonly id = this.route.snapshot.paramMap.get('id') ?? crypto.randomUUID();
-  readonly back = this.editing ? '/actuaciones/' + this.id : '/actuaciones';
+  readonly seriesId = this.route.snapshot.queryParamMap.get('serie');
+  private series: EventSeries | null = null;
+  readonly back = this.seriesId
+    ? '/actuaciones/series/' + this.seriesId
+    : this.editing
+      ? '/actuaciones/' + this.id
+      : '/actuaciones';
   readonly loading = signal(true);
   readonly loadError = signal('');
   readonly error = signal('');
@@ -218,6 +225,8 @@ export class EventForm {
         this.repo.catalog(),
         this.editing ? this.repo.get(this.id) : Promise.resolve(null),
       ]);
+      if (this.seriesId && !this.editing)
+        this.series = (await this.repo.seriesDetail(this.seriesId)).series;
       this.current = e;
       this.uniforms.set(
         catalog.uniforms.filter((u) => !u.archived || u.id === e?.uniform_id),
@@ -245,25 +254,40 @@ export class EventForm {
     this.saving.set(true);
     this.error.set('');
     try {
-      await this.repo.command(
-        'EVENT',
-        this.id,
-        this.current?.version ?? null,
-        {
-          title: this.title,
-          uniform_id: this.uniform,
-          starts: this.starts,
-          ends: this.ends,
-          from: this.from,
-          until: this.until,
-          notes: this.notes,
-        },
-        this.request,
-      );
+      const data = {
+        title: this.title,
+        uniform_id: this.uniform,
+        starts: this.starts,
+        ends: this.ends,
+        from: this.from,
+        until: this.until,
+        notes: this.notes,
+      };
+      if (this.seriesId && this.series && !this.editing) {
+        await this.repo.seriesCommand(
+          'EVENT_CREATE',
+          this.seriesId,
+          this.series.version,
+          { event_id: this.id, event_data: data },
+          this.request,
+        );
+      } else {
+        await this.repo.command(
+          'EVENT',
+          this.id,
+          this.current?.version ?? null,
+          data,
+          this.request,
+        );
+      }
       this.dirty.set(false);
       this.feedback.success('Actuación guardada.');
       this.completed = true;
-      await this.router.navigate(['/actuaciones', this.id]);
+      await this.router.navigate(
+        this.seriesId
+          ? ['/actuaciones/series', this.seriesId]
+          : ['/actuaciones', this.id],
+      );
     } catch (e) {
       this.error.set(planningError(e));
     } finally {

@@ -8,6 +8,7 @@ export type Uniform = {
   updated_by: string;
 };
 export type BandEvent = {
+  series_id?: string | null;
   id: string;
   title: string;
   starts_at: string;
@@ -32,6 +33,10 @@ export type EventPerson = {
   archived_at: string | null;
 };
 export type Preparation = {
+  block_id?: string | null;
+  block_from?: string | null;
+  block_until?: string | null;
+  last_in_block?: boolean | null;
   event_id: string;
   person_id: string;
   full_name: string;
@@ -99,6 +104,19 @@ export function madridLocal(value: string) {
 export function planningError(error: unknown): string {
   const e = error as { message?: string; code?: string };
   const messages: Record<string, string> = {
+    GAP_DECISION_REQUIRED:
+      'Hay actuaciones intermedias sin participar. Elige mantener la prenda o dividir el periodo.',
+    USE_SERIES:
+      'Gestiona la participación y las prendas desde la preparación de la serie.',
+    SERIES_PLAN_EXISTS:
+      'Antes de cambiar las actuaciones o sus horarios, retira las participaciones de la serie. Esto libera sus reservas; después tendrás que volver a preparar los periodos.',
+    SERIES_IN_CUSTODY:
+      'Este periodo tiene prendas entregadas. Registra su devolución real antes de cambiar las participaciones.',
+    EVENT_HAS_PLAN:
+      'Esta actuación ya tiene participantes, está cancelada o pertenece a otra serie. Revisa su preparación antes de incorporarla.',
+    SPLIT_PERIOD_OVERLAP:
+      'Los periodos separados se solapan. Ajusta la recogida/devolución de las actuaciones o elige mantener la prenda.',
+    SERIES_LIMIT: 'Una serie admite hasta 60 actuaciones y 200 participantes.',
     PLAN_CHANGED:
       'La planificación ha cambiado. Recarga los datos antes de continuar.',
     REQUEST_ALREADY_USED:
@@ -127,4 +145,40 @@ export function planningError(error: unknown): string {
       ? 'Los datos han cambiado. Recarga antes de continuar.'
       : 'No hemos podido guardar o cargar los datos. Comprueba tu conexión y reintenta.')
   );
+}
+
+export type EventSeries = {
+  id: string;
+  name: string;
+  version: number;
+  updated_at: string;
+  updated_by: string;
+};
+export type SeriesBlock = {
+  id: string;
+  series_id: string;
+  person_id: string;
+  full_name: string;
+  instrument: string | null;
+  event_ids: string[];
+  type_ids: string[];
+  planned_from: string;
+  planned_until: string;
+  gap_choice: 'KEEP' | 'SPLIT' | 'CONSECUTIVE';
+};
+export type SeriesDetail = {
+  series: EventSeries;
+  events: BandEvent[];
+  blocks: SeriesBlock[];
+  rows: Preparation[];
+};
+export function hasParticipationGap(
+  events: BandEvent[],
+  selected: string[],
+): boolean {
+  const indexes = events
+    .filter((e) => !e.cancelled)
+    .map((e, i) => (selected.includes(e.id) ? i : -1))
+    .filter((i) => i >= 0);
+  return indexes.some((value, i) => i > 0 && value > indexes[i - 1] + 1);
 }

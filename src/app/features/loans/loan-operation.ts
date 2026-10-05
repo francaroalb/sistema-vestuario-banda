@@ -133,7 +133,9 @@ export class LoanOperation {
               subtitle: r.type_name + ' · Talla ' + r.size,
             })),
           );
-          this.due.set(madridLocal(event.planned_until));
+          this.due.set(
+            madridLocal(rows[0]?.block_until ?? event.planned_until),
+          );
           this.notes.set('Actuación: ' + event.title);
         } else if (this.eventId) throw new Error('PLAN_CHANGED');
       } else {

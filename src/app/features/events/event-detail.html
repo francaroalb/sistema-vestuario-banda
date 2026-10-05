@@ -21,6 +21,14 @@
       >
     }
   </div>
+  @if (e.series_id) {
+    <p class="notice">
+      <a [routerLink]="['/actuaciones/series', e.series_id]"
+        >Preparar vestuario de la serie</a
+      >
+      · Participaciones y asignaciones se gestionan conjuntamente.
+    </p>
+  }
   <div class="event-stack">
     <section class="card event-card event-summary">
       <h2>{{ e.uniform_name }}</h2>
@@ -56,7 +64,7 @@
         Busca la ficha existente para conservar su historial. Si no existe,
         puedes crear un refuerzo con nombre e instrumento.
       </p>
-      @if (!e.cancelled) {
+      @if (!e.cancelled && !e.series_id) {
         <div class="event-actions">
           <button
             class="btn btn-primary"
@@ -153,19 +161,31 @@
                   >Entregar prendas</a
                 >
               }
-              <button
-                class="btn btn-quiet"
-                [disabled]="saving() || !connection.online()"
-                (click)="remove(person)"
-              >
-                Quitar participante
-              </button>
+              @if (!e.series_id) {
+                <button
+                  class="btn btn-quiet"
+                  [disabled]="saving() || !connection.online()"
+                  (click)="remove(person)"
+                >
+                  Quitar participante
+                </button>
+              }
             </div>
           }
         </header>
         @for (row of lines(person.person_id); track row.type_id) {
           <div class="event-choice preparation-line">
             <div class="preparation-data">
+              @if (row.block_until) {
+                <small class="period-hint"
+                  >{{
+                    row.last_in_block
+                      ? 'Última actuación — devolución prevista al finalizar'
+                      : 'Conserva la prenda para las siguientes actuaciones'
+                  }}
+                  · {{ time(row.block_until) }}</small
+                >
+              }
               <strong
                 >{{ row.type_name }}
                 @if (row.code) {
@@ -218,7 +238,7 @@
                   >Devolver</a
                 >
               }
-              @if (!e.cancelled) {
+              @if (!e.cancelled && !e.series_id) {
                 <button
                   class="btn btn-secondary"
                   [disabled]="saving() || !connection.online()"

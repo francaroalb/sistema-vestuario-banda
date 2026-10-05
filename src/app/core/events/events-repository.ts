@@ -2,13 +2,55 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from '../config/supabase';
 import { Json } from '../config/database.types';
 import { literalSearch } from '../inventory/inventory';
-import { BandEvent, EventChoice, Uniform } from './models';
+import {
+  BandEvent,
+  EventChoice,
+  Uniform,
+  EventSeries,
+  SeriesDetail,
+} from './models';
 @Injectable({ providedIn: 'root' })
 export class EventsRepository {
   private readonly supabase = inject(SupabaseService);
   private get client() {
     if (!this.supabase.client) throw new Error('Not configured');
     return this.supabase.client;
+  }
+  async seriesList(q: string, page: number) {
+    const r = await this.client
+      .from('event_series')
+      .select('*', { count: 'exact' })
+      .ilike('name', '%' + literalSearch(q.slice(0, 160)) + '%')
+      .order('updated_at', { ascending: false })
+      .order('id')
+      .range((page - 1) * 24, page * 24 - 1);
+    if (r.error?.code === 'PGRST103' && page > 1) return { rows: [], count: 0 };
+    if (r.error) throw r.error;
+    return { rows: r.data, count: r.count ?? 0 };
+  }
+  async seriesDetail(id: string) {
+    const r = await this.client.rpc('series_detail', { p_id: id });
+    if (r.error) throw r.error;
+    return r.data as unknown as SeriesDetail;
+  }
+  async seriesCommand(
+    action: string,
+    id: string,
+    version: number | null,
+    data: Json,
+    request: string,
+  ) {
+    const r = await this.client
+      .rpc('plan_series', {
+        p_request_id: request,
+        p_action: action,
+        p_id: id,
+        p_expected_version: version,
+        p_data: data,
+      })
+      .retry(false);
+    if (r.error) throw r.error;
+    return r.data as unknown as EventSeries;
   }
   async catalog() {
     const types = await this.client

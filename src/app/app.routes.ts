@@ -136,6 +136,22 @@ export const routes: Routes = [
           import('./features/loans/loan-list').then((m) => m.LoanList),
       },
       {
+        path: 'actuaciones/series',
+        title: 'Series · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/events/series-list').then((m) => m.SeriesList),
+      },
+      {
+        path: 'actuaciones/series/:id',
+        title: 'Preparar serie · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/events/series-detail').then(
+            (m) => m.SeriesDetailPage,
+          ),
+      },
+      {
         path: 'actuaciones/uniformes',
         title: 'Uniformes · Gestión de trajes',
         canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],

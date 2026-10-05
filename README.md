@@ -2,10 +2,10 @@
 
 Aplicación privada de la Banda Municipal Ntra. Sra. del Valle de La Palma del Condado.
 
-**Fase 5 completada:** acceso privado, inventario, personas, cesiones con firma y preparación
+**Fase 6 implementada:** acceso privado, inventario, personas, cesiones con firma y preparación
 individual de actuaciones. Incluye uniformes configurables, refuerzos y reservas por intervalos.
 La asignación futura y la posesión real se muestran por separado. No se almacena ni transmite el dibujo de la firma.
-Series y recomendador siguen pendientes. No se ha desplegado en Cloudflare ni configurado el dominio.
+Incluye series, participación conjunta y periodos de reserva con decisión mantener/dividir. El recomendador sigue pendiente. No se ha desplegado en Cloudflare ni configurado el dominio.
 
 ## Arrancar en este equipo
 
@@ -136,9 +136,51 @@ Las antiguas reservas no se recuperan automáticamente; las cesiones y el histor
 
 La planificación no cambia retroactivamente la fecha prevista de una cesión real. Se conserva
 la registrada al entregar. Quitar una asignación o participante tampoco cierra cesiones.
-Las asignaciones de actuaciones individuales deben tener periodos separados; la gestión de cesiones
-continuadas entre varias actuaciones y la decisión mantener/dividir corresponden a fase 6.
+Las asignaciones de actuaciones individuales deben tener periodos separados. Para una cesión
+continuada entre varias actuaciones, utiliza una serie y su preparación conjunta.
 El recomendador y la resolución completa de conflictos no se adelantan.
+
+## Probar la fase 6
+
+1. Entrar en **Actuaciones → Series → Nueva serie**, por ejemplo «Semana Santa 2027».
+2. Desplegar **Actuaciones** y completar primero la agenda. **Crear actuación para la serie**
+   guarda y vincula la actuación en una sola operación. También puedes incorporar una existente
+   sin participantes, no cancelada y que no pertenezca a otra serie.
+3. Crear seis actuaciones: Domingo de Ramos, Martes, Miércoles, Jueves, Madrugá y Viernes.
+   Madrugá y Viernes pueden compartir fecha con horarios distintos. El orden depende de la hora
+   de inicio; si coinciden exactamente, se desempata por identificador.
+4. Pulsar **Añadir participante**, buscar la ficha existente o crear un refuerzo con nombre e
+   instrumento. Marcar las actuaciones en las que participa; **Marcar todas** agiliza el caso completo.
+5. Si participa en actuaciones consecutivas, se crea un solo periodo automáticamente, aunque
+   haya días libres entre ellas. Si falta a una actuación intermedia, hay que elegir **Mantener una
+   única cesión** o **Dividir**. Sin elección explícita no se puede guardar.
+6. Cada persona muestra sus periodos, actuaciones y tipos de prenda. **Asignar prenda** comprueba
+   el intervalo entero, incluidos los huecos cuando conserva el vestuario. Una reserva incompatible
+   en otro periodo o actuación impide seleccionarla y se revalida al guardar.
+7. Desde el periodo, pulsar **Entregar prendas**, revisar el final previsto y firmar. Se crea una
+   cesión física, con devolución prevista al final del periodo. Las actuaciones siguientes muestran
+   **En su poder**, sin exigir entregas ni firmas repetidas. Si ya tenía físicamente la prenda, se
+   reutiliza esa posesión sin cambiar retroactivamente su cesión ni su fecha de devolución.
+8. En la última actuación aparece **Última actuación — devolución prevista al finalizar**.
+   Registrar la devolución real desde **Devolver**; también se admiten devoluciones parciales.
+   Ninguna fecha, desmarcado o cambio de asignación registra una devolución ficticia.
+9. **Editar participación** vuelve a preguntar por los huecos. Al guardar, avisa de que sustituye
+   sus periodos y quita las asignaciones anteriores; hay que prepararlas de nuevo. Desmarcar todas
+   retira al participante. Los movimientos y sus datos anteriores permanecen en el historial/auditoría.
+10. Probar dos pestañas: un plan obsoleto no sobrescribe el nuevo; hay que recargar. Sin conexión,
+    el borrador permanece en la página y se deshabilitan las operaciones.
+
+Para modificar la agenda, los horarios o cancelar una actuación con preparación conjunta, primero
+retira las participaciones de la serie; después vuelve a prepararlas. Se bloquea esa retirada cuando
+el periodo conserva líneas entregadas sin devolver. Esta decisión evita cambiar silenciosamente
+las reservas o una elección previa sobre los huecos. Cambiar el nombre de la serie sí está permitido.
+
+Si los periodos previstos de dos bloques separados se solapan, se pide ajustar los horarios de
+recogida/devolución o mantener una única cesión. Cuando se necesitan uniformes distintos dentro de
+un mismo periodo, se prepara la unión de sus tipos de prenda para conservarlos hasta el final.
+
+Los listados muestran 24 series y 12 participantes por página. Cada serie admite 60 actuaciones
+y 200 personas. Mantiene la navegación principal de cinco secciones y las tarjetas compactas.
 
 ## Probar la PWA
 
@@ -257,7 +299,7 @@ No se publica nada automáticamente desde este proyecto.
 Los logotipos y las tipografías conservan la identidad de Entradas. Los iconos PWA de Vestuario
 se generan desde el SVG propio con `node scripts/generate-icons.mjs` (requiere Chrome).
 
-Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 6.**
+Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 7.**
 Ver [sistema visual y refinamiento de la interfaz](docs/sistema-visual.md).
 Ver [validación de fase 2](docs/qa-fase2.md).
 
@@ -277,3 +319,5 @@ Este ejecutor y sus credenciales están excluidos de Git. La variable indica un 
 que recibe por stdin exclusivamente el SQL de limpieza de las pruebas. No se usa desde la aplicación.
 También se puede proporcionar `VESTUARIO_QA_MANAGEMENT_TOKEN` temporalmente al proceso de QA para
 usar la API de gestión sin acceder al llavero en cada limpieza. Ninguna de estas variables se copia al frontend.
+
+Ver [validación y decisiones de fase 6](docs/qa-fase6.md).
