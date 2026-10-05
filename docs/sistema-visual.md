@@ -230,3 +230,17 @@ y se detecta el cambio de día cada minuto mientras Inicio está abierto. Se res
 de 23 y 25 horas por cambio de horario. Validación: 27 pruebas unitarias, compilación y pruebas
 de navegador de agenda vacía, dos actuaciones, error/reintento, enlace directo y anchos de
 320 a 1440 px en escritorio y móvil. Capturas locales `home-today-390.png` y `home-today-1440.png`.
+
+### Inventario por tipos desplegables
+
+La entrada a /inventario sin filtros muestra los tipos del catálogo plegados (Chaquetas,
+Camisas, Pantalones y cualquier otro tipo existente). Solo se consulta el listado al abrir
+un tipo; abrir otro cierra el anterior. La sección activa usa el filtro `tipo` de la URL,
+conservando recarga, enlaces a fichas, regreso y paginación de 24 prendas.
+La búsqueda sin tipo recorre todo el inventario; los accesos filtrados desde Inicio muestran
+sus resultados directamente. Ver todo el inventario permite consultar el listado conjunto;
+Limpiar filtros vuelve a la vista inicial plegada. Los controles tienen estado accesible
+`aria-expanded` y el tipo activo se distingue con fondo burdeos suave.
+Validación: compilación sin avisos y cuatro pruebas de navegador aprobadas en escritorio y
+móvil, cubriendo carga bajo demanda, cambio/cierre de tipo, recarga, búsqueda, paginación,
+recuperación de errores y ausencia de desbordamiento entre 320 y 1440 px.

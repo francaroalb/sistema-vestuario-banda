@@ -6,6 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -23,9 +24,15 @@ import { Icon } from '../../shared/ui/icon';
 import { GarmentStatus } from '../../shared/ui/garment-status';
 @Component({
   selector: 'app-inventory-list',
-  imports: [ReactiveFormsModule, RouterLink, Icon, GarmentStatus],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    Icon,
+    GarmentStatus,
+    NgTemplateOutlet,
+  ],
   templateUrl: './inventory-list.html',
-  styleUrl: './inventory.scss',
+  styleUrls: ['./inventory.scss', './inventory-list.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InventoryList {
@@ -52,6 +59,32 @@ export class InventoryList {
     location: '',
   });
   readonly advanced = signal(false);
+  readonly selectedType = signal('');
+  readonly allTypes = signal(false);
+  readonly browsing = signal(true);
+  typeLabel(name: string) {
+    return (
+      (
+        {
+          Chaqueta: 'Chaquetas',
+          Camisa: 'Camisas',
+          Pantalón: 'Pantalones',
+        } as Record<string, string>
+      )[name] ?? name
+    );
+  }
+  toggleType(id: string) {
+    this.allTypes.set(false);
+    this.form.controls.type.setValue(this.selectedType() === id ? '' : id, {
+      emitEvent: false,
+    });
+    this.navigate(1);
+  }
+  showAll() {
+    this.allTypes.set(true);
+    this.form.controls.type.setValue('', { emitEvent: false });
+    this.navigate(1);
+  }
   private controller?: AbortController;
   private filters: InventoryFilters = {
     q: '',
@@ -89,10 +122,21 @@ export class InventoryList {
           Number.isSafeInteger(page) && page > 0 ? Math.min(page, 10000) : 1,
       };
       this.page.set(this.filters.page);
+      this.selectedType.set(this.filters.type);
+      this.allTypes.set(params.get('vista') === 'todas');
+      this.browsing.set(
+        !this.filters.type &&
+          !this.filters.q &&
+          !this.filters.size &&
+          !this.filters.state &&
+          !this.filters.location &&
+          this.filters.archive === 'active' &&
+          !this.allTypes() &&
+          this.filters.page === 1,
+      );
       this.advanced.set(
         Boolean(
           this.filters.location ||
-          this.filters.type ||
           this.filters.state ||
           this.filters.size ||
           this.filters.archive !== 'active',
@@ -118,8 +162,14 @@ export class InventoryList {
     this.controller?.abort();
     const controller = new AbortController();
     this.controller = controller;
-    this.loading.set(true);
     this.error.set('');
+    if (this.browsing()) {
+      this.garments.set([]);
+      this.total.set(0);
+      this.loading.set(false);
+      return;
+    }
+    this.loading.set(true);
     try {
       const result = await this.repository.list(
         this.filters,
@@ -144,6 +194,7 @@ export class InventoryList {
       relativeTo: this.route,
       replaceUrl: true,
       queryParams: {
+        vista: this.allTypes() ? 'todas' : null,
         buscar: filters.q.trim() || null,
         tipo: filters.type || null,
         situacion: filters.location || null,
@@ -155,6 +206,7 @@ export class InventoryList {
     });
   }
   clear(): void {
+    this.allTypes.set(false);
     this.form.reset({
       q: '',
       type: '',

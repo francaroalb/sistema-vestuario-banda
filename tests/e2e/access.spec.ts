@@ -263,6 +263,7 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
     });
     await page.goto('/inventario');
     await enter(page);
+    await page.getByRole('button', { name: 'Ver todo el inventario' }).click();
     await expect(page.getByRole('alert')).toContainText(
       'Comprueba tu conexión',
     );
@@ -298,6 +299,77 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
     await expect(
       page.getByRole('heading', { name: 'Inventario', exact: true }),
     ).toBeVisible();
+  });
+  test('inventario agrupado: carga al desplegar, cambia de tipo y conserva búsqueda', async ({
+    page,
+  }) => {
+    await mockSupabase(page);
+    const types = ['Chaqueta', 'Camisa', 'Pantalón'].map((name, i) => ({
+      id: '11111111-1111-4111-8111-11111111111' + i,
+      name,
+      active: true,
+      sort_order: i,
+    }));
+    await page.route('**/rest/v1/garment_types?*', (r) =>
+      r.fulfill({ json: types }),
+    );
+    const requests: string[] = [];
+    await page.route('**/rest/v1/garment_inventory?*', (r) => {
+      const u = new URL(r.request().url()),
+        type = u.searchParams.get('garment_type_id');
+      requests.push(type ?? 'all');
+      return r.fulfill({
+        json: [
+          {
+            id: userId,
+            code: type?.endsWith('1') ? 'CA01-M' : 'C01-40',
+            size: '40',
+            physical_state: 'DISPONIBLE',
+            garment_types: { name: 'Prenda' },
+          },
+        ],
+        headers: {
+          'content-range': '0-0/1',
+          'access-control-expose-headers': 'content-range',
+        },
+      });
+    });
+    await page.goto('/inventario');
+    await enter(page);
+    await expect(page.locator('.category-toggle')).toHaveCount(3);
+    await expect(page.locator('.garment-card')).toHaveCount(0);
+    expect(requests).toHaveLength(0);
+    await page.getByRole('button', { name: 'Chaquetas', exact: true }).click();
+    await expect(
+      page.getByRole('link', { name: 'Ver prenda C01-40' }),
+    ).toBeVisible();
+    expect(requests.at(-1)).toBe('eq.' + types[0].id);
+    await page.getByRole('button', { name: 'Camisas', exact: true }).click();
+    await expect(
+      page.getByRole('link', { name: 'Ver prenda CA01-M' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Chaquetas', exact: true }),
+    ).toHaveAttribute('aria-expanded', 'false');
+    await page.reload();
+    await expect(
+      page.getByRole('button', { name: 'Camisas', exact: true }),
+    ).toHaveAttribute('aria-expanded', 'true');
+    await page.getByRole('button', { name: 'Camisas', exact: true }).click();
+    await expect(page.locator('.garment-card')).toHaveCount(0);
+    await page.getByLabel('Buscar por código', { exact: true }).fill('C01');
+    await expect(
+      page.getByRole('link', { name: 'Ver prenda C01-40' }),
+    ).toBeVisible();
+    expect(requests.at(-1)).toBe('all');
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
   });
   test('la ficha admite códigos y tallas largos sin desbordar en móvil', async ({
     page,
