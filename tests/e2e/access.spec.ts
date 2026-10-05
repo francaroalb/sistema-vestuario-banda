@@ -493,6 +493,44 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
       'No encontramos esta cesión',
     );
   });
+  test('pestañas de actuaciones, series y uniformes conservan rutas y selección', async ({
+    page,
+  }) => {
+    await mockSupabase(page);
+    for (const table of ['events', 'event_series', 'uniforms']) {
+      await page.route('**/rest/v1/' + table + '?*', (r) =>
+        r.fulfill({ json: [], headers: { 'content-range': '*/0' } }),
+      );
+    }
+    await page.goto('/actuaciones');
+    await enter(page);
+    const nav = page.getByRole('navigation', {
+      name: 'Secciones de actuaciones',
+    });
+    await expect(
+      nav.getByRole('link', { name: 'Actuaciones', exact: true }),
+    ).toHaveAttribute('aria-current', 'page');
+    await expect(
+      page.getByRole('link', { name: 'Conflictos y avisos', exact: true }),
+    ).toHaveCount(0);
+    for (const [name, path] of [
+      ['Series', '/actuaciones/series'],
+      ['Uniformes', '/actuaciones/uniformes'],
+      ['Actuaciones', '/actuaciones'],
+    ]) {
+      await nav.getByRole('link', { name, exact: true }).click();
+      await expect(page).toHaveURL(new RegExp(path + '$'));
+      await expect(nav.locator('[aria-current="page"]')).toHaveText(name);
+      await page.reload();
+      await expect(nav.locator('[aria-current="page"]')).toHaveText(name);
+      await page.setViewportSize({ width: 320, height: 800 });
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+  });
   test('actuaciones: búsqueda literal, filtros persistentes, errores y página desaparecida', async ({
     page,
   }) => {

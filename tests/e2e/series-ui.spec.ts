@@ -236,6 +236,15 @@ test.describe('Preparación compacta de series', () => {
     await enter(page);
     await expect(page).toHaveURL(/\/inicio$/);
     await page.goto('/actuaciones/series/' + sid);
+    const headings = await page
+      .locator('.series-options > details > summary')
+      .evaluateAll((nodes) =>
+        nodes.map((node) => {
+          const s = getComputedStyle(node);
+          return [s.fontFamily, s.fontSize, s.fontWeight, s.lineHeight];
+        }),
+      );
+    expect(headings[0]).toEqual(headings[1]);
     await page.locator('.series-agenda > summary').click();
     const agenda = page.locator('.agenda-tile');
     await expect(agenda).toHaveCount(3);

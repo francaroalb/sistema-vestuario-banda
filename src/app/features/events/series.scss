@@ -6,13 +6,7 @@
   display: grid;
   gap: var(--space-4);
 }
-.series-agenda summary {
-  cursor: pointer;
-  font-weight: 700;
-  color: var(--color-primary-dark);
-  min-height: 44px;
-  align-content: center;
-}
+
 .series-events,
 .series-picker {
   display: grid;
@@ -133,14 +127,23 @@
   padding: 10px 16px;
   margin-bottom: 12px;
 }
-.series-assistant > summary {
+.series-options > details > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
   min-height: 44px;
-  align-content: center;
-  font-weight: 700;
-  color: var(--color-primary-dark);
+  font-family: var(--font-body);
   font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--color-primary-dark);
+  list-style: none;
 }
+.series-options > details > summary::-webkit-details-marker {
+  display: none;
+}
+
 .series-assistant > summary span {
   font-weight: 400;
   font-size: var(--text-xs);
@@ -418,7 +421,8 @@
 }
 .series-options summary::after {
   content: '⌄';
-  float: right;
+  margin-left: auto;
+  flex-shrink: 0;
   font-size: 18px;
 }
 .series-options details[open] > summary::after {

@@ -1,3 +1,4 @@
+import { EventsTabs } from './events-tabs';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -12,11 +13,10 @@ import { EventSeries, planningError } from '../../core/events/models';
 import { Connectivity } from '../../core/connectivity';
 @Component({
   selector: 'app-series-list',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, EventsTabs],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../inventory/inventory.scss', './events.scss', './series.scss'],
   template: `
-    <a class="back-link" routerLink="/actuaciones">Volver a Actuaciones</a>
     <div class="page-heading">
       <div>
         <p class="eyebrow">Preparación conjunta</p>
@@ -26,6 +26,7 @@ import { Connectivity } from '../../core/connectivity';
         Nueva serie
       </button>
     </div>
+    <app-events-tabs />
     @if (creating) {
       <form class="card event-card" (ngSubmit)="create()">
         <div class="field">

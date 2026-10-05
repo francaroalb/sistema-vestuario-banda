@@ -1,3 +1,4 @@
+import { EventsTabs } from './events-tabs';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -12,7 +13,7 @@ import { BandEvent, planningError } from '../../core/events/models';
 import { formatTimestamp } from '../../core/inventory/inventory';
 @Component({
   selector: 'app-event-list',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, EventsTabs],
   styleUrls: ['../inventory/inventory.scss', './events.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -20,17 +21,14 @@ import { formatTimestamp } from '../../core/inventory/inventory';
       <div>
         <p class="eyebrow">Agenda y preparación</p>
         <h1>Actuaciones</h1>
-        <a routerLink="/conflictos">Conflictos y avisos</a>
       </div>
       <div class="event-actions">
-        <a class="btn btn-secondary" routerLink="/actuaciones/series">Series</a>
-        <a class="btn btn-secondary" routerLink="/actuaciones/uniformes"
-          >Uniformes</a
-        ><a class="btn btn-primary" routerLink="/actuaciones/nueva"
+        <a class="btn btn-primary" routerLink="/actuaciones/nueva"
           >Nueva actuación</a
         >
       </div>
     </div>
+    <app-events-tabs />
     <form class="event-filters" (ngSubmit)="search()">
       <div class="field">
         <label for="event-search">Buscar actuación</label

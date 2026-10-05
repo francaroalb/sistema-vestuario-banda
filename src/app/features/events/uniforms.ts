@@ -1,3 +1,4 @@
+import { EventsTabs } from './events-tabs';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -6,7 +7,6 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { EventsRepository } from '../../core/events/events-repository';
 import { Uniform, planningError } from '../../core/events/models';
 import { GarmentType } from '../../core/config/database.types';
@@ -14,11 +14,10 @@ import { Connectivity } from '../../core/connectivity';
 import { Feedback } from '../../core/feedback';
 @Component({
   selector: 'app-uniforms',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, EventsTabs],
   styleUrls: ['../inventory/inventory.scss', './events.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <a class="back-link" routerLink="/actuaciones">Volver a Actuaciones</a>
     <div class="page-heading">
       <div>
         <p class="eyebrow">Tipos de prenda requeridos</p>
@@ -32,6 +31,7 @@ import { Feedback } from '../../core/feedback';
         Nuevo uniforme
       </button>
     </div>
+    <app-events-tabs />
     @if (error()) {
       <p class="notice notice-error" role="alert">
         {{ error() }}

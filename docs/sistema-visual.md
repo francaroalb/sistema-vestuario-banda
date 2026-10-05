@@ -171,3 +171,18 @@ las prendas solo para la primera actuación del bloque. No se cuentan prendas de
 Sin cambios de base de datos. Validación: 24 pruebas unitarias, compilación y 2 pruebas de
 navegador (escritorio y móvil); agenda abierta sin desbordamiento de página entre 320 y 1440 px.
 Capturas locales `series-agenda-desktop.png` y `series-agenda-mobile.png`.
+
+### Navegación de actuaciones y tipografía de series
+
+Actuaciones, Series y Uniformes comparten tres pestañas de navegación con sección activa
+burdeos y `aria-current="page"`. Se conservan sus rutas, enlaces directos y protecciones
+frente a cambios sin guardar. Cada listado mantiene su acción principal de creación.
+Conflictos y avisos se consulta desde su apartado de seguimiento en Inicio; se elimina
+el enlace suelto bajo el título de Actuaciones.
+
+Los encabezados Preparación asistida y Actuaciones de una serie comparten Manrope, tamaño
+`--text-sm`, peso 700, interlineado 1.5 y altura mínima 44 px. Flechas alineadas a la derecha;
+los textos auxiliares y recuentos mantienen una jerarquía secundaria.
+Validación: compilación y seis pruebas de navegador aprobadas entre escritorio y móvil,
+con navegación entre pestañas, recarga, filtros, preparación y comparación de estilos
+calculados. Se comprobó que las tres pestañas caben a 320 px sin desbordamiento.
