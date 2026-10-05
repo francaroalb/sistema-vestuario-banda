@@ -1,5 +1,5 @@
-import { summarizeParticipant } from './series-preparation';
-import { Preparation, SeriesBlock } from '../../core/events/models';
+import { summarizeEvent, summarizeParticipant } from './series-preparation';
+import { BandEvent, Preparation, SeriesBlock } from '../../core/events/models';
 const block = (id = 'b') => ({ id }) as SeriesBlock;
 const row = (data: Partial<Preparation> = {}) =>
   ({
@@ -60,5 +60,53 @@ describe('Resumen de preparación de un participante', () => {
     expect(s.state).toBe('ready');
     expect(s.priority).toBe(3);
     expect(summarizeParticipant([block()], []).state).toBe('pending');
+  });
+});
+
+describe('Resumen de una actuación de la serie', () => {
+  const event = { id: 'e2', type_ids: ['j', 's'] } as BandEvent;
+  const blocks = [
+    { id: 'b', person_id: 'p', event_ids: ['e1', 'e2'] },
+    { id: 'c', person_id: 'q', event_ids: ['e1'] },
+  ] as SeriesBlock[];
+  const jacket = row({
+    person_id: 'p',
+    event_id: 'e1',
+    kind: 'REFUERZO',
+    garment_id: 'g',
+    status: 'ASIGNADA',
+  });
+  it('cuenta asistentes sin duplicarlos por prenda ni incluir ausentes, usando el bloque compartido', () => {
+    const s = summarizeEvent(event, blocks, [
+      jacket,
+      row({
+        person_id: 'p',
+        type_id: 's',
+        type_name: 'Camisa',
+        kind: 'REFUERZO',
+      }),
+      row({ block_id: 'c', person_id: 'q' }),
+    ]);
+    expect(s.total).toBe(1);
+    expect(s.reinforcements).toBe(1);
+    expect(s.pending).toBe(1);
+    expect(s.ready).toBe(false);
+    expect(s.types[1]).toMatchObject({ name: 'Camisa', total: 1, assigned: 0 });
+  });
+  it('solo exige las prendas del uniforme de esta actuación', () => {
+    expect(
+      summarizeEvent({ ...event, type_ids: ['j'] }, blocks, [jacket]).ready,
+    ).toBe(true);
+    expect(summarizeEvent(event, blocks, [jacket]).ready).toBe(false);
+  });
+  it('no marca completo un conflicto, una devolución pendiente ni una actuación vacía', () => {
+    for (const status of ['CONFLICTO', 'PENDIENTE_DEVOLUCION'] as const) {
+      const s = summarizeEvent({ ...event, type_ids: ['j'] }, blocks, [
+        { ...jacket, status },
+      ]);
+      expect(s.ready).toBe(false);
+      expect(s.review).toBe(1);
+    }
+    expect(summarizeEvent(event, [], []).ready).toBe(false);
   });
 });

@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { summarizeParticipant } from './series-preparation';
+import { summarizeEvent, summarizeParticipant } from './series-preparation';
 import { RecommendationPanel } from './recommendation-panel';
 import { AssistedPreparation } from './assisted-preparation';
 import {
@@ -84,6 +84,27 @@ export class SeriesDetailPage {
   readonly personQuery = signal('');
   readonly personFilter = signal<'all' | 'pending' | 'ready'>('all');
   readonly rail = viewChild<ElementRef<HTMLElement>>('participantRail');
+  readonly eventRail = viewChild<ElementRef<HTMLElement>>('eventRail');
+  readonly eventSummaries = computed(
+    () =>
+      new Map(
+        (this.detail()?.events ?? []).map((e) => [
+          e.id,
+          summarizeEvent(
+            e,
+            this.detail()?.blocks ?? [],
+            this.detail()?.rows ?? [],
+          ),
+        ]),
+      ),
+  );
+  scrollEvents(direction: number) {
+    const rail = this.eventRail()?.nativeElement;
+    rail?.scrollBy({
+      left: direction * rail.clientWidth * 0.8,
+      behavior: 'smooth',
+    });
+  }
   rename = false;
   seriesName = '';
   readonly time = formatTimestamp;

@@ -236,6 +236,33 @@ test.describe('Preparación compacta de series', () => {
     await enter(page);
     await expect(page).toHaveURL(/\/inicio$/);
     await page.goto('/actuaciones/series/' + sid);
+    await page.locator('.series-agenda > summary').click();
+    const agenda = page.locator('.agenda-tile');
+    await expect(agenda).toHaveCount(3);
+    await expect(agenda.first()).toContainText('30 participantes');
+    await expect(agenda.first()).toContainText('29/30 asignadas');
+    await expect(agenda.nth(1)).toContainText('29/30 asignadas');
+    await expect(agenda.first()).toContainText('Pendiente de asignaciones');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole('button', { name: 'Actuaciones siguientes' }).click();
+    await expect
+      .poll(() => page.locator('.series-events').evaluate((e) => e.scrollLeft))
+      .toBeGreaterThan(0);
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+      ).toBe(true);
+    }
+    await page.setViewportSize(info.project.use.viewport!);
+    mkdirSync('.local/screenshots', { recursive: true });
+    await page.screenshot({
+      path: '.local/screenshots/series-agenda-' + info.project.name + '.png',
+      fullPage: true,
+    });
+    await page.locator('.series-agenda > summary').click();
     await expect(page.locator('.person-tile')).toHaveCount(30);
     await expect(page.locator('.participant-card')).toHaveCount(0);
     await expect(page.locator('.person-tile').nth(0)).toContainText(
@@ -300,7 +327,7 @@ test.describe('Preparación compacta de series', () => {
       .getByRole('button', { name: 'Asignar C50-48', exact: true })
       .click();
     await expect(page.locator('.person-tile.selected')).toHaveClass(/ready/);
-    await expect(page.locator('article')).toContainText('C50-48');
+    await expect(page.locator('.participant-card')).toContainText('C50-48');
     await expect(page.locator('.person-tile').nth(1)).toContainText(
       'Luis Martín',
     );
@@ -308,7 +335,7 @@ test.describe('Preparación compacta de series', () => {
       'Ana García',
     );
     await page.getByRole('button', { name: 'Plegar', exact: true }).click();
-    await expect(page.locator('article')).toHaveCount(0);
+    await expect(page.locator('.participant-card')).toHaveCount(0);
     await page.getByRole('button', { name: /Por preparar ·/ }).click();
     await expect(page.locator('.person-tile')).toHaveCount(2);
     await page.getByLabel('Buscar participante o instrumento').fill('luis');
@@ -319,7 +346,7 @@ test.describe('Preparación compacta de series', () => {
     await page.keyboard.press('Enter');
     await expect(page.locator('article h2')).toHaveText('Luis Martín');
     await page.getByLabel('Buscar participante o instrumento').fill('nadie');
-    await expect(page.locator('article')).toHaveCount(0);
+    await expect(page.locator('.participant-card')).toHaveCount(0);
     await expect(
       page.getByText('No hay participantes con este filtro.'),
     ).toBeVisible();

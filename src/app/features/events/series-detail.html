@@ -73,23 +73,85 @@
           Ordenadas por inicio y hora de Madrid. Completa la agenda antes de
           preparar las participaciones.
         </p>
-        <div class="series-events">
+        @if (d.events.length > 1) {
+          <div class="agenda-navigation">
+            <button
+              class="btn btn-secondary"
+              aria-label="Actuaciones anteriores"
+              (click)="scrollEvents(-1)"
+            >
+              ←
+            </button>
+            <button
+              class="btn btn-secondary"
+              aria-label="Actuaciones siguientes"
+              (click)="scrollEvents(1)"
+            >
+              →
+            </button>
+          </div>
+        }
+        <div
+          class="series-events"
+          #eventRail
+          role="list"
+          aria-label="Actuaciones de la serie"
+          tabindex="0"
+        >
           @for (e of d.events; track e.id) {
-            <div class="event-choice">
-              <div>
+            @let s = eventSummaries().get(e.id)!;
+            <article
+              class="agenda-tile"
+              role="listitem"
+              [class.ready]="s.ready && !e.cancelled"
+              [class.pending]="s.total > 0 && !s.ready && !e.cancelled"
+            >
+              <strong
+                ><a [routerLink]="['/actuaciones', e.id]">{{
+                  e.title
+                }}</a></strong
+              >
+              <small>{{ time(e.starts_at) }} · {{ e.uniform_name }}</small>
+              <span class="agenda-status">{{
+                e.cancelled
+                  ? 'Cancelada'
+                  : !s.total
+                    ? 'Sin participantes'
+                    : s.ready
+                      ? 'Completado'
+                      : s.pending
+                        ? 'Pendiente de asignaciones'
+                        : 'Revisar asignaciones'
+              }}</span>
+              <div class="agenda-people">
                 <strong
-                  ><a [routerLink]="['/actuaciones', e.id]">{{
-                    e.title
-                  }}</a></strong
+                  >{{ s.total }}
+                  {{ s.total === 1 ? 'participante' : 'participantes' }}</strong
                 ><small
-                  >{{ time(e.starts_at) }} · {{ e.uniform_name
-                  }}{{ e.cancelled ? ' · Cancelada' : '' }}</small
+                  >Incluye {{ s.reinforcements }}
+                  {{ s.reinforcements === 1 ? 'refuerzo' : 'refuerzos' }}</small
                 >
               </div>
+              @if (s.total) {
+                <ul class="agenda-garments">
+                  @for (t of s.types; track t.id) {
+                    <li>
+                      <span
+                        >{{ t.name }} <strong>· {{ t.total }}</strong></span
+                      ><small>{{ t.assigned }}/{{ t.total }} asignadas</small>
+                    </li>
+                  }
+                </ul>
+                @if (s.review) {
+                  <small class="agenda-review"
+                    >{{ s.review }} asignaciones por revisar</small
+                  >
+                }
+              }
               <button class="btn btn-quiet" (click)="membership(e, false)">
                 Sacar de la serie
               </button>
-            </div>
+            </article>
           }
         </div>
         <div class="event-actions">

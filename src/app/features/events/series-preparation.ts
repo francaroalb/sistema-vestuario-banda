@@ -1,4 +1,4 @@
-import { Preparation, SeriesBlock } from '../../core/events/models';
+import { BandEvent, Preparation, SeriesBlock } from '../../core/events/models';
 
 export type ParticipantSummary = {
   state: 'pending' | 'review' | 'ready';
@@ -42,5 +42,50 @@ export function summarizeParticipant(
         : codes.join(' · ') + (missingJacket ? ' · Faltan periodos' : ''),
     assigned,
     total: unique.length,
+  };
+}
+
+/** Rows are returned once per block, even when it spans several performances. */
+export function summarizeEvent(
+  event: BandEvent,
+  blocks: SeriesBlock[],
+  rows: Preparation[],
+) {
+  const attending = blocks.filter((b) => b.event_ids.includes(event.id));
+  const people = new Map(attending.map((b) => [b.person_id, b]));
+  const blockIds = new Set(attending.map((b) => b.id));
+  const relevant = rows.filter((r) => blockIds.has(r.block_id!));
+  const lookup = new Map(
+    relevant.map((r) => [r.person_id + ':' + r.type_id, r]),
+  );
+  const types = event.type_ids.map((id) => {
+    let assigned = 0,
+      review = 0;
+    for (const person of people.keys()) {
+      const r = lookup.get(person + ':' + id);
+      if (r?.garment_id && r.status !== 'SIN_ASIGNAR') assigned++;
+      if (r?.status === 'CONFLICTO' || r?.status === 'PENDIENTE_DEVOLUCION')
+        review++;
+    }
+    return {
+      id,
+      name: rows.find((r) => r.type_id === id)?.type_name ?? 'Prenda',
+      total: people.size,
+      assigned,
+      review,
+    };
+  });
+  const reinforcements = new Set(
+    relevant.filter((r) => r.kind === 'REFUERZO').map((r) => r.person_id),
+  ).size;
+  const pending = types.reduce((n, t) => n + t.total - t.assigned, 0);
+  const review = types.reduce((n, t) => n + t.review, 0);
+  return {
+    total: people.size,
+    reinforcements,
+    types,
+    pending,
+    review,
+    ready: people.size > 0 && types.length > 0 && pending === 0 && review === 0,
   };
 }

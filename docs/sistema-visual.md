@@ -157,3 +157,17 @@ Se comprobó desplazamiento táctil emulado, edición dentro de la ficha, protec
 borradores, orden tras asignar y ausencia de desbordamiento de página en 320, 390, 768,
 1280 y 1440 px. Capturas revisadas en `.local/screenshots/series-compacta-desktop.png`
 y `.local/screenshots/series-compacta-mobile.png`. Pendiente la valoración en dispositivo físico.
+
+### Resumen horizontal de actuaciones
+
+El desplegable Actuaciones usa tarjetas horizontales con desplazamiento táctil y flechas.
+Cada tarjeta muestra fecha, uniforme, total de participantes (incluidos los refuerzos),
+recuento de refuerzos y necesidades por tipo de prenda con progreso de asignación.
+El estado Completado se muestra en verde solo cuando todas las prendas del uniforme de
+esa actuación están asignadas sin conflictos ni devoluciones pendientes. Las asignaciones
+pendientes o por revisar aparecen en ámbar; sin participantes y cancelada son estados neutros.
+Los recuentos se calculan desde los bloques de asistencia, incluso cuando el servidor devuelve
+las prendas solo para la primera actuación del bloque. No se cuentan prendas de otros uniformes.
+Sin cambios de base de datos. Validación: 24 pruebas unitarias, compilación y 2 pruebas de
+navegador (escritorio y móvil); agenda abierta sin desbordamiento de página entre 320 y 1440 px.
+Capturas locales `series-agenda-desktop.png` y `series-agenda-mobile.png`.
