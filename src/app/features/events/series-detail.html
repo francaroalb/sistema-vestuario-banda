@@ -392,6 +392,13 @@
                     }
                   </div>
                   <div class="event-actions">
+                    @if (r.loan_id) {
+                      <a
+                        class="btn btn-quiet"
+                        [routerLink]="['/cesiones', r.loan_id]"
+                        >Ver cesión</a
+                      >
+                    }
                     @if (r.loan_id && r.holder_id === b.person_id) {
                       <a
                         class="btn btn-secondary"

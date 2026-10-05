@@ -1,6 +1,31 @@
 <header class="home-heading">
   <h1>Hola, {{ auth.profile()?.display_name }}.</h1>
 </header>
+@if (conflicts(); as c) {
+  @if (c.conflicts || c.pending) {
+    <a class="notice home-conflicts" routerLink="/conflictos"
+      ><strong
+        >{{ c.conflicts }}
+        {{ c.conflicts === 1 ? 'conflicto' : 'conflictos' }} de
+        vestuario</strong
+      ><span
+        >{{ c.pending }}
+        {{
+          c.pending === 1 ? 'devolución prevista' : 'devoluciones previstas'
+        }}
+        por comprobar</span
+      ><span>Revisar incidencias →</span></a
+    >
+  }
+}
+@if (conflictsError()) {
+  <p class="notice" role="alert">
+    No se han podido consultar los conflictos.
+    <button class="text-button" (click)="loadConflicts()">
+      Reintentar avisos
+    </button>
+  </p>
+}
 <div class="home-grid">
   <section class="operations" aria-labelledby="operations-title">
     <h2 id="operations-title" class="sr-only">Gestiones de vestuario</h2>
@@ -106,6 +131,7 @@
     <div class="planning-heading">
       <h2 id="planning-title">Preparar vestuario</h2>
     </div>
+    <a class="section-link" routerLink="/conflictos">Conflictos y avisos →</a>
     <div class="planning-links">
       <a routerLink="/actuaciones"
         ><app-icon name="calendar" /><span

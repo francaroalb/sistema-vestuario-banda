@@ -25,6 +25,7 @@ export type LoanItem = {
   size: string;
   delivered_at: string;
   returned_at: string | null;
+  retained_at?: string | null;
   returned_state: PhysicalState | null;
 };
 export type MovementKind = 'ENTREGA' | 'DEVOLUCION' | 'CAMBIO';
@@ -102,6 +103,10 @@ export function loanError(error: unknown): LoanError {
   if (error instanceof LoanError) return error;
   const e = error as { message?: string; code?: string } | null;
   const messages: Record<string, string> = {
+    RETENTION_CHANGED:
+      'Han cambiado la cesión o las asignaciones afectadas. Vuelve a revisar el impacto antes de confirmar.',
+    RETENTION_NOT_ALLOWED:
+      'Solo se puede registrar esta decisión en una cesión activa con devolución prevista.',
     SIGNATURE_REQUIRED: 'Falta la firma. Dibuja la firma antes de confirmar.',
     GARMENT_IN_CUSTODY:
       'Una de las prendas ya está cedida. Revisa la selección y vuelve a cargar los datos.',

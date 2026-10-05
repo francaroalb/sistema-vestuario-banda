@@ -1,3 +1,4 @@
+import { PlannedUses } from '../events/planned-uses';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -27,7 +28,7 @@ const nonBlank = (control: AbstractControl) =>
   String(control.value ?? '').trim() ? null : { required: true };
 @Component({
   selector: 'app-garment-form',
-  imports: [ReactiveFormsModule, RouterLink, Icon],
+  imports: [ReactiveFormsModule, RouterLink, Icon, PlannedUses],
   templateUrl: './garment-form.html',
   styleUrl: './inventory.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

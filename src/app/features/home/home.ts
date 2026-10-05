@@ -1,3 +1,5 @@
+import { ConflictsRepository } from '../../core/conflicts/conflicts-repository';
+import { ConflictSummary } from '../../core/conflicts/models';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -18,6 +20,17 @@ import { Icon } from '../../shared/ui/icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Home {
+  private readonly conflictsRepo = inject(ConflictsRepository);
+  readonly conflicts = signal<ConflictSummary | null>(null);
+  readonly conflictsError = signal(false);
+  async loadConflicts() {
+    this.conflictsError.set(false);
+    try {
+      this.conflicts.set(await this.conflictsRepo.summary());
+    } catch {
+      this.conflictsError.set(true);
+    }
+  }
   readonly auth = inject(AuthService);
   private readonly repository = inject(InventoryRepository);
   readonly summary = signal<InventorySummary | null>(null);
@@ -25,6 +38,7 @@ export class Home {
   readonly error = signal('');
   constructor() {
     void this.load();
+    void this.loadConflicts();
   }
   async load(): Promise<void> {
     this.loading.set(true);

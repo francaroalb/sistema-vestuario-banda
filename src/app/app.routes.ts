@@ -15,6 +15,14 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'inicio' },
       {
+        path: 'conflictos',
+        title: 'Conflictos · Gestión de trajes',
+        loadComponent: () =>
+          import('./features/conflicts/conflict-list').then(
+            (m) => m.ConflictList,
+          ),
+      },
+      {
         path: 'inicio',
         title: 'Inicio · Gestión de trajes',
         loadComponent: () => import('./features/home/home').then((m) => m.Home),
@@ -125,6 +133,7 @@ export const routes: Routes = [
       },
       {
         path: 'cesiones/:id',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
         title: 'Detalle de cesión · Gestión de trajes',
         loadComponent: () =>
           import('./features/loans/loan-detail').then((m) => m.LoanDetail),

@@ -252,6 +252,11 @@
             <div class="event-actions">
               @if (row.loan_id) {
                 <a
+                  class="btn btn-quiet"
+                  [routerLink]="['/cesiones', row.loan_id]"
+                  >Ver cesión</a
+                >
+                <a
                   class="btn btn-secondary"
                   [routerLink]="['/cesiones', row.loan_id, 'devolver']"
                   [attr.aria-label]="'Devolver ' + row.code"

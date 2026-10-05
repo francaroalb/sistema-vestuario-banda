@@ -1,3 +1,4 @@
+import type { Conflict, RetentionDecision } from '../conflicts/models';
 import type {
   EventSeries,
   Uniform,
@@ -71,6 +72,12 @@ export type InventorySummary = {
 export interface Database {
   public: {
     Tables: {
+      loan_retention_decisions: {
+        Row: RetentionDecision;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       event_series: {
         Row: EventSeries;
         Insert: never;
@@ -174,6 +181,7 @@ export interface Database {
       };
     };
     Views: {
+      wardrobe_conflicts: { Row: Conflict; Relationships: [] };
       event_people: { Row: EventPerson; Relationships: [] };
       event_preparation: { Row: Preparation; Relationships: [] };
       garment_reservations: { Row: Reservation; Relationships: [] };
@@ -181,6 +189,15 @@ export interface Database {
       garment_inventory: { Row: StockGarment; Relationships: [] };
     };
     Functions: {
+      conflict_summary: { Args: Record<string, never>; Returns: Json };
+      preview_retention: {
+        Args: { p_loan: string; p_items: string[] };
+        Returns: Json;
+      };
+      confirm_retention: {
+        Args: { p_request: string; p_preview: Json };
+        Returns: Json;
+      };
       garment_recommendation: {
         Args: { p_event: string; p_person: string; p_type: string };
         Returns: Json;

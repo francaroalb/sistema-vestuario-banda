@@ -102,6 +102,8 @@ async function mockSupabase(
         },
         json: [],
       });
+    if (url.includes('/conflict_summary'))
+      return route.fulfill({ json: { conflicts: 0, pending: 0 } });
     if (url.includes('/inventory_summary'))
       return route.fulfill({
         json: {
@@ -134,6 +136,7 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
     for (const path of [
       '/',
       '/inicio',
+      '/conflictos',
       '/inventario',
       '/personas',
       '/actuaciones',
@@ -659,5 +662,95 @@ test.describe('Supabase real', () => {
       page.getByRole('heading', { name: 'Gestión de trajes' }),
     ).toBeVisible();
     expect(errors).toEqual([]);
+  });
+});
+
+test.describe('Conflictos con respuestas controladas', () => {
+  test.use({ serviceWorkers: 'block' });
+  test('errores recuperables, filtros, paginación y última página resuelta', async ({
+    page,
+  }) => {
+    await mockSupabase(page);
+    let fail = true,
+      missing = false;
+    const filters: string[] = [];
+    await page.route('**/rest/v1/wardrobe_conflicts?*', (route) => {
+      const url = new URL(route.request().url()),
+        offset = Number(url.searchParams.get('offset') ?? 0),
+        filter = url.searchParams.get('critical') ?? 'all';
+      filters.push(filter);
+      if (fail)
+        return route.fulfill({
+          status: 400,
+          json: { code: 'TEST_FAILURE', message: 'Error simulado' },
+        });
+      if (missing && offset)
+        return route.fulfill({ status: 416, json: { code: 'PGRST103' } });
+      const total = filter === 'eq.false' ? 0 : 13;
+      const count = Math.min(12, Math.max(0, total - offset));
+      return route.fulfill({
+        headers: {
+          'content-range': count
+            ? offset + '-' + (offset + count - 1) + '/' + total
+            : '*/0',
+          'access-control-expose-headers': 'content-range',
+        },
+        json: Array.from({ length: count }, (_, i) => ({
+          event_id:
+            userId.slice(0, -2) + String(offset + i + 1).padStart(2, '0'),
+          series_id: null,
+          block_id: null,
+          person_id: userId,
+          full_name: 'Músico ' + (offset + i + 1),
+          type_id: userId,
+          type_name: 'Chaqueta',
+          garment_id: userId,
+          code: 'C-' + (offset + i + 1),
+          size: '48',
+          title: 'Actuación de prueba',
+          planned_from: '2090-01-01T10:00:00Z',
+          planned_until: '2090-01-01T20:00:00Z',
+          starts_at: '2090-01-01T18:00:00Z',
+          holder_id: null,
+          holder_name: null,
+          loan_id: null,
+          due_at: null,
+          reasons: ['DAMAGED'],
+          critical: true,
+        })),
+      });
+    });
+    await page.goto('/login');
+    await enter(page);
+    await expect(page).toHaveURL(/\/inicio$/);
+    await page.goto('/conflictos');
+    await expect(page.getByRole('alert')).toBeVisible();
+    fail = false;
+    await page.getByRole('button', { name: 'Reintentar', exact: true }).click();
+    await expect(page.locator('article')).toHaveCount(12);
+    await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Músico 13', exact: true }),
+    ).toBeVisible();
+    missing = true;
+    await page.getByRole('button', { name: 'Actualizar', exact: true }).click();
+    await expect(
+      page.getByText(/No hay incidencias en este filtro/),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Anterior', exact: true }).click();
+    await expect(page.locator('article')).toHaveCount(12);
+    await page
+      .getByRole('button', { name: 'Devoluciones previstas', exact: true })
+      .click();
+    await expect(page.locator('article')).toHaveCount(0);
+    expect(filters).toContain('eq.false');
+    await page.getByRole('button', { name: 'Conflictos', exact: true }).click();
+    await expect(page.locator('article')).toHaveCount(12);
+    expect(filters).toContain('eq.true');
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
   });
 });

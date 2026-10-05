@@ -2,10 +2,10 @@
 
 Aplicación privada de la Banda Municipal Ntra. Sra. del Valle de La Palma del Condado.
 
-**Fase 7 implementada:** acceso privado, inventario, personas, cesiones con firma y preparación
+**Fase 8 implementada:** acceso privado, inventario, personas, cesiones con firma y preparación
 individual de actuaciones. Incluye uniformes configurables, refuerzos y reservas por intervalos.
 La asignación futura y la posesión real se muestran por separado. No se almacena ni transmite el dibujo de la firma.
-Incluye series, participación conjunta y periodos de reserva con decisión mantener/dividir. Incluye recomendaciones por histórico y preparación asistida con revisión previa. No se ha desplegado en Cloudflare ni configurado el dominio.
+Incluye series, participación conjunta y periodos de reserva con decisión mantener/dividir. Incluye recomendaciones por histórico, preparación asistida, conflictos y permanencia de prendas con revisión previa. No se ha desplegado en Cloudflare ni configurado el dominio.
 
 ## Arrancar en este equipo
 
@@ -299,7 +299,7 @@ No se publica nada automáticamente desde este proyecto.
 Los logotipos y las tipografías conservan la identidad de Entradas. Los iconos PWA de Vestuario
 se generan desde el SVG propio con `node scripts/generate-icons.mjs` (requiere Chrome).
 
-Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 8.**
+Ver [decisiones de arquitectura](docs/arquitectura.md). **Esperar aprobación antes de fase 9.**
 Ver [sistema visual y refinamiento de la interfaz](docs/sistema-visual.md).
 Ver [validación de fase 2](docs/qa-fase2.md).
 
@@ -335,3 +335,22 @@ con su histórico y alternativas. Puedes elegir una propuesta o usar el selector
 Las personas sin histórico, los empates y las tallas superiores necesitan revisión manual.
 
 Ver [reglas y validación de fase 7](docs/qa-fase7.md).
+
+
+## Probar la fase 8
+
+- **Inicio → Conflictos y avisos**: muestra los conflictos y las devoluciones previstas que
+  conviene comprobar. También se puede entrar desde Actuaciones. Cada periodo de una serie
+  se cuenta una vez, aunque incluya varias actuaciones.
+- **Cesiones → Abrir una cesión → Registrar que mantiene prendas**: disponible en cesiones
+  activas con devolución prevista. Selecciona las prendas y pulsa **Revisar impacto**.
+  Puedes cancelar sin cambios o confirmar **Mantener igualmente** si afecta a otras reservas.
+- La cesión continúa abierta y conserva su fecha prevista original. Se registra quién tomó
+  la decisión, cuándo y qué prendas/asignaciones estaban afectadas. No se crea una devolución.
+- Desde una incidencia puedes revisar la asignación, registrar una devolución real o revisar
+  el estado de la prenda. Cambiar la prenda en una serie actualiza todo el bloque.
+- Al devolver, reparar, completar la lavandería o sustituir una asignación, la incidencia
+  desaparece si ya no hay otra causa. Pulsa **Actualizar** para consultar los últimos cambios.
+  Las reservas nunca se eliminan automáticamente por un conflicto.
+
+Ver [validación y decisiones de fase 8](docs/qa-fase8.md).

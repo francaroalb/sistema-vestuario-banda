@@ -1,6 +1,9 @@
+import { RetentionPanel } from '../conflicts/retention-panel';
+import { RetentionDecision } from '../../core/conflicts/models';
 import {
   ChangeDetectionStrategy,
   Component,
+  HostListener,
   inject,
   signal,
 } from '@angular/core';
@@ -19,7 +22,7 @@ import { formatTimestamp, stateLabel } from '../../core/inventory/inventory';
 import { Icon } from '../../shared/ui/icon';
 @Component({
   selector: 'app-loan-detail',
-  imports: [RouterLink, Icon],
+  imports: [RouterLink, Icon, RetentionPanel],
   template: `
     <a class="back-link" [routerLink]="backLink"
       ><app-icon name="back" />Volver a Cesiones</a
@@ -55,6 +58,14 @@ import { Icon } from '../../shared/ui/icon';
             ><app-icon name="exchange" />Cambiar prenda</a
           >
         </div>
+      }
+      @if (!item.closed_at && item.due_at) {
+        <app-retention-panel
+          [loan]="item.id"
+          [items]="items()"
+          (busy)="saving.set($event)"
+          (saved)="load()"
+        />
       }
       <div class="operation-sections loan-detail-grid">
         <section class="operation-card card">
@@ -100,6 +111,14 @@ import { Icon } from '../../shared/ui/icon';
                   }}</a
                   ><small>{{ line.type_name }} · Talla {{ line.size }}</small
                   ><small>Entregada: {{ timestamp(line.delivered_at) }}</small>
+                  @if (line.retained_at) {
+                    <small
+                      >Mantiene la prenda desde {{ timestamp(line.retained_at)
+                      }}{{
+                        line.returned_at ? ' · Posteriormente devuelta' : ''
+                      }}</small
+                    >
+                  }
                   @if (line.returned_at) {
                     <small
                       >Devuelta: {{ timestamp(line.returned_at) }} ·
@@ -114,6 +133,29 @@ import { Icon } from '../../shared/ui/icon';
             }
           </ul>
         </section>
+        @if (decisions().length) {
+          <section class="operation-card card">
+            <h2>Decisiones de permanencia</h2>
+            @for (d of decisions(); track d.id) {
+              <div class="retention-history">
+                <strong>Mantiene prendas</strong>
+                <p>{{ timestamp(d.occurred_at) }} · {{ d.actor_name }}</p>
+                <p>
+                  @for (i of d.preview.items; track i.id) {
+                    <span>{{ i.code }} · Talla {{ i.size }}; </span>
+                  }
+                </p>
+                <p>
+                  {{ d.preview.impacts.length }} asignaciones afectadas al
+                  confirmar. La situación actual puede haber cambiado.
+                </p>
+              </div>
+            }
+            <a class="btn btn-secondary" routerLink="/conflictos"
+              >Ver conflictos actuales</a
+            >
+          </section>
+        }
         <section class="operation-card card">
           <h2>Movimientos</h2>
           <ol class="history">
@@ -160,6 +202,16 @@ export class LoanDetail {
   );
   readonly loan = signal<LoanOverview | null>(null);
   readonly items = signal<LoanItem[]>([]);
+  readonly saving = signal(false);
+  readonly decisions = signal<RetentionDecision[]>([]);
+  @HostListener('window:beforeunload', ['$event']) beforeUnload(
+    event: BeforeUnloadEvent,
+  ) {
+    if (this.saving()) event.preventDefault();
+  }
+  canLeave() {
+    return !this.saving();
+  }
   readonly movements = signal<LoanMovement[]>([]);
   readonly loading = signal(true);
   readonly error = signal('');
@@ -184,6 +236,7 @@ export class LoanDetail {
       this.loan.set(data.loan);
       this.items.set(data.items);
       this.movements.set(data.movements);
+      this.decisions.set(data.decisions);
     } catch (e) {
       if (request === this.request) this.error.set(loanError(e).message);
     } finally {

@@ -202,9 +202,9 @@ Antes de fase 5 se ha aplicado el refinamiento visual solicitado: tokens comunes
 neutras, navegación inferior burdeos y lateral claro, controles y jerarquía consistentes.
 Ver `docs/sistema-visual.md`. Esta revisión no modifica modelos, RPC ni flujos funcionales.
 
-8 Conflictos · 9 Productividad · 10 QA y producción.
+9 Productividad · 10 QA y producción.
 
-Se requiere aprobación expresa entre fases. No comenzar fase 8 sin autorización.
+Se requiere aprobación expresa entre fases. No comenzar fase 9 sin autorización.
 
 
 ## Fase 7 — recomendador y preparación asistida
@@ -235,4 +235,43 @@ Se requiere aprobación expresa entre fases. No comenzar fase 8 sin autorizació
 - Se reutilizan plan_event/plan_series y su auditoría. No se crean cesiones, movimientos ni
   firmas al recomendar o reservar. Las escrituras directas siguen denegadas por RLS.
 - Migración 20261005000900_recommendations.sql aplicada exclusivamente al Supabase de Vestuario.
-  La fase 8 (resolución avanzada de conflictos) continúa pendiente.
+  La fase 8 amplía esta base con seguimiento y resolución de conflictos.
+
+
+## Fase 8 — conflictos y realidad física
+
+- La vista wardrobe_conflicts, con security_invoker y RLS de sus tablas de origen, deriva
+  las incidencias de reservas vigentes para actuaciones no terminadas ni canceladas. No hay
+  una tabla de conflictos que pueda quedar desactualizada ni un botón para ocultarlos.
+- Causas: prenda/persona archivada, tipo cambiado, daño, lavandería, posesión de otra persona,
+  decisión de mantener y reservas incompatibles. La posesión propia no es un conflicto por
+  sí misma. Una devolución futura compatible es un aviso diferenciado de un conflicto.
+- Agrupación por bloque/actuación, persona y tipo. Para una serie se muestra la primera actuación
+  aún vigente del bloque y su periodo completo. No se duplica el contador por cada actuación.
+  El inicio resume conflictos y avisos; el panel pagina 12 filas y permite filtrar por gravedad.
+- Al entrar/actualizar se recalcula con el reloj del servidor. No requiere cron ni cambia
+  físicamente una prenda al vencer una fecha. Cesiones conserva su filtro de vencidas.
+- loan_items.retained_at registra que se mantiene una línea pendiente. La fecha original
+  loans.due_at no se borra ni se desplaza; a partir de esa decisión deja de justificar una
+  devolución compatible para otras personas. Nuevas asignaciones manuales tampoco pueden
+  confiar en esa fecha invalidada. Las reservas existentes se conservan y señalan.
+- La acción requiere cesión activa con fecha prevista y permite elegir entre 1 y 30 prendas
+  pendientes no marcadas previamente. Puede registrarse también antes de vencer cuando ya se
+  sabe que la persona las conservará. No añade una fecha ficticia de devolución.
+- preview_retention es de solo lectura y muestra todas las reservas afectadas de otras
+  personas, incluidas series. Confirmar es una acción expresa; el impacto no impide mantener.
+  Si el plan o la cesión cambian entre revisión y confirmación, hay que revisar el nuevo impacto.
+- confirm_retention requiere ADMIN, comparte el bloqueo de planificación y bloquea persona,
+  cesión y prendas en el mismo orden que movimientos. Verifica la vista previa íntegra,
+  incrementa la versión de la cesión y admite reintentos con UUID sin duplicar decisiones.
+  Compite de forma segura con una devolución/cambio físico y con nuevas asignaciones.
+- loan_retention_decisions conserva administrador, fecha, selección e impacto observado;
+  solo lectura para ADMIN. También se registra PRENDAS_MANTENIDAS en la auditoría.
+  Es una decisión administrativa sin movimiento físico: no exige ni simula una firma.
+  Entregas, cambios y devoluciones reales conservan su firma y sus validaciones.
+- La devolución real resuelve la posesión, pero puede dejar una incidencia por daño o lavandería.
+  Editar un estado sigue permitido; el formulario muestra las reservas y avisa del efecto futuro.
+  La resolución utiliza las operaciones existentes con sus versiones y auditoría.
+- Migración 20261005001000_conflicts.sql aplicada al Supabase independiente de Vestuario.
+  No se alteran datos físicos ni reservas preexistentes al aplicar la migración.
+- Fase 9 pendiente de autorización: no se añaden importaciones, duplicados ni acciones masivas.

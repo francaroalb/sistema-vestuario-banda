@@ -374,3 +374,14 @@ a {
     column-gap: 6px;
   }
 }
+
+.home-conflicts {
+  display: flex;
+  gap: 8px 20px;
+  flex-wrap: wrap;
+  align-items: center;
+  text-decoration: none;
+  background: var(--color-accent-soft);
+  border: 1px solid var(--color-accent-border);
+  color: var(--color-primary-dark);
+}

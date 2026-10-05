@@ -142,3 +142,8 @@
   </div>
 </form>
 }
+
+@if(editing && garment() && !loading()){
+<p class="notice">Los cambios de estado se guardan aunque afecten a reservas futuras. Comprueba estas asignaciones y revisa <a routerLink="/conflictos">Conflictos y avisos</a> después de guardar.</p>
+<app-planned-uses [garment]="id"/>
+}

@@ -20,6 +20,7 @@ import { formatTimestamp } from '../../core/inventory/inventory';
       <div>
         <p class="eyebrow">Agenda y preparación</p>
         <h1>Actuaciones</h1>
+        <a routerLink="/conflictos">Conflictos y avisos</a>
       </div>
       <div class="event-actions">
         <a class="btn btn-secondary" routerLink="/actuaciones/series">Series</a>

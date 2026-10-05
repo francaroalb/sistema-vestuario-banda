@@ -66,7 +66,12 @@ export class LoansRepository {
   }
   async detail(id: string) {
     const loan = await this.get(id);
-    const [items, movements] = await Promise.all([
+    const [decisions, items, movements] = await Promise.all([
+      this.client
+        .from('loan_retention_decisions')
+        .select('*')
+        .eq('loan_id', id)
+        .order('occurred_at'),
       this.client
         .from('loan_items')
         .select('*')
@@ -80,9 +85,14 @@ export class LoansRepository {
         .order('occurred_at')
         .order('id'),
     ]);
-    if (items.error || movements.error)
-      throw loanError(items.error ?? movements.error);
-    return { loan, items: items.data ?? [], movements: movements.data ?? [] };
+    if (items.error || movements.error || decisions.error)
+      throw loanError(items.error ?? movements.error ?? decisions.error);
+    return {
+      loan,
+      items: items.data ?? [],
+      movements: movements.data ?? [],
+      decisions: decisions.data ?? [],
+    };
   }
   async choices(
     mode: 'person' | 'garment',
