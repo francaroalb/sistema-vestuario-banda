@@ -15,7 +15,7 @@ export interface PeopleFilters {
 }
 export const PEOPLE_PAGE_SIZE = 24;
 export const personKinds: { value: PersonKind; label: string }[] = [
-  { value: 'BANDA', label: 'Músico de la Banda' },
+  { value: 'BANDA', label: 'Componente' },
   { value: 'REFUERZO', label: 'Refuerzo' },
 ];
 export function personKindLabel(kind: PersonKind): string {

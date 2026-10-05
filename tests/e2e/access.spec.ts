@@ -440,6 +440,7 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
     });
     await page.goto('/personas');
     await enter(page);
+    await page.getByRole('button', { name: 'Ver todas las personas' }).click();
     await expect(page.getByRole('alert')).toContainText(
       'Comprueba tu conexión',
     );
@@ -454,7 +455,7 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
     total = 24;
     await page.reload();
     await expect(page.locator('.person-card')).toHaveCount(24);
-    await expect(page).toHaveURL(/\/personas$/);
+    expect(new URL(page.url()).searchParams.get('pagina')).toBeNull();
     await page.getByLabel('Buscar por nombre').fill('A%_');
     await expect(page).toHaveURL(/buscar=/);
     await expect.poll(() => lastSearch).toBe('ilike.%A\\%\\_%');
@@ -466,6 +467,87 @@ test.describe('Acceso y navegación con respuestas controladas', () => {
     await expect(
       page.getByRole('heading', { name: 'Personas', exact: true }),
     ).toBeVisible();
+  });
+  test('personas agrupadas por componentes, refuerzos e instrumento', async ({
+    page,
+  }) => {
+    await mockSupabase(page);
+    const requests: string[] = [];
+    await page.route('**/rest/v1/people?*', (route) => {
+      const u = new URL(route.request().url());
+      const kind = u.searchParams.get('kind')?.slice(3) ?? 'BANDA';
+      requests.push(kind);
+      expect(u.searchParams.get('order')).toContain('instrument.asc');
+      return route.fulfill({
+        json: [
+          {
+            id: userId,
+            full_name: kind === 'BANDA' ? 'Ana García' : 'Luis Pérez',
+            kind,
+            instrument: 'Clarinete',
+          },
+          {
+            id: '22222222-2222-4222-8222-222222222222',
+            full_name: 'Pilar Alonso',
+            kind,
+            instrument: null,
+          },
+        ],
+        headers: {
+          'content-range': '0-1/2',
+          'access-control-expose-headers': 'content-range',
+        },
+      });
+    });
+    await page.goto('/personas');
+    await enter(page);
+    await expect(
+      page.getByRole('button', { name: 'Componentes', exact: true }),
+    ).toBeVisible();
+    await expect(page.locator('.person-card')).toHaveCount(0);
+    expect(requests).toHaveLength(0);
+    await page
+      .getByRole('button', { name: 'Componentes', exact: true })
+      .click();
+    await expect(page.locator('.instrument-group')).toHaveCount(2);
+    await page
+      .locator('.instrument-group > summary')
+      .filter({ hasText: 'Clarinete' })
+      .click();
+    await expect(
+      page.getByRole('link', { name: 'Ver persona Ana García' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Ver persona Ana García' }),
+    ).toContainText('Componente');
+    await page.getByRole('button', { name: 'Refuerzos', exact: true }).click();
+    await expect(
+      page.getByRole('button', { name: 'Componentes', exact: true }),
+    ).toHaveAttribute('aria-expanded', 'false');
+    await page
+      .locator('.instrument-group > summary')
+      .filter({ hasText: 'Clarinete' })
+      .click();
+    await expect(
+      page.getByRole('link', { name: 'Ver persona Luis Pérez' }),
+    ).toBeVisible();
+    expect(requests.at(-1)).toBe('REFUERZO');
+    await page.reload();
+    await expect(
+      page.getByRole('button', { name: 'Refuerzos', exact: true }),
+    ).toHaveAttribute('aria-expanded', 'true');
+    await page.getByLabel('Buscar por nombre', { exact: true }).fill('Luis');
+    await expect(
+      page.getByRole('link', { name: 'Ver persona Luis Pérez' }),
+    ).toBeVisible();
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
   });
   test('personas: nombres y observaciones largos caben en la ficha móvil', async ({
     page,

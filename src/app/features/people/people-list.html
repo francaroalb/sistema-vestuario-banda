@@ -1,6 +1,6 @@
 <div class="page-heading">
   <div>
-    <p class="eyebrow">Músicos y refuerzos</p>
+    <p class="eyebrow">Componentes y refuerzos</p>
     <h1>Personas</h1>
   </div>
   <a
@@ -68,94 +68,157 @@
     </button>
   </details>
 </form>
-@if (loading()) {
-  <p class="loading-state" role="status">
-    <span class="spinner" aria-hidden="true"></span>Cargando personas…
-  </p>
-} @else if (error()) {
-  <div class="notice notice-error" role="alert">
-    {{ error() }}
-    <button class="text-button" type="button" (click)="load()">
-      Reintentar
+<section class="inventory-categories" aria-label="Personas por pertenencia">
+  <div class="category-heading">
+    <p>Elige un grupo y después un instrumento.</p>
+    <button class="text-button" (click)="showAll()">
+      Ver todas las personas
     </button>
   </div>
-} @else {
-  <div class="results-heading">
-    <p role="status">
-      {{ total() }} {{ total() === 1 ? "persona" : "personas" }}
-    </p>
-    <span>{{
-      form.controls.archive.value === "active"
-        ? "Personas activas"
-        : form.controls.archive.value === "archived"
-          ? "Archivo"
-          : "Todas las personas"
-    }}</span>
-  </div>
-  @if (people().length) {
-    <ul class="inventory-grid">
-      @for (person of people(); track person.id) {
-        <li>
-          <a
-            class="person-card garment-card card"
-            [routerLink]="['/personas', person.id]"
-            [queryParams]="{ volver: router.url }"
-            [attr.aria-label]="'Ver persona ' + person.full_name"
-          >
-            <div class="person-card-heading">
-              <h2>{{ person.full_name }}</h2>
-              <span
-                class="person-badge"
-                [class.reinforcement]="person.kind === 'REFUERZO'"
-                >{{ kindLabel(person.kind) }}</span
-              >
-            </div>
-            <div class="garment-card-bottom">
-              <span class="instrument">{{
-                person.instrument || "Sin instrumento indicado"
-              }}</span
-              ><app-icon name="arrow" />
-            </div>
-            @if (person.archived_at) {
-              <span class="archived-label"
-                ><app-icon name="archive" />Archivada</span
-              >
-            }
-          </a>
-        </li>
-      }
-    </ul>
-  } @else {
-    <section class="empty-state card">
-      <app-icon name="people" />
-      <h2>No hay personas en esta vista</h2>
-      <p>
-        Prueba otro nombre o cambia los filtros. Si todavía no existe su ficha,
-        puedes añadir una nueva persona.
-      </p>
-      <button class="btn btn-secondary" type="button" (click)="clear()">
-        Limpiar búsqueda y filtros
+  @for (kind of kinds; track kind.value) {
+    <section
+      class="inventory-category"
+      [class.expanded]="selectedKind() === kind.value"
+    >
+      <button
+        class="category-toggle"
+        [attr.aria-expanded]="selectedKind() === kind.value"
+        [attr.aria-controls]="'people-' + kind.value"
+        (click)="toggleKind(kind.value)"
+      >
+        <app-icon name="people" /><strong>{{
+          kind.value === 'BANDA' ? 'Componentes' : 'Refuerzos'
+        }}</strong
+        ><span aria-hidden="true">{{
+          selectedKind() === kind.value ? '−' : '+'
+        }}</span>
       </button>
+      @if (selectedKind() === kind.value) {
+        <div class="category-content" [id]="'people-' + kind.value">
+          <ng-container *ngTemplateOutlet="results" />
+        </div>
+      }
     </section>
   }
-  @if (pages() > 1) {
-    <nav class="pagination" aria-label="Páginas de personas">
-      <button
-        class="btn btn-secondary"
-        type="button"
-        [disabled]="page() <= 1"
-        (click)="navigate(page() - 1)"
-      >
-        <app-icon name="back" />Anterior</button
-      ><span>Página {{ page() }} de {{ pages() }}</span
-      ><button
-        class="btn btn-secondary"
-        type="button"
-        [disabled]="page() >= pages()"
-        (click)="navigate(page() + 1)"
-      >
-        Siguiente<app-icon name="arrow" />
-      </button>
-    </nav>
-  }
+</section>
+@if (!selectedKind() && !browsing()) {
+  <ng-container *ngTemplateOutlet="results" />
 }
+<ng-template #results>
+  @if (loading()) {
+    <p class="loading-state" role="status">
+      <span class="spinner" aria-hidden="true"></span>Cargando personas…
+    </p>
+  } @else if (error()) {
+    <div class="notice notice-error" role="alert">
+      {{ error() }}
+      <button class="text-button" type="button" (click)="load()">
+        Reintentar
+      </button>
+    </div>
+  } @else {
+    <div class="results-heading">
+      <p role="status">
+        {{ total() }} {{ total() === 1 ? 'persona' : 'personas' }}
+      </p>
+      <span>{{
+        form.controls.archive.value === 'active'
+          ? 'Personas activas'
+          : form.controls.archive.value === 'archived'
+            ? 'Archivo'
+            : 'Todas las personas'
+      }}</span>
+    </div>
+    @if (people().length) {
+      @for (group of groups(); track group.key) {
+        <details
+          class="instrument-group"
+          [open]="
+            allKinds() ||
+            !!form.controls.q.value ||
+            !!form.controls.instrument.value
+          "
+        >
+          <summary>
+            {{ !selectedKind() ? kindLabel(group.kind) + ' · ' : ''
+            }}{{ group.instrument }}
+            <span
+              >{{ group.people.length }}
+              {{
+                pages() > 1
+                  ? 'en esta página'
+                  : group.people.length === 1
+                    ? 'persona'
+                    : 'personas'
+              }}</span
+            >
+          </summary>
+          <ul class="inventory-grid">
+            @for (person of group.people; track person.id) {
+              <li>
+                <a
+                  class="person-card garment-card card"
+                  [routerLink]="['/personas', person.id]"
+                  [queryParams]="{ volver: router.url }"
+                  [attr.aria-label]="'Ver persona ' + person.full_name"
+                >
+                  <div class="person-card-heading">
+                    <h2>{{ person.full_name }}</h2>
+                    <span
+                      class="person-badge"
+                      [class.reinforcement]="person.kind === 'REFUERZO'"
+                      >{{ kindLabel(person.kind) }}</span
+                    >
+                  </div>
+                  <div class="garment-card-bottom">
+                    <span class="instrument">{{
+                      person.instrument || 'Sin instrumento indicado'
+                    }}</span
+                    ><app-icon name="arrow" />
+                  </div>
+                  @if (person.archived_at) {
+                    <span class="archived-label"
+                      ><app-icon name="archive" />Archivada</span
+                    >
+                  }
+                </a>
+              </li>
+            }
+          </ul>
+        </details>
+      }
+    } @else {
+      <section class="empty-state card">
+        <app-icon name="people" />
+        <h2>No hay personas en esta vista</h2>
+        <p>
+          Prueba otro nombre o cambia los filtros. Si todavía no existe su
+          ficha, puedes añadir una nueva persona.
+        </p>
+        <button class="btn btn-secondary" type="button" (click)="clear()">
+          Limpiar búsqueda y filtros
+        </button>
+      </section>
+    }
+    @if (pages() > 1) {
+      <nav class="pagination" aria-label="Páginas de personas">
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="page() <= 1"
+          (click)="navigate(page() - 1)"
+        >
+          <app-icon name="back" />Anterior</button
+        ><span>Página {{ page() }} de {{ pages() }}</span
+        ><button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="page() >= pages()"
+          (click)="navigate(page() + 1)"
+        >
+          Siguiente<app-icon name="arrow" />
+        </button>
+      </nav>
+    }
+  }
+</ng-template>

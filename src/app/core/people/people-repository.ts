@@ -37,6 +37,8 @@ export class PeopleRepository {
       );
     const start = (filters.page - 1) * PEOPLE_PAGE_SIZE;
     const result = await query
+      .order('kind')
+      .order('instrument', { nullsFirst: false })
       .order('full_name')
       .order('id')
       .range(start, start + PEOPLE_PAGE_SIZE - 1)

@@ -244,3 +244,19 @@ Limpiar filtros vuelve a la vista inicial plegada. Los controles tienen estado a
 Validación: compilación sin avisos y cuatro pruebas de navegador aprobadas en escritorio y
 móvil, cubriendo carga bajo demanda, cambio/cierre de tipo, recarga, búsqueda, paginación,
 recuperación de errores y ausencia de desbordamiento entre 320 y 1440 px.
+
+### Personas por pertenencia e instrumento
+
+Personas comienza con Componentes y Refuerzos plegados. Abrir una sección consulta solo esa
+pertenencia y presenta desplegables por instrumento, con nombres en orden alfabético.
+Sin instrumento indicado tiene su grupo propio. La búsqueda por nombre y el filtro de
+instrumento abren los resultados para evitar pasos adicionales; Ver todas las personas
+permite consultar el conjunto. La sección y los filtros se conservan en la URL.
+
+La ordenación por pertenencia, instrumento y nombre se realiza antes de paginar. Se mantienen
+24 personas por página; si un instrumento abarca varias páginas, el recuento de su grupo
+indica explícitamente «en esta página». No se descarga toda la base de personas.
+La etiqueta visible del tipo BANDA cambia a Componente en listados, fichas y formularios;
+el valor interno y los datos existentes se conservan. Validación: 27 pruebas unitarias,
+compilación sin avisos y seis pruebas de navegador aprobadas entre escritorio y móvil,
+incluyendo desplegables, búsqueda, recarga, paginación, errores y nombres largos.

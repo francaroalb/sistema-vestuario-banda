@@ -1,14 +1,14 @@
 <a class="back-link" [routerLink]="backLink"
   ><app-icon name="back" />{{
-    editing ? "Volver a la persona" : "Volver a Personas"
+    editing ? 'Volver a la persona' : 'Volver a Personas'
   }}</a
 >
 <div class="page-heading">
   <div>
     <p class="eyebrow">Personas</p>
-    <h1>{{ editing ? "Editar persona" : "Nueva persona" }}</h1>
+    <h1>{{ editing ? 'Editar persona' : 'Nueva persona' }}</h1>
     <p class="page-intro">
-      Una misma ficha, aunque pase de refuerzo a la Banda.
+      Una misma ficha, aunque pase de refuerzo a componente.
     </p>
   </div>
 </div>
@@ -136,7 +136,7 @@
           <span class="spinner" aria-hidden="true"></span>Guardando…
         } @else {
           <app-icon name="check" />{{
-            editing ? "Guardar cambios" : "Añadir persona"
+            editing ? 'Guardar cambios' : 'Añadir persona'
           }}
         }</button
       ><a class="btn btn-quiet" [routerLink]="backLink">Cancelar</a>

@@ -111,7 +111,7 @@ test.describe('Supabase real · personas fase 3', () => {
     ).toBeVisible();
     expect(new URL(page.url()).pathname).toBe('/personas/' + person.id);
     await expect(
-      page.getByText('Músico de la Banda', { exact: true }),
+      page.getByText('Componente', { exact: true }),
     ).toBeVisible();
     await page.goto(
       '/personas?buscar=' +

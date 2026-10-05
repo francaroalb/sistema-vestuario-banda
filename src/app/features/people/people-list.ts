@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -22,9 +23,13 @@ import {
 import { Icon } from '../../shared/ui/icon';
 @Component({
   selector: 'app-people-list',
-  imports: [ReactiveFormsModule, RouterLink, Icon],
+  imports: [ReactiveFormsModule, RouterLink, Icon, NgTemplateOutlet],
   templateUrl: './people-list.html',
-  styleUrls: ['../inventory/inventory.scss', './people.scss'],
+  styleUrls: [
+    '../inventory/inventory.scss',
+    './people.scss',
+    '../inventory/inventory-list.scss',
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PeopleList {
@@ -48,6 +53,47 @@ export class PeopleList {
     archive: 'active',
   });
   readonly advanced = signal(false);
+  readonly selectedKind = signal('');
+  readonly allKinds = signal(false);
+  readonly browsing = signal(true);
+  readonly groups = computed(() => {
+    const groups = new Map<
+      string,
+      { key: string; instrument: string; kind: PersonKind; people: PersonRow[] }
+    >();
+    for (const person of this.people()) {
+      const instrument =
+        person.instrument?.trim() || 'Sin instrumento indicado';
+      const key = person.kind + ':' + instrument.toLocaleLowerCase('es');
+      if (!groups.has(key))
+        groups.set(key, { key, instrument, kind: person.kind, people: [] });
+      groups.get(key)!.people.push(person);
+    }
+    return [...groups.values()]
+      .sort(
+        (a, b) =>
+          a.kind.localeCompare(b.kind) ||
+          a.instrument.localeCompare(b.instrument, 'es'),
+      )
+      .map((g) => ({
+        ...g,
+        people: g.people.sort((a, b) =>
+          a.full_name.localeCompare(b.full_name, 'es'),
+        ),
+      }));
+  });
+  toggleKind(kind: string) {
+    this.allKinds.set(false);
+    this.form.controls.kind.setValue(this.selectedKind() === kind ? '' : kind, {
+      emitEvent: false,
+    });
+    this.navigate(1);
+  }
+  showAll() {
+    this.allKinds.set(true);
+    this.form.controls.kind.setValue('', { emitEvent: false });
+    this.navigate(1);
+  }
   private controller?: AbortController;
   private filters: PeopleFilters = {
     q: '',
@@ -74,12 +120,18 @@ export class PeopleList {
           Number.isSafeInteger(page) && page > 0 ? Math.min(page, 10000) : 1,
       };
       this.page.set(this.filters.page);
+      this.selectedKind.set(this.filters.kind);
+      this.allKinds.set(params.get('vista') === 'todas');
+      this.browsing.set(
+        !this.filters.kind &&
+          !this.filters.q &&
+          !this.filters.instrument &&
+          this.filters.archive === 'active' &&
+          !this.allKinds() &&
+          this.filters.page === 1,
+      );
       this.advanced.set(
-        Boolean(
-          this.filters.kind ||
-          this.filters.instrument ||
-          this.filters.archive !== 'active',
-        ),
+        Boolean(this.filters.instrument || this.filters.archive !== 'active'),
       );
       this.form.patchValue(this.filters, { emitEvent: false });
       void this.load();
@@ -93,8 +145,14 @@ export class PeopleList {
     this.controller?.abort();
     const controller = new AbortController();
     this.controller = controller;
-    this.loading.set(true);
     this.error.set('');
+    if (this.browsing()) {
+      this.people.set([]);
+      this.total.set(0);
+      this.loading.set(false);
+      return;
+    }
+    this.loading.set(true);
     try {
       const result = await this.repository.list(
         this.filters,
@@ -119,6 +177,7 @@ export class PeopleList {
       relativeTo: this.route,
       replaceUrl: true,
       queryParams: {
+        vista: this.allKinds() ? 'todas' : null,
         buscar: filters.q.trim() || null,
         tipo: filters.kind || null,
         instrumento: filters.instrument.trim() || null,
@@ -128,6 +187,7 @@ export class PeopleList {
     });
   }
   clear(): void {
+    this.allKinds.set(false);
     this.form.reset({
       q: '',
       kind: '',

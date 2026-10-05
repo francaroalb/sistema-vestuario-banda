@@ -26,7 +26,7 @@ describe('Personas: navegación y mensajes', () => {
     ).not.toContain('database');
   });
   it('distingue banda de refuerzo', () => {
-    expect(personKindLabel('BANDA')).toBe('Músico de la Banda');
+    expect(personKindLabel('BANDA')).toBe('Componente');
     expect(personKindLabel('REFUERZO')).toBe('Refuerzo');
   });
 });
