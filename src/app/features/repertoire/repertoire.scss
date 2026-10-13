@@ -36,29 +36,6 @@
 .work-row .actions {
   margin: 0;
 }
-.section-nav {
-  display: flex;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-  flex-wrap: wrap;
-}
-.section-nav a {
-  padding: 8px 14px;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  text-decoration: none;
-  color: var(--color-primary);
-}
-.section-nav .active {
-  background: var(--color-primary-soft);
-  border-color: var(--color-primary-border);
-}
 .toolbar {
   display: flex;
   gap: var(--space-3);

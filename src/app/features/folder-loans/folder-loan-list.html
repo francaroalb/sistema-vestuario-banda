@@ -1,9 +1,3 @@
-<nav class="section-tabs" aria-label="Tipo de cesiones">
-  <a routerLink="/cesiones">Vestuario</a
-  ><a class="active" routerLink="/cesiones/carpetas" aria-current="page"
-    >Carpetas</a
-  >
-</nav>
 <div class="heading">
   <div>
     <p class="eyebrow">Reservas, entregas y devoluciones</p>
@@ -75,7 +69,8 @@
         <h2>{{ r.person_name }}</h2>
         <p class="small">
           {{ r.status === 'RESERVED' ? 'Inicio previsto: ' : 'Desde: '
-          }}{{ timestamp(r.delivered_at || r.starts_at) }} · Devolución prevista:
+          }}{{ timestamp(r.delivered_at || r.starts_at) }} · Devolución
+          prevista:
           {{ r.due_at ? timestamp(r.due_at) : 'Sin fecha prevista' }}
         </p>
       </div>

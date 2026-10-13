@@ -17,12 +17,11 @@ import {
   RepertoireCode,
 } from '../../core/music/models';
 import { musicError } from '../../core/music/music-api';
-import { InventoryTabs } from '../inventory/inventory-tabs';
 import { VoicePicker } from './voice-picker';
 import { folderStatus } from './folder-ui';
 @Component({
   selector: 'app-folder-list',
-  imports: [ReactiveFormsModule, RouterLink, InventoryTabs, VoicePicker],
+  imports: [ReactiveFormsModule, RouterLink, VoicePicker],
   templateUrl: './folder-list.html',
   styleUrl: './folders.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

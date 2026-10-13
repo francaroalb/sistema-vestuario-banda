@@ -21,10 +21,6 @@ import { Icon } from '../../shared/ui/icon';
   selector: 'app-loan-list',
   imports: [FormsModule, RouterLink, Icon],
   template: `
-    <nav class="folder-loan-tabs" aria-label="Tipo de cesiones">
-      <a class="active" routerLink="/cesiones" aria-current="page">Vestuario</a
-      ><a routerLink="/cesiones/carpetas">Carpetas</a>
-    </nav>
     <div class="page-heading">
       <div>
         <p class="eyebrow">Entregas y devoluciones</p>

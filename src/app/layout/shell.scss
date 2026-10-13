@@ -95,7 +95,7 @@ main {
   left: 0;
   right: 0;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--nav-count, 5), minmax(0, 1fr));
   background: var(--color-primary-dark);
   border-top: 1px solid var(--color-accent);
   padding: var(--space-2) var(--space-2)
@@ -327,5 +327,41 @@ main {
   .logout {
     padding: var(--space-2);
     gap: var(--space-1);
+  }
+}
+
+.module-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.25rem var(--page-gutter);
+  background: var(--color-primary-soft);
+  border-bottom: 1px solid var(--color-primary-border);
+  color: var(--color-primary-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  a,
+  span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  a {
+    min-height: 44px;
+    color: inherit;
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+  app-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+@media (max-width: 22rem) {
+  .module-bar > span {
+    font-size: 0.65rem;
   }
 }

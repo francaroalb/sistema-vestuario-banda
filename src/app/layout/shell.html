@@ -1,96 +1,121 @@
 @if (auth.authenticated()) {
-<a class="skip-link" href="#main-content">Saltar al contenido</a>
-<div class="app-shell">
-  <aside class="sidebar">
-    <a
-      routerLink="/inicio"
-      class="brand"
-      aria-label="Gestión de trajes, inicio"
-    >
-      <span class="band-logo"
-        ><img
-          src="assets/brand/logo-banda-ui.png"
-          alt="Banda Municipal Ntra. Sra. del Valle"
-          width="1358"
-          height="1920"
-      /></span>
-      <strong>Gestión de trajes</strong>
-    </a>
-    <nav aria-label="Navegación principal" class="desktop-nav">
-      @for (item of navigation; track item.path) {
+  <a class="skip-link" href="#main-content">Saltar al contenido</a>
+  <div class="app-shell">
+    <aside class="sidebar">
       <a
-        [routerLink]="item.path"
-        routerLinkActive="is-active"
-        ariaCurrentWhenActive="page"
-        ><app-icon [name]="item.icon" />{{ item.label }}</a
+        [routerLink]="section() ? '/carpetas' : '/inicio'"
+        class="brand"
+        [attr.aria-label]="title() + ', inicio'"
       >
-      }
-    </nav>
-    <div class="sidebar-footer">
-      <span>La Palma del Condado</span>
-      <p>Banda Municipal de Música<br />Ntra. Sra. del Valle</p>
-    </div>
-  </aside>
-  <div class="workspace">
-    <header class="topbar">
-      <a
-        routerLink="/inicio"
-        class="mobile-title"
-        aria-label="Gestión de trajes, inicio"
-        ><span class="band-logo"
+        <span class="band-logo"
           ><img
             src="assets/brand/logo-banda-ui.png"
-            alt=""
+            alt="Banda Municipal Ntra. Sra. del Valle"
             width="1358"
-            height="1920" /></span
-        ><strong>Gestión de trajes</strong></a
+            height="1920"
+        /></span>
+        <strong>{{ title() }}</strong>
+      </a>
+      <nav
+        [attr.aria-label]="
+          section() ? 'Navegación de carpetas' : 'Navegación principal'
+        "
+        class="desktop-nav"
       >
-      <span class="desktop-title"
-        >Ntra. Sra. del Valle <span aria-hidden="true">/</span> Gestión de
-        trajes</span
-      >
-      <div class="account">
-        <span class="avatar" aria-hidden="true"
-          >{{ auth.profile()?.display_name?.slice(0, 1)?.toUpperCase() }}</span
-        ><span class="account-name">{{ auth.profile()?.display_name }}</span
-        ><button
-          class="btn btn-quiet logout"
-          type="button"
-          (click)="signOut()"
-          [disabled]="auth.busy()"
-        >
-          <app-icon name="logout" /><span>Salir</span>
-        </button>
+        @for (item of navigation(); track item.path) {
+          <a
+            [routerLink]="item.path"
+            [class.is-active]="active(item)"
+            [attr.aria-current]="active(item) ? 'page' : null"
+            [attr.aria-label]="item.shortLabel ? item.label : null"
+            ><app-icon [name]="item.icon" />{{ item.label }}</a
+          >
+        }
+      </nav>
+      <div class="sidebar-footer">
+        <span>La Palma del Condado</span>
+        <p>Banda Municipal de Música<br />Ntra. Sra. del Valle</p>
       </div>
-    </header>
-    @if (!connection.online()) {
-    <div class="connection-notice" role="status">
-      Sin conexión. Necesitas internet para guardar operaciones.
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <a
+          [routerLink]="section() ? '/carpetas' : '/inicio'"
+          class="mobile-title"
+          [attr.aria-label]="title() + ', inicio'"
+          ><span class="band-logo"
+            ><img
+              src="assets/brand/logo-banda-ui.png"
+              alt=""
+              width="1358"
+              height="1920" /></span
+          ><strong>{{ title() }}</strong></a
+        >
+        <span class="desktop-title"
+          >Ntra. Sra. del Valle <span aria-hidden="true">/</span> Gestión de
+          trajes</span
+        >
+        <div class="account">
+          <span class="avatar" aria-hidden="true">{{
+            auth.profile()?.display_name?.slice(0, 1)?.toUpperCase()
+          }}</span
+          ><span class="account-name">{{ auth.profile()?.display_name }}</span
+          ><button
+            class="btn btn-quiet logout"
+            type="button"
+            (click)="signOut()"
+            [disabled]="auth.busy()"
+          >
+            <app-icon name="logout" /><span>Salir</span>
+          </button>
+        </div>
+      </header>
+      @if (section()) {
+        <div class="module-bar">
+          <a routerLink="/inicio"><app-icon name="back" />Menú general</a>
+          <span><app-icon name="folder" />Carpetas musicales</span>
+        </div>
+      }
+      @if (!connection.online()) {
+        <div class="connection-notice" role="status">
+          Sin conexión. Necesitas internet para guardar operaciones.
+        </div>
+      }
+      @if (feedback.message()) {
+        <div class="toast" role="status">
+          <app-icon name="check" /><span>{{ feedback.message() }}</span
+          ><button
+            type="button"
+            aria-label="Cerrar aviso"
+            (click)="feedback.dismiss()"
+          >
+            <app-icon name="close" />
+          </button>
+        </div>
+      }
+      <main id="main-content" tabindex="-1"><router-outlet /></main>
+      <footer class="workspace-footer"><app-install-app /></footer>
     </div>
-    } @if (feedback.message()) {
-    <div class="toast" role="status">
-      <app-icon name="check" /><span>{{ feedback.message() }}</span
-      ><button
-        type="button"
-        aria-label="Cerrar aviso"
-        (click)="feedback.dismiss()"
-      >
-        <app-icon name="close" />
-      </button>
-    </div>
-    }
-    <main id="main-content" tabindex="-1"><router-outlet /></main>
-    <footer class="workspace-footer"><app-install-app /></footer>
-  </div>
-  <nav aria-label="Navegación principal móvil" class="bottom-nav">
-    @for (item of navigation; track item.path) {
-    <a
-      [routerLink]="item.path"
-      routerLinkActive="is-active"
-      ariaCurrentWhenActive="page"
-      ><app-icon [name]="item.icon" /><span>{{ item.label }}</span></a
+    <nav
+      [attr.aria-label]="
+        section()
+          ? 'Navegación de carpetas móvil'
+          : 'Navegación principal móvil'
+      "
+      [style.--nav-count]="navigation().length"
+      class="bottom-nav"
     >
-    }
-  </nav>
-</div>
+      @for (item of navigation(); track item.path) {
+        <a
+          [routerLink]="item.path"
+          [class.is-active]="active(item)"
+          [attr.aria-current]="active(item) ? 'page' : null"
+          [attr.aria-label]="item.shortLabel ? item.label : null"
+          ><app-icon [name]="item.icon" /><span>{{
+            item.shortLabel || item.label
+          }}</span></a
+        >
+      }
+    </nav>
+  </div>
 }

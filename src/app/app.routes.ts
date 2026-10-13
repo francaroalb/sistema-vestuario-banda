@@ -15,6 +15,12 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'inicio' },
       {
+        path: 'carpetas',
+        title: 'Carpetas musicales · Gestión de trajes',
+        loadComponent: () =>
+          import('./features/folders/folder-home').then((m) => m.FolderHome),
+      },
+      {
         path: 'inventario/importar',
         title: 'Importar prendas · Gestión de trajes',
         data: { kind: 'garments' },

@@ -4,6 +4,7 @@ describe('Destinos tras el login', () => {
     expect(safeReturnUrl('/inventario?buscar=C-05')).toBe(
       '/inventario?buscar=C-05',
     );
+    expect(safeReturnUrl('/carpetas')).toBe('/carpetas');
     expect(safeReturnUrl('/personas')).toBe('/personas');
     expect(safeReturnUrl('/conflictos')).toBe('/conflictos');
   });

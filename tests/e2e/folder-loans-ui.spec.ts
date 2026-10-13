@@ -358,16 +358,23 @@ test.describe('Carpetas fase 5 · interfaz', () => {
     ).toBeVisible();
     await page.getByRole('link', { name: '← Cesiones de carpetas' }).click();
     await expect(page.getByLabel('Código de carpeta')).toHaveValue('CLA1');
+    await page.getByRole('link', { name: 'Menú general', exact: true }).click();
     await page
-      .getByRole('navigation', { name: 'Tipo de cesiones' })
-      .getByRole('link', { name: 'Vestuario' })
+      .getByRole('navigation', { name: /^Navegación principal/ })
+      .filter({ visible: true })
+      .getByRole('link', { name: 'Cesiones', exact: true })
       .click();
     await expect(
       page.getByRole('heading', { name: 'Cesiones', exact: true }),
     ).toBeVisible();
     await page
-      .getByRole('navigation', { name: 'Tipo de cesiones' })
+      .getByRole('navigation', { name: /^Navegación principal/ })
+      .filter({ visible: true })
       .getByRole('link', { name: 'Carpetas' })
+      .click();
+    await page
+      .getByRole('navigation', { name: 'Gestión de carpetas', exact: true })
+      .getByRole('link', { name: /Cesiones/ })
       .click();
     await expect(
       page.getByRole('heading', { name: 'Cesiones de carpetas', exact: true }),

@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
+test.use({ serviceWorkers: 'block' });
 const userId = '11111111-1111-4111-8111-111111111111';
 const user = {
   id: userId,
@@ -274,7 +275,10 @@ test.describe('Carpetas fase 2 · interfaz', () => {
     await page.goto('/inventario/carpetas');
     await enter(page);
     await expect(
-      page.getByRole('heading', { name: 'Carpetas', exact: true }),
+      page.getByRole('heading', {
+        name: 'Inventario de carpetas',
+        exact: true,
+      }),
     ).toBeVisible();
     await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
     await expect(page.getByText('PRO-CLA1-025', { exact: true })).toBeVisible();
@@ -288,7 +292,7 @@ test.describe('Carpetas fase 2 · interfaz', () => {
     expect(queries.at(-1)?.searchParams.get('repertoire_code')).toBe('eq.PRO');
     expect(queries.at(-1)?.searchParams.get('archived')).toBe('eq.false');
     await expect(
-      page.getByRole('link', { name: 'Vestuario', exact: true }),
+      page.getByRole('link', { name: 'Menú general', exact: true }),
     ).toBeVisible();
     await expect(page.getByText('1 carpeta', { exact: true })).toBeVisible();
     mkdirSync('.local/screenshots', { recursive: true });
@@ -298,7 +302,7 @@ test.describe('Carpetas fase 2 · interfaz', () => {
     });
     await expect(
       page
-        .getByRole('navigation', { name: /^Navegación principal/ })
+        .getByRole('navigation', { name: /^Navegación de carpetas/ })
         .filter({ visible: true })
         .getByRole('link'),
     ).toHaveCount(5);
@@ -308,4 +312,70 @@ test.describe('Carpetas fase 2 · interfaz', () => {
       ),
     ).toBe(true);
   });
+});
+
+test('Carpetas · menú propio y acceso desde el menú general', async ({
+  page,
+}, info) => {
+  await mockSupabase(page);
+  await page.goto('/carpetas');
+  await enter(page);
+  const menu = () =>
+    page
+      .getByRole('navigation', { name: /^Navegación de carpetas/ })
+      .filter({ visible: true });
+  await expect(menu().getByRole('link')).toHaveCount(5);
+  await expect(menu().locator('[aria-current="page"]')).toHaveText('Resumen');
+  const sections = page.getByRole('navigation', {
+    name: 'Gestión de carpetas',
+    exact: true,
+  });
+  await expect(sections.getByRole('link')).toHaveCount(4);
+  await sections.getByRole('link', { name: /Repertorio/ }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Repertorio', exact: true }),
+  ).toBeVisible();
+  await expect(menu().locator('[aria-current="page"]')).toHaveText(
+    'Repertorio',
+  );
+  await expect(menu().locator('[aria-current="page"]')).toHaveCount(1);
+  await menu()
+    .getByRole('link', { name: 'Mantenimiento', exact: true })
+    .click();
+  await expect(
+    page.getByRole('heading', { name: 'Mantenimiento', exact: true }),
+  ).toBeVisible();
+  await expect(menu().locator('[aria-current="page"]')).toHaveCount(1);
+  await menu().getByRole('link', { name: 'Resumen', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Carpetas musicales', exact: true }),
+  ).toBeVisible();
+  if (info.project.name === 'mobile')
+    await page.setViewportSize({ width: 320, height: 740 });
+  await page.screenshot({
+    path: '.local/screenshots/folder-home-' + info.project.name + '.png',
+    fullPage: false,
+    scale: 'css',
+    animations: 'disabled',
+  });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.getByRole('link', { name: 'Menú general', exact: true }).click();
+  const general = page
+    .getByRole('navigation', { name: /^Navegación principal/ })
+    .filter({ visible: true });
+  await expect(general.getByRole('link')).toHaveCount(6);
+  for (const link of await general.getByRole('link').all()) {
+    const box = await link.boundingBox();
+    expect(box?.width).toBeGreaterThanOrEqual(44);
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+  }
+  await general.getByRole('link', { name: 'Carpetas', exact: true }).click();
+  await expect(page).toHaveURL(/\/carpetas$/);
+  await expect(
+    page.getByRole('heading', { name: 'Carpetas musicales', exact: true }),
+  ).toBeVisible();
 });

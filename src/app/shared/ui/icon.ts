@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 const paths = {
+  folder: 'M3 7V4h7l2 3h9v13H3V7Z',
+  music: 'M9 18V5l11-2v13M9 8l11-2M9 18a3 3 0 1 1-3-3h3M20 16a3 3 0 1 1-3-3h3',
   plus: 'M12 5v14M5 12h14',
   search: 'M21 21l-6-6M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z',
   back: 'M19 12H5m5-5-5 5 5 5',

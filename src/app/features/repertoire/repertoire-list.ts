@@ -17,11 +17,10 @@ import {
   RepertoireWork,
 } from '../../core/music/models';
 import { musicError } from '../../core/music/music-api';
-import { InventoryTabs } from '../inventory/inventory-tabs';
 import { safePage } from './repertoire-ui';
 @Component({
   selector: 'app-repertoire-list',
-  imports: [ReactiveFormsModule, RouterLink, InventoryTabs],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './repertoire-list.html',
   styleUrls: ['../folders/folders.scss', './repertoire.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

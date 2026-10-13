@@ -4,7 +4,7 @@ Implementada el 13 de octubre de 2026. Pendiente de validación del usuario ante
 
 ## Acceso y alcance
 
-- **Cesiones → Carpetas**: reservas pendientes, carpetas en poder de personas, devoluciones
+- **Carpetas → Cesiones**: reservas pendientes, carpetas en poder de personas, devoluciones
   vencidas, conflictos y todo el historial. Filtros por persona y código, paginación de 24
   registros y conservación de filtros al regresar desde una ficha.
 - **Nueva cesión o reserva**: seleccionar persona y carpeta utilizable, elegir entregar ahora

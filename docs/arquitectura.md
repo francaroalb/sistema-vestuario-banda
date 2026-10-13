@@ -335,3 +335,9 @@ excepciones físicas posteriores. Incidencias de partituras y físicas separadas
 derivada de archivo, bloqueo manual y bloqueos abiertos. Escrituras RPC con petición
 idempotente, versiones, RLS y auditoría, sin cambiar los contratos de cesiones de prendas.
 Las escrituras del módulo usan un lock propio 65013; la UI empieza en fase 2.
+
+## Navegación de Carpetas — 13/10/2026
+
+Carpetas tiene acceso propio en el menú general y navegación contextual independiente de
+Vestuario. La separación conserva los enlaces existentes y los modelos especializados.
+Ver [decisiones de navegación](carpetas/navegacion.md). No adelanta la fase 6.
