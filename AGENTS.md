@@ -15,11 +15,11 @@ Aplicación independiente de `../sistema-entradas-banda`. Usar Entradas solo com
 ## Ampliación de Carpetas musicales
 
 - Prompt: `docs/carpetas/prompt-maestro.md`. Fase 0 aprobada el 13/10/2026.
-- Fase 1 de datos, servicios y pruebas implementada; pendiente de validación del usuario.
-- NO comenzar fase 2 de Carpetas sin autorización expresa. Esta numeración es independiente de Vestuario.
-- Nuevas migraciones de Carpetas verificadas localmente, todavía no aplicadas a Supabase remoto.
+- Fases 1 a 4 aprobadas; fase 5 de cesiones individuales de carpetas implementada, pendiente de validación del usuario.
+- NO comenzar fase 6 de Carpetas sin autorización expresa. Esta numeración es independiente de Vestuario.
+- Migraciones de Carpetas aplicadas al Supabase independiente de Vestuario el 13/10/2026. Interfaz aún sin publicar.
 - Mantener modelos especializados; voz por participación, presencia distinta de daño y mantenimiento distinto de operatividad.
-- Consultar `docs/carpetas/fase-1-datos-servicios.md` antes de continuar.
+- Consultar `docs/carpetas/fase-1-datos-servicios.md`, `docs/carpetas/fase-2-inventario.md`, `docs/carpetas/fase-3-repertorio.md`, `docs/carpetas/fase-4-mantenimiento.md` y `docs/carpetas/fase-5-cesiones.md` antes de continuar.
 
 ## Decisiones aprobadas
 

@@ -1,0 +1,115 @@
+<app-inventory-tabs section="folders" />
+<nav class="section-nav" aria-label="Carpetas musicales">
+  <a routerLink="/inventario/carpetas">Carpetas físicas</a
+  ><a
+    routerLink="/inventario/carpetas/repertorio"
+    class="active"
+    aria-current="page"
+    >Repertorio</a
+  >
+</nav>
+<div class="heading">
+  <div>
+    <p class="eyebrow">Catálogo común</p>
+    <h1>Repertorio</h1>
+  </div>
+  <a
+    class="btn btn-primary"
+    routerLink="/inventario/carpetas/repertorio/nueva"
+    [queryParams]="{
+      repertorio: form.controls.repertoire.value,
+      volver: router.url,
+    }"
+    >Nueva obra</a
+  >
+</div>
+<div class="card toolbar" [formGroup]="form">
+  <div class="field">
+    <label for="work-search">Buscar obra</label
+    ><input
+      id="work-search"
+      type="search"
+      formControlName="q"
+      maxlength="200"
+      placeholder="Título de la obra"
+    />
+  </div>
+  <div class="field">
+    <label for="catalog">Repertorio</label
+    ><select id="catalog" formControlName="repertoire">
+      <option value="PRO">PRO</option>
+      <option value="PMM">PMM</option>
+    </select>
+  </div>
+  <div class="field">
+    <label for="work-state">Mostrar obras</label
+    ><select id="work-state" formControlName="state">
+      <option value="active">Activas</option>
+      <option value="retired">Retiradas</option>
+      <option value="all">Todas</option>
+    </select>
+  </div>
+</div>
+<p class="muted small">
+  @for (c of catalog(); track c.code) {
+    @if (c.code === form.controls.repertoire.value) {
+      <strong>{{ c.name }}</strong> ·
+    }
+  }
+  Las obras activas se comparten entre todas las voces de su repertorio. Añadir
+  una obra deja su incorporación física pendiente.
+</p>
+@if (loading()) {
+  <p role="status">Cargando repertorio…</p>
+} @else if (error()) {
+  <p role="alert" class="notice notice-error">
+    {{ error() }}
+    <button class="text-button" (click)="load()">Reintentar</button>
+  </p>
+} @else {
+  <p aria-live="polite">{{ total() }} {{ total() === 1 ? 'obra' : 'obras' }}</p>
+  <div class="work-list">
+    @for (w of rows(); track w.id) {
+      <article class="card work-row">
+        <div class="identity">
+          <h2>
+            <a
+              [routerLink]="['/inventario/carpetas/repertorio', w.id]"
+              [queryParams]="{ volver: router.url }"
+              >{{ w.title }}</a
+            >
+          </h2>
+          <p class="muted small">
+            {{ w.author || 'Autor sin indicar' }} · {{ w.repertoire_code }}
+          </p>
+        </div>
+        <span class="badge" [class.archived]="!w.active">{{
+          w.active ? 'Activa' : 'Retirada'
+        }}</span>
+      </article>
+    } @empty {
+      <div class="card empty">
+        <h2>No hay obras en esta selección</h2>
+        <p>Prueba otra búsqueda o añade una obra al repertorio.</p>
+      </div>
+    }
+  </div>
+  @if (pages() > 1) {
+    <nav class="pager" aria-label="Páginas de obras">
+      <button
+        class="btn btn-secondary"
+        [disabled]="page() <= 1"
+        (click)="navigate(page() - 1)"
+      >
+        Anterior</button
+      ><span>{{ page() }} / {{ pages() }}</span
+      ><button
+        class="btn btn-secondary"
+        [disabled]="page() >= pages()"
+        (click)="navigate(page() + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
+  }
+}

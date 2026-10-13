@@ -31,6 +31,22 @@
       reactivarla cuando vuelva a participar.
     </p>
   }
+  <div class="actions">
+    <a
+      class="btn btn-secondary"
+      routerLink="/cesiones/carpetas"
+      [queryParams]="{ persona: item.id, estado: 'all' }"
+      >Historial de carpetas</a
+    >
+    @if (!item.archived_at) {
+      <a
+        class="btn btn-secondary"
+        routerLink="/cesiones/carpetas/nueva"
+        [queryParams]="{ persona: item.id }"
+        >Ceder o reservar carpeta</a
+      >
+    }
+  </div>
   <section class="garment-detail card" aria-label="Ficha de la persona">
     <div class="detail-overview">
       <span class="detail-symbol"><app-icon name="people" /></span
@@ -43,20 +59,20 @@
     <dl class="detail-data">
       <div>
         <dt>Instrumento</dt>
-        <dd>{{ item.instrument || "Sin indicar" }}</dd>
+        <dd>{{ item.instrument || 'Sin indicar' }}</dd>
       </div>
       <div>
         <dt>Teléfono</dt>
-        <dd>{{ item.phone || "Sin indicar" }}</dd>
+        <dd>{{ item.phone || 'Sin indicar' }}</dd>
       </div>
       <div>
         <dt>Ficha</dt>
-        <dd>{{ item.archived_at ? "Archivada" : "Activa" }}</dd>
+        <dd>{{ item.archived_at ? 'Archivada' : 'Activa' }}</dd>
       </div>
     </dl>
     <div class="detail-notes">
       <h2>Observaciones</h2>
-      <p>{{ item.notes || "Sin observaciones." }}</p>
+      <p>{{ item.notes || 'Sin observaciones.' }}</p>
     </div>
     <dl class="detail-timestamps">
       <div>
@@ -87,8 +103,8 @@
     <p>
       {{
         item.archived_at
-          ? "Reactiva esta misma ficha cuando vuelva a participar."
-          : "Si deja de participar, archiva su ficha para conservar su información."
+          ? 'Reactiva esta misma ficha cuando vuelva a participar.'
+          : 'Si deja de participar, archiva su ficha para conservar su información.'
       }}
     </p>
     <button
@@ -98,7 +114,7 @@
       [disabled]="!connection.online()"
     >
       <app-icon name="archive" />{{
-        item.archived_at ? "Reactivar persona" : "Archivar persona"
+        item.archived_at ? 'Reactivar persona' : 'Archivar persona'
       }}
     </button>
   </div>
@@ -113,13 +129,13 @@
     (cancel)="cancelDialog($event)"
   >
     <h2 id="archive-title">
-      {{ item.archived_at ? "Reactivar" : "Archivar" }} {{ item.full_name }}
+      {{ item.archived_at ? 'Reactivar' : 'Archivar' }} {{ item.full_name }}
     </h2>
     <p>
       {{
         item.archived_at
-          ? "Volverá a aparecer en Personas activas con los datos de su misma ficha."
-          : "Dejará de aparecer en Personas activas. Su información se conservará y podrás reactivarla."
+          ? 'Volverá a aparecer en Personas activas con los datos de su misma ficha.'
+          : 'Dejará de aparecer en Personas activas. Su información se conservará y podrás reactivarla.'
       }}
     </p>
     @if (!connection.online()) {
@@ -154,10 +170,10 @@
       >
         {{
           saving()
-            ? "Guardando…"
+            ? 'Guardando…'
             : item.archived_at
-              ? "Confirmar reactivación"
-              : "Confirmar archivado"
+              ? 'Confirmar reactivación'
+              : 'Confirmar archivado'
         }}
       </button>
     </div>

@@ -700,6 +700,78 @@ test('Carpetas fase 1: catálogo, presencia, incidencias y seguridad', async (t)
       },
     );
     await t.test(
+      'Centro de mantenimiento: categorías, ausencia sin duplicados, resolución e identidad del responsable',
+      async () => {
+        const w = uuid();
+        await saveWork(w);
+        const f = await makeFolder('PRO-CLA1-981');
+        const damage = await issue(f.id, w, 'DAMAGED');
+        const missing = await issue(f.id, w, 'MISSING');
+        const exterior = await physical(f.id, 'ELASTICS', false);
+        const entries = () =>
+          query(
+            'select * from public.music_maintenance_index where folder_id=$1 order by kind',
+            [f.id],
+          );
+        let rows = await entries();
+        assert.equal(rows.length, 3);
+        assert.equal(rows.filter((r) => r.kind === 'MISSING').length, 1);
+        assert.equal(
+          rows.filter((r) => r.category === 'CONSERVATION').length,
+          2,
+        );
+        assert.ok(
+          rows.every(
+            (r) =>
+              r.operability === 'USABLE' &&
+              r.created_by_name === 'Admin prueba',
+          ),
+        );
+        await resolveScore(missing.issue.id, 'PRESENT');
+        await resolveScore(damage.issue.id, 'PRESENT');
+        await resolvePhysical(exterior.issue.id);
+        rows = await entries();
+        assert.equal(rows.length, 3);
+        assert.ok(
+          rows.every(
+            (r) => r.resolved_at && r.resolved_by_name === 'Admin prueba',
+          ),
+        );
+        assert.equal((await state(f.id, w)).present, true);
+        assert.equal(
+          (
+            await query(
+              'select * from public.music_maintenance_index',
+              [],
+              outsider,
+            )
+          ).length,
+          0,
+        );
+        assert.equal(
+          (
+            await query(
+              'select * from public.music_maintenance_index',
+              [],
+              inactive,
+            )
+          ).length,
+          0,
+        );
+        await assert.rejects(
+          query('select * from public.music_maintenance_index', [], '', 'anon'),
+          /permission denied/,
+        );
+        await assert.rejects(
+          query(
+            'delete from public.music_maintenance_index where folder_id=$1',
+            [f.id],
+          ),
+          /permission denied|cannot delete/,
+        );
+      },
+    );
+    await t.test(
       'RLS, escritura directa y ayudantes privados protegidos; no se crean cesiones',
       async () => {
         const tables = [

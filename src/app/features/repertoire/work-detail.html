@@ -1,0 +1,276 @@
+<a class="back" [routerLink]="backLink">← Repertorio</a>
+@if (loading()) {
+  <p role="status">Cargando obra…</p>
+} @else if (error()) {
+  <p role="alert" class="notice notice-error">
+    {{ error() }}
+    <button class="text-button" (click)="load()">Reintentar</button>
+  </p>
+} @else if (row(); as w) {
+  <div class="heading">
+    <div>
+      <p class="eyebrow">
+        {{ w.repertoire_code }} ·
+        {{ w.active ? 'Obra activa' : 'Obra retirada' }}
+      </p>
+      <h1>{{ w.title }}</h1>
+      <p class="muted">{{ w.author || 'Autor sin indicar' }}</p>
+    </div>
+    <a
+      class="btn btn-secondary"
+      [routerLink]="['/inventario/carpetas/repertorio', w.id, 'editar']"
+      [queryParams]="{ volver: returnTo }"
+      >Editar obra</a
+    >
+  </div>
+  <div class="row">
+    <h2>Carpetas afectadas</h2>
+    <button
+      class="text-button"
+      [disabled]="busy() || !!preview() || !connection.online()"
+      (click)="confirming.set(!confirming())"
+    >
+      {{ w.active ? 'Retirar obra del repertorio' : 'Reactivar obra' }}
+    </button>
+  </div>
+  @if (confirming()) {
+    <section class="operation" aria-label="Cambio de repertorio">
+      <h2>{{ w.active ? 'Retirar obra' : 'Reactivar obra' }}</h2>
+      <p>
+        {{
+          w.active
+            ? 'Dejará de formar parte del repertorio activo. Las copias presentes seguirán en sus carpetas hasta que confirmes la retirada física.'
+            : 'Volverá al repertorio activo. Se conservará el último estado físico conocido de cada copia; las ausentes seguirán pendientes o faltantes.'
+        }}
+      </p>
+      <div class="actions">
+        <button
+          class="btn btn-secondary"
+          [disabled]="busy()"
+          (click)="confirming.set(false)"
+        >
+          Cancelar</button
+        ><button
+          class="btn btn-primary"
+          [disabled]="busy() || conflict() || !connection.online()"
+          (click)="changeActive()"
+        >
+          {{
+            busy()
+              ? 'Guardando…'
+              : w.active
+                ? 'Confirmar retirada del repertorio'
+                : 'Confirmar reactivación'
+          }}
+        </button>
+      </div>
+    </section>
+  }
+  <div class="toolbar">
+    <div class="field">
+      <label for="affected-state">Estado de las copias</label
+      ><select
+        id="affected-state"
+        [formControl]="state"
+        [attr.disabled]="busy() || preview() ? true : null"
+      >
+        <option value="PENDING_ADD">Pendientes de incorporar</option>
+        <option value="PENDING_REMOVE">Pendientes de retirar</option>
+        <option value="MISSING">Faltantes</option>
+        <option value="PRESENT">Presentes</option>
+        <option value="ABSENT_RETIRED">Retiradas y ausentes</option>
+        <option value="">Todas</option>
+      </select>
+    </div>
+    <p>{{ total() }} {{ total() === 1 ? 'carpeta' : 'carpetas' }}</p>
+  </div>
+  @if (!connection.online()) {
+    <p class="notice">Necesitas conexión para confirmar cambios.</p>
+  }
+  @if (contentLoading()) {
+    <p role="status">Cargando carpetas…</p>
+  } @else if (contentError()) {
+    <p role="alert">
+      {{ contentError() }}
+      <button class="text-button" (click)="loadFolders()">
+        Reintentar carpetas
+      </button>
+    </p>
+  } @else {
+    @if (
+      (state.value === 'PENDING_ADD' || state.value === 'PENDING_REMOVE') &&
+      eligible().length
+    ) {
+      <button
+        class="text-button"
+        [disabled]="busy() || !!preview() || confirming()"
+        (click)="selectPage()"
+      >
+        Seleccionar las {{ eligible().length }} de esta página
+      </button>
+    }
+    <div class="work-list">
+      @for (r of rows(); track r.folder_id) {
+        <article class="card work-row">
+          <div class="identity">
+            @if (r.folder; as f) {
+              <div class="select-folder">
+                @if (
+                  (state.value === 'PENDING_ADD' ||
+                    state.value === 'PENDING_REMOVE') &&
+                  !f.archived
+                ) {
+                  <input
+                    type="checkbox"
+                    [attr.aria-label]="'Seleccionar ' + f.code"
+                    [checked]="selected().includes(f.id)"
+                    [disabled]="busy() || !!preview() || confirming()"
+                    (change)="toggle(f.id)"
+                  />
+                }
+                <h2>
+                  <a
+                    [routerLink]="['/inventario/carpetas', f.id, 'contenido']"
+                    >{{ f.code }}</a
+                  >
+                </h2>
+              </div>
+              <p class="muted small">
+                {{ f.voice_name }}{{ f.archived ? ' · Archivada' : '' }}
+              </p>
+            } @else {
+              <p>Carpeta no disponible. Recarga el listado.</p>
+            }
+          </div>
+          <span class="badge" [class.pending]="r.state !== 'PRESENT'">{{
+            labels[r.state]
+          }}</span>
+        </article>
+      } @empty {
+        <div class="card empty">No hay carpetas con este estado.</div>
+      }
+    </div>
+    @if (pages() > 1) {
+      <nav class="pager" aria-label="Páginas de carpetas afectadas">
+        <button
+          class="btn btn-secondary"
+          [disabled]="page() <= 1 || busy() || !!preview()"
+          (click)="move(-1)"
+        >
+          Anterior</button
+        ><span>{{ page() }} / {{ pages() }}</span
+        ><button
+          class="btn btn-secondary"
+          [disabled]="page() >= pages() || busy() || !!preview()"
+          (click)="move(1)"
+        >
+          Siguiente
+        </button>
+      </nav>
+    }
+  }
+  @if (selected().length && !preview()) {
+    <div class="row sticky-actions">
+      <strong>{{ selected().length }} seleccionadas</strong
+      ><button
+        class="btn btn-primary"
+        [disabled]="
+          busy() || confirming() || conflict() || !connection.online()
+        "
+        (click)="review()"
+      >
+        {{ busy() ? 'Revisando…' : 'Revisar selección' }}
+      </button>
+    </div>
+  }
+  @if (preview(); as p) {
+    <section class="operation" aria-label="Revisión de copias">
+      <h2>
+        {{
+          p.action === 'INCORPORATE'
+            ? 'Confirmar incorporación'
+            : 'Confirmar retirada física'
+        }}
+      </h2>
+      <p>
+        Confirma únicamente las carpetas en las que ya has
+        {{ p.action === 'INCORPORATE' ? 'introducido' : 'retirado' }} la copia
+        de «{{ p.title }}».
+      </p>
+      <ul>
+        @for (f of p.folders; track f.id) {
+          <li>{{ f.code }}</li>
+        }
+      </ul>
+      <div class="actions">
+        <button
+          class="btn btn-secondary"
+          [disabled]="busy()"
+          (click)="preview.set(null)"
+        >
+          Volver a la selección</button
+        ><button
+          class="btn btn-primary"
+          [disabled]="busy() || !connection.online()"
+          (click)="apply()"
+        >
+          {{
+            busy()
+              ? 'Guardando…'
+              : 'Confirmar en ' + p.folders.length + ' carpetas'
+          }}
+        </button>
+      </div>
+    </section>
+  }
+  @if (actionError()) {
+    <p class="notice notice-error" role="alert">{{ actionError() }}</p>
+  }
+  @if (conflict()) {
+    <button class="text-button" [disabled]="busy()" (click)="load()">
+      Cargar versión actual
+    </button>
+  }
+  <details class="card accordion" (toggle)="openHistory($event)">
+    <summary>Historial de la obra</summary>
+    @if (historyLoading()) {
+      <p role="status">Cargando historial…</p>
+    } @else if (historyError()) {
+      <p role="alert">{{ historyError() }}</p>
+      <button class="text-button" (click)="loadHistory(historyPage())">
+        Reintentar historial
+      </button>
+    } @else {
+      @for (h of history(); track h.id) {
+        <div class="audit">
+          <div class="row">
+            <strong>{{ historyLabel(h) }}</strong
+            ><time>{{ h.occurred_at | date: 'dd/MM/yyyy HH:mm' }}</time>
+          </div>
+          <p>{{ historyDetails(h) }}</p>
+          <small>{{ h.actor_name }}</small>
+        </div>
+      } @empty {
+        <p>Sin cambios registrados.</p>
+      }
+      @if (historyPages() > 1) {
+        <nav class="pager" aria-label="Historial de obra">
+          <button
+            class="text-button"
+            [disabled]="historyPage() <= 1"
+            (click)="loadHistory(historyPage() - 1)"
+          >
+            Anterior</button
+          ><span>{{ historyPage() }} / {{ historyPages() }}</span
+          ><button
+            class="text-button"
+            [disabled]="historyPage() >= historyPages()"
+            (click)="loadHistory(historyPage() + 1)"
+          >
+            Siguiente
+          </button>
+        </nav>
+      }
+    }
+  </details>
+}

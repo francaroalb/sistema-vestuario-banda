@@ -1,0 +1,117 @@
+<a class="back" [routerLink]="backLink">← Volver</a>
+<div class="heading">
+  <h1>{{ editing ? 'Editar carpeta' : 'Nueva carpeta' }}</h1>
+</div>
+@if (loading()) {
+  <p role="status">Cargando carpeta…</p>
+} @else if (loadError()) {
+  <div class="notice notice-error" role="alert">
+    {{ loadError() }}
+    <button class="text-button" (click)="load()">Reintentar</button>
+  </div>
+} @else {
+  @if (!connection.online()) {
+    <p class="notice" role="status">Necesitas conexión para guardar.</p>
+  }
+  @if (row()?.archived) {
+    <p class="notice">Reactiva la carpeta desde su ficha antes de editarla.</p>
+  }
+  <form class="card editor" [formGroup]="form" (ngSubmit)="save()">
+    <fieldset [disabled]="saving() || voiceSaving() || !!row()?.archived">
+      <div class="fields">
+        @if (editing) {
+          <div class="wide">
+            <strong class="code">{{ row()?.code }}</strong>
+            <p>{{ row()?.voice_name }} · {{ row()?.repertoire_code }}</p>
+            <small
+              >El código, el repertorio y la voz se conservan desde el
+              alta.</small
+            >
+          </div>
+        } @else {
+          <label class="field"
+            >Repertorio<select
+              aria-label="Repertorio"
+              formControlName="repertoire_code"
+            >
+              <option value="PRO">PRO</option>
+              <option value="PMM">PMM</option>
+            </select></label
+          ><label class="field"
+            >Código físico<input
+              formControlName="code"
+              maxlength="60"
+              placeholder="PRO-CLA1-001"
+              autocapitalize="characters"
+              aria-describedby="code-help"
+          /></label>
+          <p id="code-help" class="wide muted">
+            Copia la etiqueta de la carpeta: repertorio, código de voz y número.
+            Ejemplo: PRO-CLA1-001.
+          </p>
+          <div class="wide">
+            <app-voice-picker
+              [allowCreate]="true"
+              [label]="voice()?.name || 'Seleccionar voz'"
+              [selected]="form.controls.voice_id.value"
+              (picked)="pick($event)"
+              (saving)="voiceSaving.set($event)"
+            />
+          </div>
+          <p class="wide muted">
+            El alta presume presentes las obras activas de este repertorio. Es
+            un registro inicial, no una revisión física de cada partitura.
+          </p>
+        }
+        <label class="field wide"
+          >Notas (opcional)<textarea
+            formControlName="notes"
+            maxlength="2000"
+            rows="3"
+          ></textarea>
+        </label>
+        <label class="wide check"
+          ><input type="checkbox" formControlName="manually_blocked" />Marcar
+          como no utilizable</label
+        >
+        <p class="wide muted">
+          Las incidencias de mantenimiento no bloquean por sí solas. Esta opción
+          impide utilizar la carpeta hasta que retires el bloqueo.
+        </p>
+        @if (row()?.blocking_issue_count) {
+          <p class="wide notice">
+            Hay {{ row()?.blocking_issue_count }} incidencias bloqueantes
+            abiertas. La carpeta seguirá sin ser utilizable mientras no se
+            resuelvan.
+          </p>
+        }
+      </div>
+    </fieldset>
+    @if (error()) {
+      <p role="alert" class="notice notice-error">{{ error() }}</p>
+    }
+    @if (conflict() && editing) {
+      <button type="button" class="text-button" (click)="reload()">
+        Cargar versión actual
+      </button>
+    }
+    <div class="actions">
+      <a class="btn btn-secondary" [routerLink]="backLink">Cancelar</a
+      ><button
+        class="btn btn-primary"
+        type="submit"
+        [disabled]="
+          saving() || voiceSaving() || !connection.online() || !!row()?.archived
+        "
+      >
+        {{
+          saving()
+            ? 'Guardando…'
+            : editing
+              ? 'Guardar cambios'
+              : 'Crear carpeta'
+        }}
+      </button>
+    </div>
+  </form>
+}

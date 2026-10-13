@@ -1,0 +1,438 @@
+<a class="back" [routerLink]="backLink">← Volver a la cesión</a>
+<div class="heading">
+  <div>
+    <p class="eyebrow">Carpetas musicales</p>
+    <h1>
+      {{
+        action === 'RETURN'
+          ? 'Devolver carpeta'
+          : action === 'CANCEL'
+            ? 'Cancelar reserva'
+            : action === 'RESERVE'
+              ? 'Reservar carpeta'
+              : 'Entregar carpeta'
+      }}
+    </h1>
+  </div>
+</div>
+@if (loading()) {
+  <p role="status">Cargando datos…</p>
+} @else if (loadError()) {
+  <p class="notice notice-error" role="alert">
+    {{ loadError() }}
+    <button class="text-button" (click)="load(true)">Reintentar</button>
+  </p>
+} @else {
+  <div class="operation-stack">
+    @if (!preview()) {
+      <fieldset [disabled]="busy()">
+        @if (!editing) {
+          <div class="field">
+            <label for="folder-action">Operación</label
+            ><select
+              id="folder-action"
+              [(ngModel)]="action"
+              (ngModelChange)="changed()"
+            >
+              <option value="DELIVER">Entregar ahora con firma</option>
+              <option value="RESERVE">Reservar para más adelante</option>
+            </select>
+          </div>
+        }
+        <section class="card">
+          <h2>Persona y carpeta</h2>
+          @if (person(); as p) {
+            <div class="row">
+              <strong>{{ p.label }}</strong>
+              @if (!editing) {
+                <button
+                  class="text-button"
+                  type="button"
+                  (click)="person.set(null); changed()"
+                >
+                  Cambiar persona
+                </button>
+              }
+            </div>
+          } @else {
+            <app-choice-picker mode="person" (picked)="choosePerson($event)" />
+          }
+          @if (folder(); as f) {
+            <div class="summary-box">
+              <div class="row">
+                <strong>{{ f.code }} · {{ f.voice_name }}</strong>
+                @if (!editing) {
+                  <button
+                    class="text-button"
+                    type="button"
+                    (click)="folder.set(null); changed()"
+                  >
+                    Cambiar carpeta
+                  </button>
+                }
+              </div>
+              <p>
+                {{
+                  f.holder_name ? 'En poder de ' + f.holder_name : 'En la Banda'
+                }}
+              </p>
+              @if (
+                f.missing_count +
+                  f.pending_add_count +
+                  f.pending_remove_count +
+                  f.conservation_issue_count +
+                  f.physical_issue_count >
+                0
+              ) {
+                <p class="notice">
+                  Pendientes: {{ f.missing_count }} faltantes ·
+                  {{ f.pending_add_count }} por incorporar ·
+                  {{ f.pending_remove_count }} por retirar ·
+                  {{
+                    f.conservation_issue_count + f.physical_issue_count
+                  }}
+                  incidencias de conservación.
+                </p>
+                <a
+                  class="text-button"
+                  routerLink="/inventario/carpetas/mantenimiento"
+                  [queryParams]="{ carpeta: f.id }"
+                  >Consultar mantenimiento</a
+                >
+              }
+            </div>
+          } @else {
+            <app-folder-picker (selected)="chooseFolder($event)" />
+          }
+        </section>
+        <section class="card accordion">
+          @if (action === 'RESERVE') {
+            <div class="field">
+              <label for="folder-start">Inicio previsto (hora de Madrid)</label
+              ><input
+                id="folder-start"
+                type="datetime-local"
+                [(ngModel)]="start"
+                (ngModelChange)="changed()"
+              />
+            </div>
+          }
+          @if (action === 'DELIVER' || action === 'RESERVE') {
+            <div class="field">
+              <label for="folder-due"
+                >Devolución prevista (opcional, hora de Madrid)</label
+              ><input
+                id="folder-due"
+                type="datetime-local"
+                [(ngModel)]="due"
+                (ngModelChange)="changed()"
+              />
+            </div>
+            <p class="muted small">
+              Sin fecha, permanece abierta hasta la devolución real. Reservar no
+              entrega la carpeta.
+            </p>
+          }
+          <div class="field">
+            <label for="folder-note">Observaciones (opcional)</label
+            ><textarea
+              id="folder-note"
+              rows="2"
+              maxlength="2000"
+              [(ngModel)]="notes"
+              (ngModelChange)="changed()"
+            ></textarea>
+          </div>
+          @if (action === 'RETURN') {
+            <details>
+              <summary>Añadir incidencia al devolver (opcional)</summary>
+              <p class="muted small">
+                No es necesario revisar todas las obras. Puedes devolver sin
+                añadir incidencias; las existentes se conservan.
+              </p>
+              <div class="field">
+                <label for="return-incident">Incidencia</label
+                ><select
+                  id="return-incident"
+                  [(ngModel)]="incidentFamily"
+                  (ngModelChange)="incidentChanged()"
+                >
+                  <option value="">Ninguna nueva</option>
+                  <option value="SCORE">Partitura</option>
+                  <option value="PHYSICAL">Carpeta exterior</option>
+                </select>
+              </div>
+              @if (incidentFamily) {
+                <div class="field">
+                  <label for="return-kind">Tipo de incidencia</label
+                  ><select
+                    id="return-kind"
+                    [(ngModel)]="incidentKind"
+                    (ngModelChange)="changed()"
+                  >
+                    @for (
+                      k of incidentFamily === 'SCORE'
+                        ? scoreKinds
+                        : physicalKinds;
+                      track k
+                    ) {
+                      <option [value]="k">{{ labels[k] }}</option>
+                    }
+                  </select>
+                </div>
+                @if (incidentFamily === 'SCORE') {
+                  @if (selectedWork(); as w) {
+                    <div class="row">
+                      <strong>{{ w.title }}</strong
+                      ><button
+                        type="button"
+                        class="text-button"
+                        (click)="selectedWork.set(null); changed()"
+                      >
+                        Cambiar obra
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="field">
+                      <label for="return-work"
+                        >Buscar obra de esta carpeta</label
+                      ><input
+                        id="return-work"
+                        maxlength="200"
+                        [(ngModel)]="workQuery"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      (click)="findWorks(1)"
+                    >
+                      Buscar obra
+                    </button>
+                    @if (workLoading()) {
+                      <p role="status">Buscando obras…</p>
+                    } @else if (workError()) {
+                      <p role="alert">{{ workError() }}</p>
+                      <button
+                        class="text-button"
+                        (click)="findWorks(workPage())"
+                      >
+                        Reintentar obras
+                      </button>
+                    } @else {
+                      <div class="picker-results">
+                        @for (w of works(); track w.work_id) {
+                          <button
+                            class="btn btn-secondary folder-choice"
+                            (click)="selectedWork.set(w); changed()"
+                          >
+                            {{ w.title }}
+                          </button>
+                        } @empty {
+                          <p>
+                            No hay copias presentes con esta búsqueda. Las
+                            ausencias ya registradas se revisan desde
+                            Mantenimiento.
+                          </p>
+                        }
+                      </div>
+                      @if (worksCount() > 24) {
+                        <nav class="pager">
+                          <button
+                            class="text-button"
+                            [disabled]="workPage() <= 1"
+                            (click)="findWorks(workPage() - 1)"
+                          >
+                            Anteriores obras</button
+                          ><span>Página {{ workPage() }}</span
+                          ><button
+                            class="text-button"
+                            [disabled]="workPage() * 24 >= worksCount()"
+                            (click)="findWorks(workPage() + 1)"
+                          >
+                            Más obras
+                          </button>
+                        </nav>
+                      }
+                    }
+                  }
+                }
+                <div class="field">
+                  <label for="return-description">{{
+                    incidentFamily === 'PHYSICAL'
+                      ? 'Descripción del desperfecto'
+                      : 'Descripción (opcional)'
+                  }}</label
+                  ><textarea
+                    id="return-description"
+                    rows="2"
+                    maxlength="2000"
+                    [(ngModel)]="description"
+                    (ngModelChange)="changed()"
+                  ></textarea>
+                </div>
+                @if (incidentFamily === 'PHYSICAL') {
+                  <label class="check"
+                    ><input
+                      type="checkbox"
+                      [(ngModel)]="blocksUse"
+                      (ngModelChange)="changed()"
+                    />
+                    Impide utilizar la carpeta</label
+                  >
+                }
+              }
+            </details>
+          }
+          <button
+            class="btn btn-primary"
+            type="button"
+            [disabled]="
+              busy() || !person() || !folder() || !connection.online()
+            "
+            (click)="review()"
+          >
+            {{ busy() ? 'Revisando…' : 'Revisar operación' }}
+          </button>
+        </section>
+      </fieldset>
+    } @else if (preview(); as p) {
+      <section class="card" aria-label="Revisión de carpeta">
+        <h2>Revisa antes de confirmar</h2>
+        <div class="summary-box">
+          <strong>{{ p.folder_code }} · {{ p.voice_name }}</strong>
+          <p>{{ p.person_name }}</p>
+          <p>
+            {{
+              action === 'RESERVE'
+                ? 'Reserva sin entrega física'
+                : action === 'DELIVER'
+                  ? 'Entrega física con firma'
+                  : action === 'RETURN'
+                    ? 'Devolución física con firma'
+                    : 'Cancelación de reserva sin movimiento físico'
+            }}
+          </p>
+          @if (action === 'RESERVE') {
+            <p>Inicio previsto: {{ start.replace('T', ' ') }} (Madrid)</p>
+          }
+          @if (action === 'DELIVER' || action === 'RESERVE') {
+            <p>
+              Devolución:
+              {{
+                due ? due.replace('T', ' ') + ' (Madrid)' : 'Sin fecha prevista'
+              }}
+            </p>
+          }
+          @if (notes) {
+            <p class="notes">{{ notes }}</p>
+          }
+          @if (action === 'RETURN' && incidentFamily) {
+            <p>
+              <strong>Incidencia:</strong> {{ labels[incidentKind] }}
+              @if (selectedWork(); as w) {
+                · {{ w.title }}
+              }
+            </p>
+            <p>{{ description }}</p>
+            @if (incidentFamily === 'PHYSICAL') {
+              <p>
+                {{
+                  blocksUse
+                    ? 'Impide utilizar la carpeta'
+                    : 'Aviso sin bloqueo de uso'
+                }}
+              </p>
+            }
+          }
+        </div>
+        @if (p.custody) {
+          <p class="notice">
+            En poder de {{ p.custody.person_name }}. Devolución prevista:
+            {{ p.custody.due_at ? timestamp(p.custody.due_at) : 'Sin fecha' }}.
+          </p>
+        }
+        @for (c of p.conflicts; track c) {
+          <p class="notice notice-error">{{ notices[c] || c }}</p>
+        }
+        @for (w of p.warnings; track w) {
+          <p class="notice">{{ notices[w] || w }}</p>
+        }
+        @if (p.reservations.length) {
+          <details>
+            <summary>
+              Reservas pendientes de esta carpeta ({{ p.reservations.length }})
+            </summary>
+            @for (r of p.reservations; track r.id) {
+              <p class="small">
+                {{ r.person_name }} · {{ timestamp(r.starts_at) }} →
+                {{ r.due_at ? timestamp(r.due_at) : 'Sin fecha de fin' }}
+              </p>
+            }
+          </details>
+        }
+        @if (!p.conflicts.length) {
+          @if (p.warnings.length) {
+            <label class="check"
+              ><input type="checkbox" [(ngModel)]="ack" [disabled]="busy()" />
+              He revisado los avisos y las fechas</label
+            >
+          }
+          @if (action === 'DELIVER' || action === 'RETURN') {
+            <app-signature-pad
+              materialLabel="la carpeta indicada"
+              [disabled]="busy()"
+              (signed)="signed.set($event); dirty.set(true)"
+            />
+          }
+        }
+        <div class="actions">
+          <button
+            class="btn btn-secondary"
+            [disabled]="busy()"
+            (click)="back()"
+          >
+            Volver a editar</button
+          ><button
+            class="btn btn-primary"
+            [disabled]="
+              busy() ||
+              conflict() ||
+              !connection.online() ||
+              p.conflicts.length > 0 ||
+              (p.warnings.length > 0 && !ack) ||
+              ((action === 'DELIVER' || action === 'RETURN') && !signed())
+            "
+            (click)="confirm()"
+          >
+            {{
+              busy()
+                ? 'Guardando…'
+                : action === 'RESERVE'
+                  ? 'Confirmar reserva'
+                  : action === 'CANCEL'
+                    ? 'Confirmar cancelación'
+                    : action === 'RETURN'
+                      ? 'Confirmar devolución'
+                      : 'Confirmar entrega'
+            }}
+          </button>
+        </div>
+      </section>
+    }
+    @if (error()) {
+      <p class="notice notice-error" role="alert">{{ error() }}</p>
+    }
+    @if (conflict()) {
+      <button class="text-button" [disabled]="busy()" (click)="load(true)">
+        Cargar versión actual y revisar
+      </button>
+    }
+    @if (!connection.online()) {
+      <p class="notice">
+        Necesitas conexión para confirmar. El borrador se conserva en esta
+        pantalla.
+      </p>
+    }
+  </div>
+}

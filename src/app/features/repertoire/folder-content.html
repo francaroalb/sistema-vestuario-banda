@@ -1,0 +1,313 @@
+<a
+  class="back"
+  [routerLink]="['/inventario/carpetas', folder()?.id || '']"
+  [queryParams]="{ volver: returnTo }"
+  >← Ficha de carpeta</a
+>
+@if (folder(); as f) {
+  <div class="heading">
+    <div>
+      <p class="eyebrow">{{ f.code }} · {{ f.voice_name }}</p>
+      <h1>Partituras de la carpeta</h1>
+      <a
+        class="text-button"
+        routerLink="/inventario/carpetas/mantenimiento"
+        [queryParams]="{ carpeta: f.id }"
+        >Incidencias e historial</a
+      >
+    </div>
+    <a
+      class="btn btn-secondary"
+      routerLink="/inventario/carpetas/repertorio"
+      [queryParams]="{ repertorio: f.repertoire_code }"
+      >Ver repertorio {{ f.repertoire_code }}</a
+    >
+  </div>
+  <p class="muted small">
+    Las obras activas al dar de alta la carpeta se presumen presentes hasta
+    registrar cambios.
+  </p>
+  @if (f.conservation_issue_count > 0 || f.physical_issue_count > 0) {
+    <p class="notice">
+      {{ f.conservation_issue_count }} incidencias de conservación de partituras
+      · {{ f.physical_issue_count }} de carpeta exterior.
+      <a
+        class="text-button"
+        routerLink="/inventario/carpetas/mantenimiento"
+        [queryParams]="{ carpeta: f.id, categoria: 'CONSERVATION' }"
+        >Revisar avisos</a
+      >
+    </p>
+  }
+  @if (f.archived) {
+    <p class="notice">
+      Carpeta archivada. Reactívala desde su ficha para modificar el contenido.
+    </p>
+  }
+}
+<fieldset
+  class="toolbar"
+  [formGroup]="form"
+  [disabled]="saving() || !!operation()"
+  style="border: 0; padding: 0"
+>
+  <legend class="sr-only">Filtrar partituras</legend>
+  <div class="field">
+    <label for="score-search">Buscar partitura</label
+    ><input
+      type="search"
+      id="score-search"
+      formControlName="q"
+      maxlength="200"
+    />
+  </div>
+  <div class="field">
+    <label for="presence-state">Presencia</label
+    ><select id="presence-state" formControlName="state">
+      <option value="">Todas</option>
+      <option value="PRESENT">Presentes</option>
+      <option value="MISSING">Faltantes</option>
+      <option value="PENDING_ADD">Pendientes de incorporar</option>
+      <option value="PENDING_REMOVE">Pendientes de retirar</option>
+      <option value="ABSENT_RETIRED">Retiradas y ausentes</option>
+    </select>
+  </div>
+</fieldset>
+@if (loading()) {
+  <p role="status">Cargando partituras…</p>
+} @else if (error()) {
+  <p role="alert" class="notice notice-error">
+    {{ error() }}
+    <button class="text-button" (click)="load()">Reintentar</button>
+  </p>
+} @else {
+  <p aria-live="polite">{{ total() }} {{ total() === 1 ? 'obra' : 'obras' }}</p>
+  <div class="work-list">
+    @for (r of rows(); track r.work_id) {
+      <article class="card content-card">
+        <div class="work-row">
+          <div class="identity">
+            <h2>{{ r.title }}</h2>
+            <p class="muted small">
+              {{ r.author || 'Autor sin indicar'
+              }}{{
+                r.presumed && r.state === 'PRESENT'
+                  ? ' · Presencia inicial presumida'
+                  : ''
+              }}
+            </p>
+          </div>
+          <span class="badge" [class.pending]="r.state !== 'PRESENT'">{{
+            labels[r.state]
+          }}</span>
+          @if (!folder()?.archived) {
+            <div class="actions">
+              @if (r.state === 'PENDING_ADD') {
+                <button
+                  class="btn btn-secondary"
+                  [disabled]="saving() || !!operation() || !connection.online()"
+                  (click)="start(r, 'INCORPORATE')"
+                >
+                  Confirmar incorporación
+                </button>
+              }
+              @if (r.state === 'PENDING_REMOVE') {
+                <button
+                  class="btn btn-secondary"
+                  [disabled]="saving() || !!operation() || !connection.online()"
+                  (click)="start(r, 'REMOVE')"
+                >
+                  Confirmar retirada
+                </button>
+              }
+              @if (!saving() && !operation()) {
+                <a
+                  class="text-button"
+                  routerLink="/inventario/carpetas/mantenimiento"
+                  [queryParams]="{ carpeta: r.folder_id, obra: r.work_id }"
+                  >Ver incidencias</a
+                >
+              }
+              @if (r.present) {
+                @if (!saving() && !operation()) {
+                  <a
+                    class="text-button"
+                    routerLink="/inventario/carpetas/incidencias/SCORE/nueva"
+                    [queryParams]="{
+                      carpeta: r.folder_id,
+                      obra: r.work_id,
+                      volver:
+                        '/inventario/carpetas/mantenimiento?carpeta=' +
+                        r.folder_id +
+                        '&obra=' +
+                        r.work_id,
+                    }"
+                    >Registrar deterioro</a
+                  >
+                }
+                <button
+                  class="text-button"
+                  [disabled]="saving() || !!operation() || !connection.online()"
+                  (click)="start(r, 'MISSING')"
+                >
+                  Registrar faltante
+                </button>
+              }
+            </div>
+          }
+        </div>
+        @if (operation(); as op) {
+          @if (op.row.work_id === r.work_id) {
+            <section
+              class="operation"
+              aria-label="Confirmar cambio de partitura"
+            >
+              <h2>
+                {{
+                  op.kind === 'MISSING'
+                    ? 'Registrar partitura faltante'
+                    : op.kind === 'INCORPORATE'
+                      ? 'Confirmar incorporación física'
+                      : 'Confirmar retirada física'
+                }}
+              </h2>
+              <p>
+                {{
+                  op.kind === 'MISSING'
+                    ? 'Confirma que la copia no se encuentra en esta carpeta. Una copia dañada que sigue dentro conserva su presencia.'
+                    : op.kind === 'INCORPORATE'
+                      ? 'Confirma que ya has introducido esta copia en la carpeta.'
+                      : 'Confirma que ya has sacado esta copia de la carpeta.'
+                }}
+              </p>
+              <div class="field">
+                <label for="presence-note">Nota (opcional)</label
+                ><textarea
+                  id="presence-note"
+                  [formControl]="note"
+                  maxlength="2000"
+                  rows="2"
+                  [attr.disabled]="saving() ? true : null"
+                ></textarea>
+              </div>
+              @if (actionError()) {
+                <p class="notice notice-error" role="alert">
+                  {{ actionError() }}
+                </p>
+              }
+              @if (conflict()) {
+                <button
+                  class="text-button"
+                  [disabled]="saving()"
+                  (click)="reload()"
+                >
+                  Cargar versión actual
+                </button>
+              }
+              <div class="actions">
+                <button
+                  class="btn btn-secondary"
+                  [disabled]="saving()"
+                  (click)="cancel()"
+                >
+                  Cancelar operación</button
+                ><button
+                  class="btn btn-primary"
+                  [disabled]="
+                    saving() ||
+                    conflict() ||
+                    note.invalid ||
+                    !connection.online()
+                  "
+                  (click)="confirm()"
+                >
+                  {{
+                    saving()
+                      ? 'Guardando…'
+                      : op.kind === 'MISSING'
+                        ? 'Confirmar faltante'
+                        : 'Confirmar cambio físico'
+                  }}
+                </button>
+              </div>
+            </section>
+          }
+        }
+      </article>
+    } @empty {
+      <div class="card empty">
+        <h2>No hay partituras en esta selección</h2>
+        <p>Prueba otro filtro o consulta el repertorio de esta carpeta.</p>
+      </div>
+    }
+  </div>
+  @if (!connection.online()) {
+    <p class="notice">Necesitas conexión para registrar cambios.</p>
+  }
+  @if (pages() > 1) {
+    <nav class="pager" aria-label="Páginas de partituras">
+      <button
+        class="btn btn-secondary"
+        [disabled]="page() <= 1 || saving() || !!operation()"
+        (click)="navigate(page() - 1)"
+      >
+        Anterior</button
+      ><span>{{ page() }} / {{ pages() }}</span
+      ><button
+        class="btn btn-secondary"
+        [disabled]="page() >= pages() || saving() || !!operation()"
+        (click)="navigate(page() + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
+  }
+}
+<details class="card accordion" (toggle)="openHistory($event)">
+  <summary>Historial del contenido</summary>
+  @if (historyLoading()) {
+    <p role="status">Cargando historial…</p>
+  } @else if (historyError()) {
+    <p role="alert">{{ historyError() }}</p>
+    <button class="text-button" (click)="loadHistory(historyPage())">
+      Reintentar historial
+    </button>
+  } @else {
+    @for (h of history(); track h.id) {
+      <div class="audit">
+        <div class="row">
+          <strong>{{ h.title }}</strong
+          ><time>{{ h.occurred_at | date: 'dd/MM/yyyy HH:mm' }}</time>
+        </div>
+        <p>{{ movementLabels[h.action] || 'Cambio de presencia' }}</p>
+        <small>{{ h.actor_name }}</small>
+        @if (h.notes) {
+          <p class="notes">{{ h.notes }}</p>
+        }
+      </div>
+    } @empty {
+      <p class="muted">
+        Sin cambios físicos registrados. La presunción inicial se conserva en el
+        historial de la carpeta.
+      </p>
+    }
+    @if (historyPages() > 1) {
+      <nav class="pager" aria-label="Páginas de movimientos">
+        <button
+          class="text-button"
+          [disabled]="historyPage() <= 1"
+          (click)="loadHistory(historyPage() - 1)"
+        >
+          Anterior</button
+        ><span>{{ historyPage() }} / {{ historyPages() }}</span
+        ><button
+          class="text-button"
+          [disabled]="historyPage() >= historyPages()"
+          (click)="loadHistory(historyPage() + 1)"
+        >
+          Siguiente
+        </button>
+      </nav>
+    }
+  }
+</details>

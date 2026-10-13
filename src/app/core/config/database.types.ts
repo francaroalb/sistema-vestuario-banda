@@ -1,3 +1,4 @@
+import type { FolderLoan, FolderLoanMovement } from '../folder-loans/models';
 import type {
   MusicalVoice,
   MusicRepertoire,
@@ -11,6 +12,7 @@ import type {
   FolderInventory,
   FolderWorkState,
   MaintenanceTask,
+  MaintenanceEntry,
 } from '../music/models';
 type ReadOnlyTable<T> = {
   Row: T;
@@ -100,6 +102,7 @@ export interface Database {
         voice_id: string | null;
       }>;
       musical_voices: ReadOnlyTable<MusicalVoice>;
+      folder_loan_movements: ReadOnlyTable<FolderLoanMovement>;
       music_repertoires: ReadOnlyTable<MusicRepertoire>;
       repertoire_works: ReadOnlyTable<RepertoireWork>;
       repertoire_work_periods: ReadOnlyTable<WorkPeriod>;
@@ -228,7 +231,9 @@ export interface Database {
     };
     Views: {
       folder_work_state: { Row: FolderWorkState; Relationships: [] };
+      folder_loan_overview: { Row: FolderLoan; Relationships: [] };
       music_folder_inventory: { Row: FolderInventory; Relationships: [] };
+      music_maintenance_index: { Row: MaintenanceEntry; Relationships: [] };
       music_maintenance_tasks: { Row: MaintenanceTask; Relationships: [] };
       wardrobe_conflicts: { Row: Conflict; Relationships: [] };
       event_people: { Row: EventPerson; Relationships: [] };
@@ -238,6 +243,24 @@ export interface Database {
       garment_inventory: { Row: StockGarment; Relationships: [] };
     };
     Functions: {
+      preview_folder_loan: {
+        Args: {
+          p_action: string;
+          p_id: string;
+          p_version: number | null;
+          p_data: Json;
+        };
+        Returns: Json;
+      };
+      apply_folder_loan: {
+        Args: {
+          p_request: string;
+          p_preview: Json;
+          p_signature: boolean;
+          p_acknowledged: boolean;
+        };
+        Returns: Json;
+      };
       music_command: {
         Args: {
           p_request: string;

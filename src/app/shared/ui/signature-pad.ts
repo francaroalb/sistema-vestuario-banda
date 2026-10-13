@@ -24,7 +24,7 @@ import {
       </button>
     </div>
     <p [id]="canvasId + '-help'">
-      Firma con el dedo o el ratón para confirmar las prendas indicadas. El
+      Firma con el dedo o el ratón para confirmar {{ materialLabel() }}. El
       dibujo se descartará al confirmar.
     </p>
     <canvas
@@ -98,6 +98,7 @@ import {
   `,
 })
 export class SignaturePad implements OnDestroy {
+  readonly materialLabel = input('las prendas indicadas');
   readonly disabled = input(false);
   readonly signed = output<boolean>();
   readonly valid = signal(false);

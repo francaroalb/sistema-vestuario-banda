@@ -43,6 +43,13 @@ export type MusicFolder = MusicRecord & {
   notes: string | null;
 };
 export type FolderInventory = MusicFolder & {
+  loan_id?: string | null;
+  holder_id?: string | null;
+  holder_name?: string | null;
+  holder_due_at?: string | null;
+  next_reservation_id?: string | null;
+  next_assignee?: string | null;
+  next_reserved_from?: string | null;
   voice_name: string;
   voice_code: string;
   voice_archived: boolean;
@@ -198,3 +205,18 @@ export type MusicResults = {
   PHYSICAL_RESOLVE: IssueResult<PhysicalIssue>;
 };
 export type MusicPage<T> = { rows: T[]; count: number };
+
+export type MaintenanceEntry = Omit<MaintenanceTask, 'resolved_at'> & {
+  resolved_at: string | null;
+  folder_code: string;
+  voice_name: string;
+  operability: FolderInventory['operability'];
+  archived: boolean;
+  folder_version: number;
+  work_version: number | null;
+  work_active: boolean | null;
+  family: 'PRESENCE' | 'SCORE' | 'PHYSICAL';
+  resolution: string | null;
+  created_by_name: string | null;
+  resolved_by_name: string | null;
+};

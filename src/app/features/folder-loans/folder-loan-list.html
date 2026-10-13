@@ -1,0 +1,117 @@
+<nav class="section-tabs" aria-label="Tipo de cesiones">
+  <a routerLink="/cesiones">Vestuario</a
+  ><a class="active" routerLink="/cesiones/carpetas" aria-current="page"
+    >Carpetas</a
+  >
+</nav>
+<div class="heading">
+  <div>
+    <p class="eyebrow">Reservas, entregas y devoluciones</p>
+    <h1>Cesiones de carpetas</h1>
+  </div>
+  <a
+    class="btn btn-primary"
+    routerLink="/cesiones/carpetas/nueva"
+    [queryParams]="{ persona: person || null, carpeta: folder || null }"
+    >Nueva cesión o reserva</a
+  >
+</div>
+<form class="card filters" (ngSubmit)="navigate()">
+  <div class="field">
+    <label for="folder-loan-person">Buscar persona</label
+    ><input id="folder-loan-person" name="q" [(ngModel)]="q" maxlength="120" />
+  </div>
+  <div class="field">
+    <label for="folder-loan-code">Código de carpeta</label
+    ><input
+      id="folder-loan-code"
+      name="code"
+      [(ngModel)]="code"
+      maxlength="60"
+    />
+  </div>
+  <div class="field">
+    <label for="folder-loan-status">Mostrar</label
+    ><select id="folder-loan-status" name="status" [(ngModel)]="status">
+      <option value="open">Reservas y cesiones abiertas</option>
+      <option value="ACTIVE">En poder de una persona</option>
+      <option value="RESERVED">Reservas pendientes de entrega</option>
+      <option value="overdue">Devolución vencida</option>
+      <option value="conflict">Conflictos</option>
+      <option value="RETURNED">Devueltas</option>
+      <option value="CANCELLED">Reservas canceladas</option>
+      <option value="all">Todo el historial</option>
+    </select>
+  </div>
+  <button class="btn btn-secondary">Aplicar filtros</button>
+</form>
+@if (person || folder) {
+  <p class="notice">
+    Historial del material o persona seleccionados.
+    <a
+      class="text-button"
+      routerLink="/cesiones/carpetas"
+      [queryParams]="{ estado: 'all' }"
+      >Ver todos</a
+    >
+  </p>
+}
+@if (loading()) {
+  <p role="status">Cargando cesiones…</p>
+} @else if (error()) {
+  <p class="notice notice-error" role="alert">
+    {{ error() }}
+    <button class="text-button" (click)="load()">Reintentar</button>
+  </p>
+} @else {
+  <p>{{ count() }} registros</p>
+  @for (r of rows(); track r.id) {
+    <a
+      class="card circulation-card"
+      [routerLink]="['/cesiones/carpetas', r.id]"
+      [queryParams]="{ volver: router.url }"
+      ><div>
+        <span class="code">{{ r.folder_code }} · {{ r.voice_name }}</span>
+        <h2>{{ r.person_name }}</h2>
+        <p class="small">
+          {{ r.status === 'RESERVED' ? 'Inicio previsto: ' : 'Desde: '
+          }}{{ timestamp(r.delivered_at || r.starts_at) }} · Devolución prevista:
+          {{ r.due_at ? timestamp(r.due_at) : 'Sin fecha prevista' }}
+        </p>
+      </div>
+      <div class="badges">
+        <span class="badge" [class.pending]="r.status === 'RESERVED'">{{
+          labels[r.status]
+        }}</span>
+        @if (r.conflict) {
+          <span class="badge blocked">Conflicto de disponibilidad</span>
+        } @else if (r.awaiting_return) {
+          <span class="badge pending">Pendiente de devolución previa</span>
+        }
+        @if (r.overdue) {
+          <span class="badge pending">Devolución vencida</span>
+        }
+      </div></a
+    >
+  } @empty {
+    <div class="card empty">No hay cesiones ni reservas con estos filtros.</div>
+  }
+  @if (pages() > 1) {
+    <nav class="pager" aria-label="Páginas de cesiones de carpetas">
+      <button
+        class="btn btn-secondary"
+        [disabled]="page() <= 1"
+        (click)="navigate(page() - 1)"
+      >
+        Anterior</button
+      ><span>{{ page() }} / {{ pages() }}</span
+      ><button
+        class="btn btn-secondary"
+        [disabled]="page() >= pages()"
+        (click)="navigate(page() + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
+  }
+}

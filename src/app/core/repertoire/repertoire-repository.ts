@@ -1,8 +1,17 @@
 import { inject, Injectable } from '@angular/core';
 import { literalSearch } from '../inventory/inventory';
-import { MusicApi, musicError, musicPage, pageRange } from '../music/music-api';
+import {
+  MusicApi,
+  MusicError,
+  musicError,
+  musicPage,
+  pageRange,
+} from '../music/music-api';
 import {
   MusicInputs,
+  MusicPage,
+  RepertoireWork,
+  FolderWorkState,
   PresencePreview,
   PresenceState,
   RepertoireCode,
@@ -10,6 +19,49 @@ import {
 @Injectable({ providedIn: 'root' })
 export class RepertoireRepository {
   private readonly api = inject(MusicApi);
+  async get(id: string) {
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id,
+      )
+    )
+      throw new MusicError('No encontramos esta obra. Vuelve al repertorio.');
+    const r = await this.api.client
+      .from('repertoire_works')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (r.error) throw musicError(r.error);
+    if (!r.data)
+      throw new MusicError('No encontramos esta obra. Vuelve al repertorio.');
+    return r.data;
+  }
+  async affected(
+    work: string,
+    state: PresenceState | undefined,
+    page: number,
+    signal?: AbortSignal,
+  ) {
+    const r = await this.content({ work, state, page }, signal);
+    if (!r.rows.length) return { rows: [], count: r.count };
+    let q = this.api.client
+      .from('music_folder_inventory')
+      .select('*')
+      .in(
+        'id',
+        r.rows.map((row) => row.folder_id),
+      );
+    if (signal) q = q.abortSignal(signal);
+    const folders = await q;
+    if (folders.error) throw musicError(folders.error);
+    return {
+      rows: r.rows.map((row) => ({
+        ...row,
+        folder: folders.data?.find((f) => f.id === row.folder_id) ?? null,
+      })),
+      count: r.count,
+    };
+  }
   async catalog() {
     const r = await this.api.client
       .from('music_repertoires')
@@ -26,7 +78,7 @@ export class RepertoireRepository {
       page?: number;
     },
     signal?: AbortSignal,
-  ) {
+  ): Promise<MusicPage<RepertoireWork>> {
     let q = this.api.client
       .from('repertoire_works')
       .select('*', { count: 'exact' });
@@ -39,7 +91,10 @@ export class RepertoireRepository {
       .order('id')
       .range(...pageRange(filters.page ?? 1));
     if (signal) q = q.abortSignal(signal);
-    return musicPage(await q);
+    const r = await q;
+    if (r.error?.code === 'PGRST103' && (filters.page ?? 1) > 1)
+      return this.works({ ...filters, page: 1 }, signal);
+    return musicPage(r);
   }
   async content(
     filters: {
@@ -50,7 +105,7 @@ export class RepertoireRepository {
       page?: number;
     },
     signal?: AbortSignal,
-  ) {
+  ): Promise<MusicPage<FolderWorkState>> {
     let q = this.api.client
       .from('folder_work_state')
       .select('*', { count: 'exact' });
@@ -65,7 +120,10 @@ export class RepertoireRepository {
       .order('folder_id')
       .range(...pageRange(filters.page ?? 1));
     if (signal) q = q.abortSignal(signal);
-    return musicPage(await q);
+    const r = await q;
+    if (r.error?.code === 'PGRST103' && (filters.page ?? 1) > 1)
+      return this.content({ ...filters, page: 1 }, signal);
+    return musicPage(r);
   }
   saveWork(
     id: string,
@@ -94,7 +152,7 @@ export class RepertoireRepository {
     return this.api.applyPresence(preview, request);
   }
   async movements(folder: string, page = 1) {
-    return musicPage(
+    const result = musicPage(
       await this.api.client
         .from('folder_work_movements')
         .select('*', { count: 'exact' })
@@ -103,6 +161,37 @@ export class RepertoireRepository {
         .order('id')
         .range(...pageRange(page)),
     );
+    if (!result.rows.length) return { rows: [], count: result.count };
+    const [works, audits] = await Promise.all([
+      this.api.client
+        .from('repertoire_works')
+        .select('id,title')
+        .in('id', [...new Set(result.rows.map((r) => r.work_id))]),
+      this.api.client
+        .from('audit_log')
+        .select('actor_name,after_data')
+        .eq('entity_type', 'music_folder')
+        .eq('entity_id', folder)
+        .in(
+          'after_data->>request_id',
+          result.rows.map((r) => r.request_id),
+        ),
+    ]);
+    if (works.error) throw musicError(works.error);
+    if (audits.error) throw musicError(audits.error);
+    return {
+      rows: result.rows.map((row) => ({
+        ...row,
+        title: works.data.find((w) => w.id === row.work_id)?.title ?? 'Obra',
+        actor_name:
+          audits.data.find(
+            (a) =>
+              (a.after_data as { request_id?: string })?.request_id ===
+              row.request_id,
+          )?.actor_name ?? 'Responsable registrado',
+      })),
+      count: result.count,
+    };
   }
   async workHistory(work: string, page = 1) {
     return musicPage(

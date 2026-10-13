@@ -1,0 +1,77 @@
+<a class="back" [routerLink]="backLink">← Volver</a>
+<div class="heading">
+  <h1>{{ editing ? 'Editar obra' : 'Nueva obra' }}</h1>
+</div>
+@if (loading()) {
+  <p role="status">Cargando obra…</p>
+} @else if (loadError()) {
+  <p role="alert" class="notice notice-error">
+    {{ loadError() }}
+    <button class="text-button" (click)="load()">Reintentar</button>
+  </p>
+} @else {
+  <form class="card editor" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <fieldset [disabled]="saving()">
+      <legend class="sr-only">Datos de la obra</legend>
+      <div class="fields">
+        @if (editing) {
+          <p class="wide subtle">
+            Repertorio {{ row()?.repertoire_code }} ·
+            {{ row()?.active ? 'Obra activa' : 'Obra retirada' }}. Editar el
+            título o el autor no cambia la presencia de sus partituras.
+          </p>
+        } @else {
+          <div class="field wide">
+            <label for="new-work-repertoire">Repertorio</label
+            ><select id="new-work-repertoire" formControlName="repertoire_code">
+              <option value="PRO">PRO</option>
+              <option value="PMM">PMM</option>
+            </select>
+          </div>
+        }
+        <div class="field wide">
+          <label for="work-title">Título de la obra</label
+          ><input
+            id="work-title"
+            formControlName="title"
+            maxlength="200"
+            autocomplete="off"
+          />
+        </div>
+        <div class="field wide">
+          <label for="work-author">Autor (opcional)</label
+          ><input id="work-author" formControlName="author" maxlength="160" />
+        </div>
+        @if (!editing) {
+          <p class="wide muted small">
+            Se añadirá al catálogo activo. Cada carpeta existente tendrá
+            pendiente introducir físicamente su copia.
+          </p>
+        }
+      </div>
+    </fieldset>
+    @if (!connection.online()) {
+      <p class="notice">Necesitas conexión para guardar.</p>
+    }
+    @if (error()) {
+      <p class="notice notice-error" role="alert">{{ error() }}</p>
+    }
+    @if (conflict() && editing) {
+      <button type="button" class="text-button" (click)="reload()">
+        Cargar versión actual
+      </button>
+    }
+    <div class="actions">
+      <a class="btn btn-secondary" [routerLink]="backLink">Cancelar</a
+      ><button
+        class="btn btn-primary"
+        type="submit"
+        [disabled]="saving() || !connection.online()"
+      >
+        {{
+          saving() ? 'Guardando…' : editing ? 'Guardar cambios' : 'Crear obra'
+        }}
+      </button>
+    </div>
+  </form>
+}

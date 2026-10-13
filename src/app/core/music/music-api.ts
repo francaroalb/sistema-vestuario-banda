@@ -21,6 +21,17 @@ export function musicError(error: unknown): MusicError {
   if (error instanceof MusicError) return error;
   const e = error as { message?: string; code?: string } | null;
   const messages: Record<string, string> = {
+    FOLDER_INVALID_DATE:
+      'Revisa las fechas: el fin debe ser posterior al inicio. Usa horas válidas de Madrid, fuera de la hora repetida del cambio horario.',
+    FOLDER_UNAVAILABLE:
+      'La carpeta tiene un conflicto de disponibilidad. Revisa la operación.',
+    FOLDER_ACK_REQUIRED: 'Revisa y acepta los avisos antes de confirmar.',
+    FOLDER_DUPLICATE_ISSUE:
+      'Ya existe una incidencia abierta de ese tipo. Puedes devolver sin añadir otra y ampliar después sus observaciones en Mantenimiento.',
+    FOLDER_IN_CUSTODY:
+      'La carpeta sigue en poder de una persona. Registra su devolución antes de archivarla.',
+    SIGNATURE_REQUIRED:
+      'Dibuja la firma antes de confirmar la entrega o devolución.',
     ADMIN_REQUIRED: 'Tu sesión no tiene acceso. Vuelve a iniciar sesión.',
     MUSIC_CHANGED:
       'Los datos han cambiado. Vuelve a revisar la operación antes de confirmar.',

@@ -1,0 +1,261 @@
+<a class="back" [routerLink]="backLink">← Carpetas</a>
+@if (loading()) {
+  <p role="status">Cargando carpeta…</p>
+} @else if (error()) {
+  <div class="notice notice-error" role="alert">
+    {{ error() }}
+    <button class="text-button" (click)="load()">Reintentar</button>
+  </div>
+} @else if (row(); as f) {
+  <div class="heading">
+    <div>
+      <p class="eyebrow">Carpeta · {{ f.repertoire_code }}</p>
+      <h1>{{ f.code }}</h1>
+    </div>
+    @if (!f.archived) {
+      <a
+        class="btn btn-secondary"
+        [routerLink]="['/inventario/carpetas', f.id, 'editar']"
+        [queryParams]="{ volver: returnTo }"
+        >Editar carpeta</a
+      >
+    }
+  </div>
+  <section class="card accordion">
+    <div class="row">
+      <div>
+        <h2>
+          {{ f.holder_name ? 'En poder de ' + f.holder_name : 'En la Banda' }}
+        </h2>
+        @if (f.holder_due_at) {
+          <p>
+            Devolución prevista:
+            {{ f.holder_due_at | date: 'dd/MM/yyyy HH:mm' }}
+          </p>
+        } @else if (f.holder_name) {
+          <p>Sin fecha prevista de devolución.</p>
+        }
+        @if (f.next_assignee) {
+          <p>
+            Reserva: {{ f.next_assignee }} ·
+            {{ f.next_reserved_from | date: 'dd/MM/yyyy HH:mm' }}
+          </p>
+        }
+      </div>
+      <div class="actions">
+        @if (f.loan_id) {
+          <a
+            class="btn btn-primary"
+            [routerLink]="['/cesiones/carpetas', f.loan_id, 'devolver']"
+            >Devolver carpeta</a
+          >
+        }
+        @if (!f.archived) {
+          <a
+            class="btn btn-secondary"
+            routerLink="/cesiones/carpetas/nueva"
+            [queryParams]="{ carpeta: f.id }"
+            >Ceder o reservar</a
+          >
+        }
+        <a
+          class="text-button"
+          routerLink="/cesiones/carpetas"
+          [queryParams]="{ carpeta: f.id, estado: 'all' }"
+          >Historial de cesiones</a
+        >
+      </div>
+    </div>
+  </section>
+  <div class="detail">
+    <section class="card">
+      <div class="row">
+        <h2>{{ f.voice_name }}</h2>
+        <span
+          class="badge"
+          [class.blocked]="!f.usable"
+          [class.archived]="f.archived"
+          >{{ status(f) }}</span
+        >
+      </div>
+      <dl>
+        <div>
+          <dt>Repertorio</dt>
+          <dd>{{ f.repertoire_code }}</dd>
+        </div>
+        <div>
+          <dt>Código de voz</dt>
+          <dd>{{ f.voice_code }}</dd>
+        </div>
+        <div>
+          <dt>Bloqueo manual</dt>
+          <dd>{{ f.manually_blocked ? 'Activado' : 'Sin bloqueo' }}</dd>
+        </div>
+        <div>
+          <dt>Incidencias bloqueantes</dt>
+          <dd>{{ f.blocking_issue_count }}</dd>
+        </div>
+      </dl>
+      @if (f.voice_archived) {
+        <p class="notice">
+          Esta voz está archivada; se conserva su relación con la carpeta.
+        </p>
+      }
+      @if (f.notes) {
+        <p class="notes">{{ f.notes }}</p>
+      }
+      <p class="muted">
+        Alta: {{ f.created_at | date: 'dd/MM/yyyy' }} · Último cambio:
+        {{ f.updated_at | date: 'dd/MM/yyyy HH:mm' }}
+      </p>
+      @if (!connection.online()) {
+        <p class="notice">Necesitas conexión para realizar cambios.</p>
+      }
+      @if (!confirming()) {
+        <button
+          class="text-button"
+          [disabled]="saving() || !connection.online()"
+          (click)="confirming.set(true)"
+        >
+          {{ f.archived ? 'Reactivar carpeta' : 'Archivar carpeta' }}
+        </button>
+      } @else {
+        <div class="confirm">
+          <h2>{{ f.archived ? 'Reactivar' : 'Archivar' }} {{ f.code }}</h2>
+          <p>
+            {{
+              f.archived
+                ? 'Volverá al inventario activo conservando su contenido e incidencias.'
+                : 'Dejará de aparecer entre las carpetas activas. Se conservarán su contenido y su historial.'
+            }}
+          </p>
+          <div class="actions">
+            <button
+              class="btn btn-secondary"
+              [disabled]="saving()"
+              (click)="confirming.set(false)"
+            >
+              Cancelar</button
+            ><button
+              class="btn btn-primary"
+              [disabled]="saving() || !connection.online() || conflict()"
+              (click)="archive()"
+            >
+              {{
+                saving()
+                  ? 'Guardando…'
+                  : f.archived
+                    ? 'Confirmar reactivación'
+                    : 'Confirmar archivado'
+              }}
+            </button>
+          </div>
+        </div>
+      }
+      @if (actionError()) {
+        <p class="notice notice-error" role="alert">{{ actionError() }}</p>
+      }
+      @if (conflict()) {
+        <button class="text-button" (click)="load()">
+          Cargar versión actual
+        </button>
+      }
+    </section>
+    <section class="card">
+      <div class="row">
+        <h2>Contenido y conservación</h2>
+        <a
+          class="btn btn-secondary"
+          routerLink="/inventario/carpetas/mantenimiento"
+          [queryParams]="{ carpeta: f.id }"
+          >Incidencias e historial</a
+        >
+        @if (!f.archived) {
+          <a
+            class="text-button"
+            routerLink="/inventario/carpetas/incidencias/PHYSICAL/nueva"
+            [queryParams]="{
+              carpeta: f.id,
+              volver: '/inventario/carpetas/mantenimiento?carpeta=' + f.id,
+            }"
+            >Registrar desperfecto</a
+          >
+        }
+        <a
+          class="btn btn-secondary"
+          [routerLink]="['/inventario/carpetas', f.id, 'contenido']"
+          [queryParams]="{ volver: returnTo }"
+          >Ver partituras</a
+        >
+      </div>
+      <div class="counts">
+        <span
+          ><strong>{{ f.present_count }}</strong> partituras presentes</span
+        ><span [class.pending]="f.missing_count > 0"
+          ><strong>{{ f.missing_count }}</strong> faltantes</span
+        ><span [class.pending]="f.pending_add_count > 0"
+          ><strong>{{ f.pending_add_count }}</strong> por incorporar</span
+        ><span [class.pending]="f.pending_remove_count > 0"
+          ><strong>{{ f.pending_remove_count }}</strong> por retirar</span
+        >
+      </div>
+      <dl>
+        <div>
+          <dt>Incidencias de partituras</dt>
+          <dd>{{ f.score_issue_count }}</dd>
+        </div>
+        <div>
+          <dt>Incidencias físicas</dt>
+          <dd>{{ f.physical_issue_count }}</dd>
+        </div>
+      </dl>
+      <p class="muted">
+        Una partitura dañada puede seguir presente. Solo el bloqueo manual o una
+        incidencia física bloqueante impiden utilizar la carpeta.
+      </p>
+    </section>
+    <section class="card wide">
+      <h2>Historial de esta carpeta</h2>
+      @if (historyLoading()) {
+        <p role="status">Cargando historial…</p>
+      } @else if (historyError()) {
+        <p role="alert">{{ historyError() }}</p>
+        <button class="text-button" (click)="loadHistory(historyPage())">
+          Reintentar historial
+        </button>
+      } @else {
+        <ul class="history">
+          @for (h of history(); track h.id) {
+            <li>
+              <div>
+                <strong>{{ historyLabel(h) }}</strong
+                ><br /><small>{{ h.actor_name }}</small>
+              </div>
+              <time>{{ h.occurred_at | date: 'dd/MM/yyyy HH:mm' }}</time>
+            </li>
+          } @empty {
+            <li>Sin movimientos registrados.</li>
+          }
+        </ul>
+        @if (historyPages() > 1) {
+          <nav class="pager" aria-label="Páginas de historial">
+            <button
+              class="text-button"
+              [disabled]="historyPage() <= 1"
+              (click)="loadHistory(historyPage() - 1)"
+            >
+              Anterior</button
+            ><span>{{ historyPage() }} / {{ historyPages() }}</span
+            ><button
+              class="text-button"
+              [disabled]="historyPage() >= historyPages()"
+              (click)="loadHistory(historyPage() + 1)"
+            >
+              Siguiente
+            </button>
+          </nav>
+        }
+      }
+    </section>
+  </div>
+}

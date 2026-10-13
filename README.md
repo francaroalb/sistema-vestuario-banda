@@ -397,10 +397,20 @@ con el último commit subido.
 
 ## Ampliación de Carpetas musicales
 
-Fase 1 de datos y servicios implementada y validada localmente. Incluye voces, carpetas,
-repertorios, presencia física, incidencias, operatividad, auditoría y operaciones masivas
-con revisión. No añade pantallas ni modifica las cesiones de vestuario. Las nuevas
-migraciones aún no se han aplicado al Supabase remoto.
+Fases 1 a 5 implementadas: datos y servicios, inventario de carpetas con voces configurables,
+catálogo PRO/PMM, presencia física, operaciones individuales y por lotes, incidencias, mantenimiento
+y cesiones individuales con reservas, entrega firmada y devolución rápida.
+Las migraciones están aplicadas al Supabase de Vestuario. La interfaz sigue sin publicar.
 
-Ver [alcance, contratos y validación de fase 1](docs/carpetas/fase-1-datos-servicios.md).
-La fase 2 de inventario y navegación necesita aprobación expresa.
+Con `npm start`, abrir http://localhost:4201/inventario/carpetas.
+Desde **Mantenimiento** se consultan tareas por repertorio/conservación, filtros y resoluciones.
+Desde una carpeta se registran desperfectos exteriores; desde **Ver partituras**, daños o faltantes.
+Los daños conservan la presencia y solo un bloqueo explícito impide utilizar una carpeta.
+
+Guías: [fase 1](docs/carpetas/fase-1-datos-servicios.md),
+[fase 2](docs/carpetas/fase-2-inventario.md), [fase 3](docs/carpetas/fase-3-repertorio.md)
+y [fase 4](docs/carpetas/fase-4-mantenimiento.md).
+Para probar las cesiones, abrir http://localhost:4201/cesiones/carpetas o usar la pestaña
+Carpetas de Cesiones. También se accede desde Personas y desde cada carpeta.
+Ver [guía de fase 5](docs/carpetas/fase-5-cesiones.md).
+No comenzar integración conjunta con vestuario (fase 6) sin aprobación expresa.

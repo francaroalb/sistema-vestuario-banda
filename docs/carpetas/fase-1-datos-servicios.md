@@ -1,6 +1,6 @@
 # Carpetas — fase 1: datos y servicios
 
-Implementada el 13 de octubre de 2026. Pendiente de validación del usuario antes de fase 2.
+Implementada y aprobada el 13 de octubre de 2026.
 La numeración de esta ampliación es independiente de las fases anteriores de Vestuario.
 
 ## Alcance
@@ -9,7 +9,7 @@ Modelo especializado de carpetas, voces configurables, repertorios PRO/PMM, obra
 presencia física, incidencias de partituras y de carpetas, operatividad e historial.
 Incluye migraciones, RLS, servicios TypeScript y pruebas. No añade pantallas, cesiones
 de carpetas, selección de voz, recomendador ni rutas. No altera las entregas de prendas.
-Las nuevas migraciones están comprobadas localmente; no se han aplicado a Supabase remoto.
+Las migraciones se comprobaron localmente en fase 1 y se aplicaron a Supabase remoto al implementar la fase 2; ver `fase-2-inventario.md`.
 No se ha realizado push ni despliegue de esta ampliación.
 
 ## Archivos

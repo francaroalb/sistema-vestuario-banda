@@ -1,0 +1,186 @@
+<a class="back" routerLink="/inventario/carpetas">← Carpetas</a>
+<div class="heading">
+  <div>
+    <p class="eyebrow">Inventario musical</p>
+    <h1>Mantenimiento</h1>
+  </div>
+</div>
+<p class="muted">
+  Revisa el contenido y la conservación por separado. Un aviso de mantenimiento
+  no impide usar la carpeta salvo que se indique expresamente.
+</p>
+<details class="filter-panel" [open]="filtersOpen()">
+  <summary>Filtrar tareas</summary>
+  <form class="card filters" [formGroup]="form" (ngSubmit)="navigate()">
+    <div class="field">
+      <label for="maint-code">Código de carpeta</label
+      ><input id="maint-code" formControlName="code" maxlength="60" />
+    </div>
+    <div class="field">
+      <label for="maint-title">Obra</label
+      ><input id="maint-title" formControlName="title" maxlength="200" />
+    </div>
+    <div class="field">
+      <label for="maint-rep">Repertorio</label
+      ><select id="maint-rep" formControlName="repertoire">
+        <option value="">Todos</option>
+        <option>PRO</option>
+        <option>PMM</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="maint-category">Categoría</label
+      ><select id="maint-category" formControlName="category">
+        <option value="">Todas</option>
+        <option value="REPERTOIRE">Repertorio</option>
+        <option value="CONSERVATION">Conservación</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="maint-kind">Tipo</label
+      ><select id="maint-kind" formControlName="kind">
+        <option value="">Todos</option>
+        @for (k of kinds; track k[0]) {
+          <option [value]="k[0]">{{ k[1] }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="maint-state">Estado</label
+      ><select id="maint-state" formControlName="state">
+        <option value="open">Pendientes</option>
+        <option value="resolved">Incidencias resueltas</option>
+        <option value="all">Todos</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="maint-use">Operatividad actual</label
+      ><select id="maint-use" formControlName="operability">
+        <option value="">Todas</option>
+        <option value="USABLE">Utilizable</option>
+        <option value="UNUSABLE">No utilizable</option>
+        <option value="ARCHIVED">Archivada</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" type="submit">Aplicar filtros</button>
+    <a class="text-button" routerLink="/inventario/carpetas/mantenimiento"
+      >Quitar filtros</a
+    >
+  </form>
+</details>
+@if (folder() || work()) {
+  <p class="notice">
+    Mostrando únicamente la carpeta u obra seleccionada. «Quitar filtros»
+    muestra todo el mantenimiento.
+  </p>
+}
+@if (loading()) {
+  <p role="status">Cargando mantenimiento…</p>
+} @else if (error()) {
+  <p class="notice notice-error" role="alert">
+    {{ error() }}
+    <button class="text-button" (click)="load()">Reintentar</button>
+  </p>
+} @else {
+  <div class="counts" aria-label="Contadores por categoría">
+    <span class="pending"
+      ><strong>{{ repertoire() }}</strong> Repertorio</span
+    ><span class="pending"
+      ><strong>{{ conservation() }}</strong> Conservación</span
+    >
+  </div>
+  <p class="muted small">
+    Contadores con los filtros aplicados, sin limitar por categoría.
+    {{ count() }} tareas en la selección.
+  </p>
+  <div class="work-list">
+    @for (r of rows(); track r.task_id) {
+      <article class="card maintenance-task">
+        <div class="task-content">
+          <a
+            class="folder-link"
+            [routerLink]="['/inventario/carpetas', r.folder_id]"
+            ><strong>{{ r.folder_code }}</strong></a
+          ><span class="muted small"> · {{ r.voice_name }}</span>
+          <h2>{{ r.title || 'Carpeta exterior' }}</h2>
+          @if (r.resolved_at) {
+            <p class="small">
+              {{ labels[r.kind] }} · {{ r.resolved_at | date: 'dd/MM/yyyy' }}
+            </p>
+          }
+          @if (r.description) {
+            <p class="notes">{{ r.description }}</p>
+          }
+          <small class="muted"
+            >{{
+              r.operability === 'ARCHIVED'
+                ? 'Archivada'
+                : r.operability === 'USABLE'
+                  ? 'Utilizable'
+                  : 'No utilizable'
+            }}{{
+              !r.resolved_at
+                ? r.blocks_use
+                  ? ' · Esta incidencia impide el uso'
+                  : ' · Aviso sin bloqueo de uso'
+                : ''
+            }}</small
+          >
+        </div>
+        <div class="task-actions">
+          <span class="badge" [class.pending]="!r.resolved_at">{{
+            r.resolved_at ? 'Resuelta' : labels[r.kind]
+          }}</span>
+          @if (r.issue_id) {
+            <a
+              class="btn btn-secondary"
+              [routerLink]="[
+                '/inventario/carpetas/incidencias',
+                r.family,
+                r.issue_id,
+              ]"
+              [queryParams]="{ volver: router.url }"
+              >{{ r.resolved_at ? 'Ver resolución' : 'Revisar incidencia' }}</a
+            >
+          } @else {
+            <a
+              class="btn btn-secondary"
+              [routerLink]="['/inventario/carpetas', r.folder_id, 'contenido']"
+              >Revisar contenido</a
+            >
+          }
+          @if (r.kind === 'PENDING_ADD' || r.kind === 'PENDING_REMOVE') {
+            <a
+              class="text-button"
+              [routerLink]="['/inventario/carpetas/repertorio', r.work_id]"
+              >Gestionar por lotes</a
+            >
+          }
+        </div>
+      </article>
+    } @empty {
+      <div class="card empty">
+        <h2>No hay tareas con estos filtros</h2>
+        <p>Registra incidencias desde una carpeta o desde sus partituras.</p>
+      </div>
+    }
+  </div>
+  @if (pages() > 1) {
+    <nav class="pager" aria-label="Páginas de mantenimiento">
+      <button
+        class="btn btn-secondary"
+        [disabled]="page() <= 1"
+        (click)="navigate(page() - 1)"
+      >
+        Anterior</button
+      ><span>{{ page() }} / {{ pages() }}</span
+      ><button
+        class="btn btn-secondary"
+        [disabled]="page() >= pages()"
+        (click)="navigate(page() + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
+  }
+}

@@ -1,7 +1,19 @@
 import { inject, Injectable } from '@angular/core';
 import { literalSearch } from '../inventory/inventory';
-import { MusicApi, musicError, musicPage, pageRange } from '../music/music-api';
-import { MusicInputs, RepertoireCode } from '../music/models';
+import {
+  MusicApi,
+  MusicError,
+  musicError,
+  musicPage,
+  pageRange,
+} from '../music/music-api';
+import {
+  MusicInputs,
+  RepertoireCode,
+  MusicPage,
+  FolderInventory,
+  MusicalVoice,
+} from '../music/models';
 @Injectable({ providedIn: 'root' })
 export class FoldersRepository {
   private readonly api = inject(MusicApi);
@@ -15,7 +27,7 @@ export class FoldersRepository {
       page?: number;
     },
     signal?: AbortSignal,
-  ) {
+  ): Promise<MusicPage<FolderInventory>> {
     let q = this.api.client
       .from('music_folder_inventory')
       .select('*', { count: 'exact' });
@@ -30,21 +42,36 @@ export class FoldersRepository {
       .order('id')
       .range(...pageRange(filters.page ?? 1));
     if (signal) q = q.abortSignal(signal);
-    return musicPage(await q);
+    const result = await q;
+    if (result.error?.code === 'PGRST103' && (filters.page ?? 1) > 1)
+      return this.list({ ...filters, page: 1 }, signal);
+    return musicPage(result);
   }
   async get(id: string) {
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id,
+      )
+    )
+      throw new MusicError(
+        'No encontramos esta carpeta. Vuelve al inventario.',
+      );
     const r = await this.api.client
       .from('music_folder_inventory')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
     if (r.error) throw musicError(r.error);
+    if (!r.data)
+      throw new MusicError(
+        'No encontramos esta carpeta. Vuelve al inventario.',
+      );
     return r.data;
   }
   async voices(
     filters: { q?: string; archived?: boolean; page?: number } = {},
     signal?: AbortSignal,
-  ) {
+  ): Promise<MusicPage<MusicalVoice>> {
     let q = this.api.client
       .from('musical_voices')
       .select('*', { count: 'exact' });

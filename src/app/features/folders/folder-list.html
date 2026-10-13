@@ -1,0 +1,151 @@
+<app-inventory-tabs section="folders" />
+<div class="heading">
+  <div>
+    <p class="eyebrow">Inventario musical</p>
+    <h1>Carpetas</h1>
+  </div>
+  <a
+    class="btn btn-primary"
+    routerLink="/inventario/carpetas/nueva"
+    [queryParams]="{ volver: router.url }"
+    >Nueva carpeta</a
+  >
+</div>
+<p class="actions">
+  <a class="btn btn-secondary" routerLink="/inventario/carpetas/mantenimiento"
+    >Mantenimiento</a
+  >
+  <a class="btn btn-secondary" routerLink="/inventario/carpetas/repertorio"
+    >Repertorio PRO / PMM</a
+  >
+</p>
+<div class="card filters" [formGroup]="form">
+  <label class="field wide"
+    >Buscar código<input
+      type="search"
+      formControlName="q"
+      placeholder="PRO-CLA1-001"
+      maxlength="60" /></label
+  ><label class="field"
+    >Repertorio<select aria-label="Repertorio" formControlName="repertoire">
+      <option value="">Todos</option>
+      <option value="PRO">PRO</option>
+      <option value="PMM">PMM</option>
+    </select></label
+  ><label class="field"
+    >Estado<select aria-label="Estado" formControlName="state">
+      <option value="active">Activas</option>
+      <option value="usable">Utilizables</option>
+      <option value="blocked">No utilizables</option>
+      <option value="archived">Archivadas</option>
+      <option value="all">Todas</option>
+    </select></label
+  ><app-voice-picker
+    [label]="voiceLabel()"
+    [selected]="voice()"
+    [clearable]="true"
+    (picked)="pick($event)"
+  />
+</div>
+<div class="row">
+  <p aria-live="polite">
+    {{ total() }} {{ total() === 1 ? 'carpeta' : 'carpetas' }}
+  </p>
+  <button class="text-button" type="button" (click)="clear()">
+    Limpiar filtros
+  </button>
+</div>
+@if (loading()) {
+  <p role="status">Cargando carpetas…</p>
+} @else if (error()) {
+  <div class="notice notice-error" role="alert">
+    {{ error() }}
+    <button class="text-button" (click)="load()">Reintentar</button>
+  </div>
+} @else {
+  <div class="grid">
+    @for (row of rows(); track row.id) {
+      <a
+        class="card folder"
+        [routerLink]="['/inventario/carpetas', row.id]"
+        [queryParams]="{ volver: router.url }"
+        ><div class="row">
+          <strong class="code">{{ row.code }}</strong
+          ><span
+            class="badge"
+            [class.blocked]="!row.usable"
+            [class.archived]="row.archived"
+            >{{ status(row) }}</span
+          >
+        </div>
+        <span>{{ row.voice_name }} · {{ row.repertoire_code }}</span>
+        <strong class="small">{{
+          row.holder_name ? 'En poder de ' + row.holder_name : 'En la Banda'
+        }}</strong>
+        @if (row.next_assignee) {
+          <small>Reserva pendiente: {{ row.next_assignee }}</small>
+        }
+        <div class="counts">
+          <span
+            >{{ row.present_count }}
+            {{
+              row.present_count === 1
+                ? 'partitura presente'
+                : 'partituras presentes'
+            }}</span
+          >
+          @if (row.missing_count) {
+            <span class="pending"
+              >{{ row.missing_count }}
+              {{ row.missing_count === 1 ? 'faltante' : 'faltantes' }}</span
+            >
+          }
+          @if (row.pending_add_count + row.pending_remove_count) {
+            <span class="pending"
+              >{{ row.pending_add_count + row.pending_remove_count }}
+              {{
+                row.pending_add_count + row.pending_remove_count === 1
+                  ? 'cambio pendiente'
+                  : 'cambios pendientes'
+              }}</span
+            >
+          }
+          @if (row.conservation_issue_count + row.physical_issue_count) {
+            <span class="pending"
+              >{{
+                row.conservation_issue_count + row.physical_issue_count
+              }}
+              incidencias</span
+            >
+          }
+        </div></a
+      >
+    }
+  </div>
+  @if (!rows().length) {
+    <div class="card empty">
+      <h2>No hay carpetas en esta selección</h2>
+      <p class="muted">
+        Prueba otros filtros o añade una carpeta al inventario.
+      </p>
+    </div>
+  }
+  @if (pages() > 1) {
+    <nav class="pager" aria-label="Páginas de carpetas">
+      <button
+        class="btn btn-secondary"
+        [disabled]="page() <= 1"
+        (click)="navigate(page() - 1)"
+      >
+        Anterior</button
+      ><span>{{ page() }} / {{ pages() }}</span
+      ><button
+        class="btn btn-secondary"
+        [disabled]="page() >= pages()"
+        (click)="navigate(page() + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
+  }
+}

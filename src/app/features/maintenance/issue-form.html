@@ -1,0 +1,205 @@
+<a class="back" [routerLink]="backLink">← Mantenimiento</a>
+@if (loading()) {
+  <p role="status">Cargando incidencia…</p>
+} @else if (loadError()) {
+  <p class="notice notice-error" role="alert">
+    {{ loadError() }}
+    <button class="text-button" (click)="load()">Reintentar</button>
+  </p>
+} @else if (folder(); as f) {
+  <div class="heading">
+    <div>
+      <p class="eyebrow">{{ f.code }} · {{ f.voice_name }}</p>
+      <h1>{{ editing ? 'Incidencia' : 'Nueva incidencia' }}</h1>
+    </div>
+    <span class="badge" [class.blocked]="!f.usable">{{
+      f.archived ? 'Archivada' : f.usable ? 'Utilizable' : 'No utilizable'
+    }}</span>
+  </div>
+  <h2>{{ work()?.title || 'Carpeta exterior' }}</h2>
+  @if (row(); as r) {
+    <p class="muted small">
+      Registrada el {{ r.created_at | date: 'dd/MM/yyyy HH:mm' }} por
+      {{ r.created_by_name || 'Administrador' }}.
+    </p>
+  }
+  @if (row()?.resolved_at) {
+    <section class="card">
+      <h2>Incidencia resuelta · {{ labels[row()!.kind] }}</h2>
+      <p class="notes">{{ row()?.description }}</p>
+      <p>
+        {{ row()?.resolved_at | date: 'dd/MM/yyyy HH:mm' }} ·
+        {{ row()?.resolved_by_name || 'Administrador' }}
+      </p>
+      <p class="notes">
+        {{ row()?.resolution || 'Sin observaciones de resolución.' }}
+      </p>
+      <p class="muted">
+        El estado actual de la carpeta tiene en cuenta todos los bloqueos que
+        siguen activos.
+      </p>
+    </section>
+  } @else if (!editing && f.archived) {
+    <p class="notice">
+      Reactiva la carpeta antes de registrar nuevas incidencias.
+    </p>
+  } @else {
+    @if (!resolving()) {
+      <form class="card editor" [formGroup]="form" (ngSubmit)="save()">
+        <fieldset
+          [disabled]="saving()"
+          style="border: 0; padding: 0; margin: 0"
+        >
+          <div class="field">
+            <label for="issue-kind">Tipo de incidencia</label
+            ><select
+              id="issue-kind"
+              formControlName="kind"
+              [attr.disabled]="editing ? true : null"
+            >
+              @for (k of kinds; track k) {
+                <option [value]="k">{{ labels[k] }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="issue-description">{{
+              family === 'PHYSICAL'
+                ? 'Descripción del desperfecto'
+                : 'Observaciones (opcional)'
+            }}</label
+            ><textarea
+              id="issue-description"
+              rows="3"
+              formControlName="description"
+              maxlength="2000"
+            ></textarea>
+          </div>
+          @if (family === 'PHYSICAL') {
+            <label class="check"
+              ><input type="checkbox" formControlName="blocks_use" /> Impide
+              utilizar la carpeta</label
+            >
+            <p class="notice">
+              Sin marcar esta opción, la carpeta conserva su operatividad.
+              Resolver esta incidencia no elimina otros bloqueos ni el bloqueo
+              manual.
+            </p>
+          } @else {
+            <p class="notice">
+              {{
+                form.controls.kind.value === 'MISSING'
+                  ? 'Confirma que la copia no está en la carpeta: al guardar se registrará su ausencia.'
+                  : 'La copia sigue presente. Registrar su deterioro no cambia la presencia ni bloquea el uso de la carpeta.'
+              }}
+            </p>
+          }
+          <div class="actions">
+            <button
+              class="btn btn-primary"
+              type="submit"
+              [disabled]="saving() || conflict() || !connection.online()"
+            >
+              {{ saving() ? 'Guardando…' : 'Guardar incidencia' }}
+            </button>
+            @if (editing) {
+              <button
+                class="btn btn-secondary"
+                type="button"
+                [disabled]="saving() || conflict() || !connection.online()"
+                (click)="startResolve()"
+              >
+                Resolver incidencia
+              </button>
+            }
+          </div>
+        </fieldset>
+      </form>
+    } @else {
+      <form
+        class="card editor"
+        [formGroup]="resolutionForm"
+        (ngSubmit)="resolve()"
+      >
+        <h2>Confirmar resolución · {{ labels[row()!.kind] }}</h2>
+        <fieldset
+          [disabled]="saving()"
+          style="border: 0; padding: 0; margin: 0"
+        >
+          @if (family === 'SCORE') {
+            <div class="field">
+              <label for="issue-outcome">Resultado físico</label
+              ><select id="issue-outcome" formControlName="outcome">
+                @if (row()?.kind !== 'MISSING') {
+                  <option value="UNCHANGED">
+                    Revisada o reparada, sin cambiar su presencia
+                  </option>
+                }
+                <option value="PRESENT">
+                  {{
+                    row()?.kind === 'MISSING'
+                      ? 'Copia recuperada e introducida en la carpeta'
+                      : 'Copia sustituida e introducida en la carpeta'
+                  }}
+                </option>
+                @if (row()?.kind === 'MISSING' && !work()?.active) {
+                  <option value="ABSENT">
+                    Obra retirada: confirmar que la copia queda ausente
+                  </option>
+                }
+              </select>
+            </div>
+            <p class="notice">
+              Confirma el trabajo realizado físicamente. Sustituir o recuperar
+              una copia registra un movimiento en el historial.
+            </p>
+          } @else {
+            <p class="notice">
+              Confirma que has reparado o sustituido el elemento afectado. Otros
+              bloqueos activos seguirán impidiendo usar la carpeta.
+            </p>
+          }
+          <div class="field">
+            <label for="issue-resolution"
+              >Observación de resolución (opcional)</label
+            ><textarea
+              id="issue-resolution"
+              rows="3"
+              maxlength="2000"
+              formControlName="resolution"
+            ></textarea>
+          </div>
+          <div class="actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              [disabled]="saving()"
+              (click)="resolving.set(false)"
+            >
+              Volver a la incidencia</button
+            ><button
+              class="btn btn-primary"
+              type="submit"
+              [disabled]="saving() || conflict() || !connection.online()"
+            >
+              {{ saving() ? 'Guardando…' : 'Confirmar resolución' }}
+            </button>
+          </div>
+        </fieldset>
+      </form>
+    }
+  }
+  @if (error()) {
+    <p class="notice notice-error" role="alert">{{ error() }}</p>
+  }
+  @if (conflict()) {
+    <button class="text-button" [disabled]="saving()" (click)="reload()">
+      Cargar versión actual
+    </button>
+  }
+  @if (!connection.online()) {
+    <p class="notice">
+      Necesitas conexión para guardar. Tu borrador se conserva en esta pantalla.
+    </p>
+  }
+}

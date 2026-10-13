@@ -37,6 +37,10 @@ export class PeopleError extends Error {
 export function peopleError(error: unknown): PeopleError {
   if (error instanceof PeopleError) return error;
   const failure = error as { code?: string; message?: string } | null;
+  if (failure?.message === 'PERSON_IN_CUSTODY')
+    return new PeopleError(
+      'Esta persona tiene carpetas pendientes. Registra su devolución antes de archivar la ficha.',
+    );
   if (failure?.message === 'PERSON_HAS_LOANS')
     return new PeopleError(
       'Esta persona tiene prendas pendientes. Registra su devolución antes de archivar la ficha.',

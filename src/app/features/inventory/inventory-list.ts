@@ -1,3 +1,4 @@
+import { InventoryTabs } from './inventory-tabs';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -25,6 +26,7 @@ import { GarmentStatus } from '../../shared/ui/garment-status';
 @Component({
   selector: 'app-inventory-list',
   imports: [
+    InventoryTabs,
     ReactiveFormsModule,
     RouterLink,
     Icon,

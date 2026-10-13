@@ -57,6 +57,95 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home').then((m) => m.Home),
       },
       {
+        path: 'inventario/carpetas/mantenimiento',
+        title: 'Mantenimiento · Gestión de trajes',
+        loadComponent: () =>
+          import('./features/maintenance/maintenance-list').then(
+            (m) => m.MaintenanceList,
+          ),
+      },
+      {
+        path: 'inventario/carpetas/incidencias/:family/nueva',
+        title: 'Nueva incidencia · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/maintenance/issue-form').then((m) => m.IssueForm),
+      },
+      {
+        path: 'inventario/carpetas/incidencias/:family/:id',
+        title: 'Incidencia · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/maintenance/issue-form').then((m) => m.IssueForm),
+      },
+      {
+        path: 'inventario/carpetas/repertorio/nueva',
+        title: 'Nueva obra · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/repertoire/work-form').then((m) => m.WorkForm),
+      },
+      {
+        path: 'inventario/carpetas/repertorio/:id/editar',
+        title: 'Editar obra · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/repertoire/work-form').then((m) => m.WorkForm),
+      },
+      {
+        path: 'inventario/carpetas/repertorio/:id',
+        title: 'Ficha de obra · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/repertoire/work-detail').then((m) => m.WorkDetail),
+      },
+      {
+        path: 'inventario/carpetas/repertorio',
+        title: 'Repertorio · Gestión de trajes',
+        loadComponent: () =>
+          import('./features/repertoire/repertoire-list').then(
+            (m) => m.RepertoireList,
+          ),
+      },
+      {
+        path: 'inventario/carpetas/:id/contenido',
+        title: 'Contenido de carpeta · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/repertoire/folder-content').then(
+            (m) => m.FolderContent,
+          ),
+      },
+      {
+        path: 'inventario/carpetas/nueva',
+        title: 'Nueva carpeta · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/folders/folder-form').then((m) => m.FolderForm),
+      },
+      {
+        path: 'inventario/carpetas/:id/editar',
+        title: 'Editar carpeta · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/folders/folder-form').then((m) => m.FolderForm),
+      },
+      {
+        path: 'inventario/carpetas/:id',
+        title: 'Ficha de carpeta · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/folders/folder-detail').then(
+            (m) => m.FolderDetail,
+          ),
+      },
+      {
+        path: 'inventario/carpetas',
+        title: 'Carpetas · Gestión de trajes',
+        loadComponent: () =>
+          import('./features/folders/folder-list').then((m) => m.FolderList),
+      },
+      {
         path: 'inventario/nueva',
         title: 'Nueva prenda · Gestión de trajes',
         canDeactivate: [
@@ -123,6 +212,62 @@ export const routes: Routes = [
         title: 'Personas · Gestión de trajes',
         loadComponent: () =>
           import('./features/people/people-list').then((m) => m.PeopleList),
+      },
+      {
+        path: 'cesiones/carpetas/nueva',
+        title: 'Cesiones de carpetas · Gestión de trajes',
+        data: { action: 'DELIVER' },
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/folder-loans/folder-loan-operation').then(
+            (m) => m.FolderLoanOperation,
+          ),
+      },
+      {
+        path: 'cesiones/carpetas/:id/entregar',
+        title: 'Cesiones de carpetas · Gestión de trajes',
+        data: { action: 'DELIVER' },
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/folder-loans/folder-loan-operation').then(
+            (m) => m.FolderLoanOperation,
+          ),
+      },
+      {
+        path: 'cesiones/carpetas/:id/devolver',
+        title: 'Cesiones de carpetas · Gestión de trajes',
+        data: { action: 'RETURN' },
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/folder-loans/folder-loan-operation').then(
+            (m) => m.FolderLoanOperation,
+          ),
+      },
+      {
+        path: 'cesiones/carpetas/:id/cancelar',
+        title: 'Cesiones de carpetas · Gestión de trajes',
+        data: { action: 'CANCEL' },
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/folder-loans/folder-loan-operation').then(
+            (m) => m.FolderLoanOperation,
+          ),
+      },
+      {
+        path: 'cesiones/carpetas/:id',
+        title: 'Cesiones de carpetas · Gestión de trajes',
+        loadComponent: () =>
+          import('./features/folder-loans/folder-loan-detail').then(
+            (m) => m.FolderLoanDetail,
+          ),
+      },
+      {
+        path: 'cesiones/carpetas',
+        title: 'Cesiones de carpetas · Gestión de trajes',
+        loadComponent: () =>
+          import('./features/folder-loans/folder-loan-list').then(
+            (m) => m.FolderLoanList,
+          ),
       },
       {
         path: 'cesiones/nueva',
