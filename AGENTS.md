@@ -12,6 +12,15 @@ Aplicación independiente de `../sistema-entradas-banda`. Usar Entradas solo com
 - Preferencia de UI: tarjetas compactas, datos y acciones en paralelo cuando caben; destacar nombres, códigos, tallas y estados con la paleta existente, sin ocultar contenido.
 - Al acabar cada fase: explicar cambios, pruebas, decisiones y detenerse.
 
+## Ampliación de Carpetas musicales
+
+- Prompt: `docs/carpetas/prompt-maestro.md`. Fase 0 aprobada el 13/10/2026.
+- Fase 1 de datos, servicios y pruebas implementada; pendiente de validación del usuario.
+- NO comenzar fase 2 de Carpetas sin autorización expresa. Esta numeración es independiente de Vestuario.
+- Nuevas migraciones de Carpetas verificadas localmente, todavía no aplicadas a Supabase remoto.
+- Mantener modelos especializados; voz por participación, presencia distinta de daño y mantenimiento distinto de operatividad.
+- Consultar `docs/carpetas/fase-1-datos-servicios.md` antes de continuar.
+
 ## Decisiones aprobadas
 
 - Angular standalone, Signals, Supabase independiente, PostgreSQL/RLS, Cloudflare Pages, PWA.

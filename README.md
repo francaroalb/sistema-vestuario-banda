@@ -394,3 +394,13 @@ La configuración queda en Git y debe subirse para que la use Workers Builds.
 Con la integración de GitHub conectada, los pushes a `main` deben iniciar una
 compilación automática. Comprueba en Cloudflare que el commit del build coincide
 con el último commit subido.
+
+## Ampliación de Carpetas musicales
+
+Fase 1 de datos y servicios implementada y validada localmente. Incluye voces, carpetas,
+repertorios, presencia física, incidencias, operatividad, auditoría y operaciones masivas
+con revisión. No añade pantallas ni modifica las cesiones de vestuario. Las nuevas
+migraciones aún no se han aplicado al Supabase remoto.
+
+Ver [alcance, contratos y validación de fase 1](docs/carpetas/fase-1-datos-servicios.md).
+La fase 2 de inventario y navegación necesita aprobación expresa.

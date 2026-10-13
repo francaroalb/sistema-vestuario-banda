@@ -325,3 +325,13 @@ Aplicada en Supabase y comprobada con el caso existente reportado, sin nuevos mo
 - Inicio diario, búsquedas y agrupaciones de inventario/personas completados en las revisiones
   previas se mantienen. No se incorporan otras modificaciones masivas sin un caso concreto.
 - Versión 0.9.0. La fase 10 de QA general y producción requiere nueva autorización.
+
+## Ampliación de Carpetas — fase 1
+
+Modelo especializado implementado conforme a la [auditoría aprobada](carpetas/fase-0-arquitectura.md).
+Consultar [decisiones y contratos implementados](carpetas/fase-1-datos-servicios.md).
+El módulo conserva una revisión lógica inicial de repertorio por carpeta y registra
+excepciones físicas posteriores. Incidencias de partituras y físicas separadas; operatividad
+derivada de archivo, bloqueo manual y bloqueos abiertos. Escrituras RPC con petición
+idempotente, versiones, RLS y auditoría, sin cambiar los contratos de cesiones de prendas.
+Las escrituras del módulo usan un lock propio 65013; la UI empieza en fase 2.

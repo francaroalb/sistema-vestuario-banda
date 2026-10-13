@@ -1,3 +1,23 @@
+import type {
+  MusicalVoice,
+  MusicRepertoire,
+  RepertoireWork,
+  WorkPeriod,
+  MusicFolder,
+  WorkPresence,
+  WorkMovement,
+  ScoreIssue,
+  PhysicalIssue,
+  FolderInventory,
+  FolderWorkState,
+  MaintenanceTask,
+} from '../music/models';
+type ReadOnlyTable<T> = {
+  Row: T;
+  Insert: never;
+  Update: never;
+  Relationships: [];
+};
 import type { Conflict, RetentionDecision } from '../conflicts/models';
 import type {
   EventSeries,
@@ -72,6 +92,29 @@ export type InventorySummary = {
 export interface Database {
   public: {
     Tables: {
+      event_participants: ReadOnlyTable<{
+        event_id: string;
+        person_id: string;
+        active: boolean;
+        block_id: string | null;
+        voice_id: string | null;
+      }>;
+      musical_voices: ReadOnlyTable<MusicalVoice>;
+      music_repertoires: ReadOnlyTable<MusicRepertoire>;
+      repertoire_works: ReadOnlyTable<RepertoireWork>;
+      repertoire_work_periods: ReadOnlyTable<WorkPeriod>;
+      music_folders: ReadOnlyTable<MusicFolder>;
+      folder_work_presence: ReadOnlyTable<WorkPresence>;
+      folder_work_movements: ReadOnlyTable<WorkMovement>;
+      folder_score_issues: ReadOnlyTable<ScoreIssue>;
+      folder_physical_issues: ReadOnlyTable<PhysicalIssue>;
+      music_requests: ReadOnlyTable<{
+        id: string;
+        actor_id: string;
+        occurred_at: string;
+        payload: Json;
+        result: Json;
+      }>;
       loan_retention_decisions: {
         Row: RetentionDecision;
         Insert: never;
@@ -147,6 +190,9 @@ export interface Database {
           garment_id: string | null;
           person_id: string | null;
           loan_id: string | null;
+          music_folder_id: string | null;
+          music_voice_id: string | null;
+          music_work_id: string | null;
           before_data: Json;
           after_data: Json;
         };
@@ -181,6 +227,9 @@ export interface Database {
       };
     };
     Views: {
+      folder_work_state: { Row: FolderWorkState; Relationships: [] };
+      music_folder_inventory: { Row: FolderInventory; Relationships: [] };
+      music_maintenance_tasks: { Row: MaintenanceTask; Relationships: [] };
       wardrobe_conflicts: { Row: Conflict; Relationships: [] };
       event_people: { Row: EventPerson; Relationships: [] };
       event_preparation: { Row: Preparation; Relationships: [] };
@@ -189,6 +238,24 @@ export interface Database {
       garment_inventory: { Row: StockGarment; Relationships: [] };
     };
     Functions: {
+      music_command: {
+        Args: {
+          p_request: string;
+          p_action: string;
+          p_id: string;
+          p_expected_version: number | null;
+          p_data: Json;
+        };
+        Returns: Json;
+      };
+      preview_music_presence: {
+        Args: { p_action: string; p_work: string; p_folders: string[] };
+        Returns: Json;
+      };
+      apply_music_presence: {
+        Args: { p_request: string; p_preview: Json };
+        Returns: Json;
+      };
       preview_import: { Args: { p_kind: string; p_rows: Json }; Returns: Json };
       apply_import: {
         Args: { p_request: string; p_preview: Json };
