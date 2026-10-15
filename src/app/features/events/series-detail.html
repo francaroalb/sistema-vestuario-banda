@@ -17,6 +17,11 @@
     <div>
       <p class="eyebrow">Preparación conjunta</p>
       <h1>{{ d.series.name }}</h1>
+      <a
+        class="btn btn-secondary"
+        [routerLink]="['/actuaciones/series', id, 'carpetas']"
+        >Preparar carpetas musicales</a
+      >
     </div>
     <button
       class="btn btn-secondary"
@@ -648,6 +653,34 @@
         }
         @if (quick || selectedPerson()) {
           <form (ngSubmit)="saveAttendance()">
+            <div class="field">
+              <strong>Voz inicial para los días seleccionados</strong>
+              @if (voiceLoading()) {
+                <p role="status">Buscando voz habitual…</p>
+              }
+              <app-voice-picker
+                [label]="selectedVoice()?.name || 'Voz pendiente (opcional)'"
+                [selected]="selectedVoice()?.id || ''"
+                [clearable]="true"
+                clearLabel="Dejar voz pendiente"
+                (picked)="
+                  selectedVoice.set($event); applyVoice = true; dirty.set(true)
+                "
+              />
+              @if (selectedPerson() && blocks(selectedPerson()!.id).length) {
+                <label
+                  ><input
+                    type="checkbox"
+                    name="applyVoice"
+                    [(ngModel)]="applyVoice"
+                  />Aplicar esta voz a todos los días seleccionados</label
+                >
+              }
+              <p class="muted">
+                Podrás cambiar la voz de cada día desde Preparar carpetas
+                musicales.
+              </p>
+            </div>
             @if (selectedPerson(); as p) {
               <h3>{{ p.label }}</h3>
               <p>{{ p.subtitle }}</p>
@@ -755,6 +788,7 @@
               <button
                 class="btn btn-primary"
                 [disabled]="
+                  voiceLoading() ||
                   (hasGap() && !gapChoice) ||
                   (!selectedPerson() &&
                     (!name.trim() || !instrument.trim() || !selected().length))

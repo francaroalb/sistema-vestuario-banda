@@ -69,6 +69,10 @@
         </p>
       }
     </section>
+    <a class="btn btn-secondary" [routerLink]="['/actuaciones', id, 'carpetas']"
+      >Preparar carpetas musicales</a
+    >
+    <app-music-alerts [event]="id" />
     <section class="card event-card participant-tools">
       <h2>
         Participantes y refuerzos <span class="count-badge">{{ count() }}</span>
@@ -94,10 +98,53 @@
           </button>
         </div>
         @if (adding()) {
-          <app-choice-picker mode="person" (picked)="add($event)" /><button
+          @if (pendingPerson(); as p) {
+            <div class="event-picker">
+              <strong>{{ p.label }}</strong>
+              <p>{{ p.subtitle }}</p>
+              @if (voiceLoading()) {
+                <p role="status">Buscando voz habitual…</p>
+              } @else {
+                <app-voice-picker
+                  [label]="selectedVoice()?.name || 'Voz pendiente (opcional)'"
+                  [selected]="selectedVoice()?.id || ''"
+                  [clearable]="true"
+                  clearLabel="Dejar voz pendiente"
+                  (picked)="selectedVoice.set($event)"
+                />
+                <p class="muted">
+                  La propuesta utiliza su última voz conocida. Puedes cambiarla
+                  para esta actuación.
+                </p>
+              }
+              <button
+                class="btn btn-primary"
+                [disabled]="saving() || voiceLoading() || !connection.online()"
+                (click)="add(p)"
+              >
+                Añadir con esta voz
+              </button>
+              <button
+                class="btn btn-quiet"
+                [disabled]="saving()"
+                (click)="
+                  pendingPerson.set(null);
+                  selectedVoice.set(null);
+                  dirty.set(false)
+                "
+              >
+                Cambiar persona
+              </button>
+            </div>
+          } @else {
+            <app-choice-picker mode="person" (picked)="selectPerson($event)" />
+          }
+          <button
             class="btn btn-secondary"
             [disabled]="saving() || assisting() || !connection.online()"
-            (click)="quick.set(true)"
+            (click)="
+              quick.set(true); pendingPerson.set(null); selectedVoice.set(null)
+            "
           >
             No existe: crear refuerzo
           </button>
@@ -110,6 +157,13 @@
             (ngSubmit)="quickForm.valid && createPerson()"
           >
             <h3>Nuevo refuerzo</h3>
+            <app-voice-picker
+              [label]="selectedVoice()?.name || 'Voz pendiente (opcional)'"
+              [selected]="selectedVoice()?.id || ''"
+              [clearable]="true"
+              clearLabel="Dejar voz pendiente"
+              (picked)="selectedVoice.set($event); dirty.set(true)"
+            />
             <div class="field">
               <label for="quick-name">Nombre y apellidos</label
               ><input

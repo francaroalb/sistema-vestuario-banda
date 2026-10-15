@@ -26,8 +26,14 @@ import { Icon } from '../../shared/ui/icon';
       }
     </nav>
     <section class="quick" aria-labelledby="quick-title">
-      <h2 id="quick-title">Añadir</h2>
+      <h2 id="quick-title">Operaciones</h2>
       <div class="actions">
+        <a class="btn btn-secondary" routerLink="/carpetas/avisos"
+          >Avisos de actuaciones</a
+        >
+        <a class="btn btn-primary" routerLink="/carpetas/operacion"
+          >Entregar o devolver material</a
+        >
         <a class="btn btn-secondary" routerLink="/inventario/carpetas/nueva"
           ><app-icon name="plus" />Carpeta</a
         >

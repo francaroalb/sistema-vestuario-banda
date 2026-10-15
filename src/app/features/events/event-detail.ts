@@ -1,3 +1,6 @@
+import { MusicPlanning } from '../../core/music-planning/music-planning';
+import { VoicePicker } from '../folders/voice-picker';
+import { MusicAlerts } from '../music-planning/music-alerts';
 import { RecommendationPanel } from './recommendation-panel';
 import { AssistedPreparation } from './assisted-preparation';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -28,6 +31,8 @@ import { ChoicePicker } from '../loans/choice-picker';
 @Component({
   selector: 'app-event-detail',
   imports: [
+    MusicAlerts,
+    VoicePicker,
     FormsModule,
     RouterLink,
     ChoicePicker,
@@ -39,6 +44,26 @@ import { ChoicePicker } from '../loans/choice-picker';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EventDetail {
+  private readonly music = inject(MusicPlanning);
+  readonly pendingPerson = signal<Choice | null>(null);
+  readonly selectedVoice = signal<{ id: string; name: string } | null>(null);
+  readonly voiceLoading = signal(false);
+  async selectPerson(person: Choice) {
+    this.pendingPerson.set(person);
+    this.selectedVoice.set(null);
+    this.voiceLoading.set(true);
+    this.dirty.set(true);
+    try {
+      const v = await this.music.suggestion(person.id);
+      if (this.pendingPerson()?.id === person.id) this.selectedVoice.set(v);
+    } catch {
+      this.error.set(
+        'No se pudo cargar la voz habitual. Puedes elegirla manualmente.',
+      );
+    } finally {
+      this.voiceLoading.set(false);
+    }
+  }
   private readonly repo = inject(EventsRepository);
   private readonly route = inject(ActivatedRoute);
   private readonly feedback = inject(Feedback);
@@ -128,7 +153,12 @@ export class EventDetail {
       !this.connection.online()
     )
       return false;
-    const key = JSON.stringify([action, this.event()!.version, data]);
+    const key = JSON.stringify([
+      action,
+      this.event()!.version,
+      data,
+      this.selectedVoice()?.id,
+    ]);
     if (key !== this.lastCommand) {
       this.request = crypto.randomUUID();
       this.lastCommand = key;
@@ -136,13 +166,24 @@ export class EventDetail {
     this.saving.set(true);
     this.error.set('');
     try {
-      const e = await this.repo.command(
-        action,
-        this.id,
-        this.event()!.version,
-        data,
-        this.request,
-      );
+      const e =
+        action === 'PARTICIPANT' && (data as { active?: boolean }).active
+          ? ((await this.music.participant(
+              'event',
+              this.id,
+              this.event()!.version,
+              data,
+              this.selectedVoice()?.id ?? null,
+              true,
+              this.request,
+            )) as unknown as BandEvent)
+          : await this.repo.command(
+              action,
+              this.id,
+              this.event()!.version,
+              data,
+              this.request,
+            );
       this.event.set(e);
       this.feedback.success('Preparación actualizada.');
       return true;
@@ -159,6 +200,9 @@ export class EventDetail {
       await this.command('PARTICIPANT', { person_id: person.id, active: true })
     ) {
       this.adding.set(false);
+      this.pendingPerson.set(null);
+      this.selectedVoice.set(null);
+      this.dirty.set(false);
       await this.load();
     }
   }
@@ -172,6 +216,7 @@ export class EventDetail {
       })
     ) {
       this.dirty.set(false);
+      this.selectedVoice.set(null);
       this.name = '';
       this.instrument = '';
       this.personId = crypto.randomUUID();

@@ -21,6 +21,11 @@ import { Icon } from '../../shared/ui/icon';
   selector: 'app-loan-list',
   imports: [FormsModule, RouterLink, Icon],
   template: `
+    <p>
+      <a class="btn btn-secondary" routerLink="/cesiones/material"
+        >Entrega y devolución conjunta</a
+      >
+    </p>
     <div class="page-heading">
       <div>
         <p class="eyebrow">Entregas y devoluciones</p>

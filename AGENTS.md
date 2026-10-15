@@ -15,12 +15,12 @@ Aplicación independiente de `../sistema-entradas-banda`. Usar Entradas solo com
 ## Ampliación de Carpetas musicales
 
 - Prompt: `docs/carpetas/prompt-maestro.md`. Fase 0 aprobada el 13/10/2026.
-- Fases 1 a 4 aprobadas; fase 5 de cesiones individuales de carpetas implementada, pendiente de validación del usuario.
-- NO comenzar fase 6 de Carpetas sin autorización expresa. Esta numeración es independiente de Vestuario.
+- Fases 1 a 6 y navegación propia aprobadas; fases 7 y 8 autorizadas conjuntamente e implementadas, pendientes de validación del usuario.
+- NO comenzar fase 9 de Carpetas sin autorización expresa. Esta numeración es independiente de Vestuario.
 - Migraciones de Carpetas aplicadas al Supabase independiente de Vestuario el 13/10/2026. Interfaz aún sin publicar.
-- Navegación propia de Carpetas autorizada el 13/10/2026: acceso principal `/carpetas`, menú contextual y vuelta al menú general. Ver `docs/carpetas/navegacion.md`; sustituye la organización inicial en cinco pestañas. No implica autorización de fase 6.
+- Navegación propia de Carpetas autorizada el 13/10/2026: acceso principal `/carpetas`, menú contextual y vuelta al menú general. Ver `docs/carpetas/navegacion.md`; sustituye la organización inicial en cinco pestañas. La fase 6 fue autorizada posteriormente; ver `docs/carpetas/fase-6-integracion.md`.
 - Mantener modelos especializados; voz por participación, presencia distinta de daño y mantenimiento distinto de operatividad.
-- Consultar `docs/carpetas/fase-1-datos-servicios.md`, `docs/carpetas/fase-2-inventario.md`, `docs/carpetas/fase-3-repertorio.md`, `docs/carpetas/fase-4-mantenimiento.md` y `docs/carpetas/fase-5-cesiones.md` antes de continuar.
+- Consultar `docs/carpetas/fase-1-datos-servicios.md`, `docs/carpetas/fase-2-inventario.md`, `docs/carpetas/fase-3-repertorio.md`, `docs/carpetas/fase-4-mantenimiento.md`, `docs/carpetas/fase-5-cesiones.md` `docs/carpetas/fase-6-integracion.md` y `docs/carpetas/fases-7-8-planificacion.md` antes de continuar.
 
 ## Decisiones aprobadas
 

@@ -1,3 +1,4 @@
+import type { HeldMaterial } from '../material/material-repository';
 import type { FolderLoan, FolderLoanMovement } from '../folder-loans/models';
 import type {
   MusicalVoice,
@@ -230,6 +231,7 @@ export interface Database {
       };
     };
     Views: {
+      material_held: { Row: HeldMaterial; Relationships: [] };
       folder_work_state: { Row: FolderWorkState; Relationships: [] };
       folder_loan_overview: { Row: FolderLoan; Relationships: [] };
       music_folder_inventory: { Row: FolderInventory; Relationships: [] };
@@ -243,6 +245,56 @@ export interface Database {
       garment_inventory: { Row: StockGarment; Relationships: [] };
     };
     Functions: {
+      music_voice_suggestion: { Args: { p_person: string }; Returns: Json };
+      music_planning_detail: {
+        Args: {
+          p_scope: string;
+          p_id: string;
+          p_page: number;
+          p_person: string | null;
+        };
+        Returns: Json;
+      };
+      recommend_music_folders: {
+        Args: { p_key: string; p_page: number; p_q: string };
+        Returns: Json;
+      };
+      music_planning_command: {
+        Args: {
+          p_request: string;
+          p_action: string;
+          p_scope: string;
+          p_id: string;
+          p_data: Json;
+        };
+        Returns: Json;
+      };
+      plan_music_participant: {
+        Args: {
+          p_request: string;
+          p_scope: string;
+          p_id: string;
+          p_version: number;
+          p_data: Json;
+          p_voice: string | null;
+          p_apply_voice: boolean;
+        };
+        Returns: Json;
+      };
+      music_planning_alerts: {
+        Args: { p_event: string | null; p_page: number };
+        Returns: Json;
+      };
+      preview_material_operation: { Args: { p_data: Json }; Returns: Json };
+      apply_material_operation: {
+        Args: {
+          p_request: string;
+          p_preview: Json;
+          p_signature: boolean;
+          p_acknowledged: boolean;
+        };
+        Returns: Json;
+      };
       preview_folder_loan: {
         Args: {
           p_action: string;

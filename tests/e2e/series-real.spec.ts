@@ -163,6 +163,7 @@ test.describe('Supabase real · series fase 6', () => {
  create temporary table qg as select id from public.garments where id='${g}' and code like '${prefix}%';
  create temporary table ql as select id from public.loans where person_id in(select id from qp);
  delete from public.audit_log where series_id in(select id from qs) or event_id in(select id from qe) or uniform_id='${uniform}' or person_id in(select id from qp) or garment_id in(select id from qg) or loan_id in(select id from ql);
+ delete from public.music_planning_requests where payload->>'id' in(select id::text from qs union select id::text from qe);
  delete from public.planning_requests where payload->>'id' in(select id::text from qs union select id::text from qe) or payload->>'id'='${uniform}';
  delete from public.event_assignments where event_id in(select id from qe);
  delete from public.event_participants where event_id in(select id from qe);
@@ -262,7 +263,7 @@ test.describe('Supabase real · series fase 6', () => {
       .check();
     // Lost response: retry must preserve the person and block identifiers.
     await page.route(
-      '**/rpc/plan_series',
+      '**/rpc/plan_music_participant',
       async (route) => {
         const response = await route.fetch();
         expect(response.ok()).toBe(true);

@@ -15,6 +15,36 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'inicio' },
       {
+        path: 'carpetas/avisos',
+        title: 'Avisos musicales · Gestión de trajes',
+        loadComponent: () =>
+          import('./features/music-planning/music-alerts').then(
+            (m) => m.MusicAlertPage,
+          ),
+      },
+      ...[
+        { path: 'actuaciones/series/:id/carpetas', scope: 'series' },
+        { path: 'actuaciones/:id/carpetas', scope: 'event' },
+      ].map((r) => ({
+        path: r.path,
+        data: { scope: r.scope },
+        title: 'Preparar carpetas · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/music-planning/music-preparation').then(
+            (m) => m.MusicPreparation,
+          ),
+      })),
+      ...['carpetas/operacion', 'cesiones/material'].map((path) => ({
+        path,
+        title: 'Entrega y devolución conjunta · Gestión de trajes',
+        canDeactivate: [(c: { canLeave(): boolean }) => c.canLeave()],
+        loadComponent: () =>
+          import('./features/material/material-operation').then(
+            (m) => m.MaterialOperation,
+          ),
+      })),
+      {
         path: 'carpetas',
         title: 'Carpetas musicales · Gestión de trajes',
         loadComponent: () =>

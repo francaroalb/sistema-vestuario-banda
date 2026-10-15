@@ -34,6 +34,12 @@
   <div class="actions">
     <a
       class="btn btn-secondary"
+      routerLink="/cesiones/material"
+      [queryParams]="{ persona: item.id }"
+      >Entregar o devolver material</a
+    >
+    <a
+      class="btn btn-secondary"
       routerLink="/cesiones/carpetas"
       [queryParams]="{ persona: item.id, estado: 'all' }"
       >Historial de carpetas</a

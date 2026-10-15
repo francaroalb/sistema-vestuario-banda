@@ -1,0 +1,122 @@
+:host {
+  display: block;
+  max-width: 64rem;
+  margin: auto;
+}
+.card {
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+h2 {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block: 0.75rem;
+}
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.person,
+.material-row,
+.review-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.person {
+  justify-content: space-between;
+}
+.person small,
+.material-row small {
+  display: block;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+}
+.material-row,
+.review-row {
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--color-border);
+}
+.material-row > div {
+  flex: 1 1 10rem;
+}
+.material-row strong {
+  display: block;
+  color: var(--color-primary-dark);
+}
+.material-row .field {
+  flex: 1 1 13rem;
+  min-width: 0;
+  font-size: 0.75rem;
+}
+.kind {
+  font-size: 0.6875rem;
+  color: var(--color-muted);
+}
+.review-row strong {
+  color: var(--color-primary-dark);
+}
+.review-row span {
+  font-size: 0.8125rem;
+}
+.review-row span:last-child {
+  margin-left: auto;
+}
+.choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 0.5rem;
+}
+.choice {
+  text-align: left;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  cursor: pointer;
+}
+.choice span,
+.choice small,
+.muted {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
+.choice:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.choice strong {
+  color: var(--color-primary-dark);
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 44px;
+}
+.check input {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.notes {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+app-choice-picker,
+app-folder-picker {
+  display: block;
+  margin-top: 1rem;
+}

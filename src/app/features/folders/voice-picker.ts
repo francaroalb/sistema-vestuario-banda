@@ -78,7 +78,7 @@ import { StableRequest } from './folder-ui';
     </div>
     @if (clearable()) {
       <button type="button" class="text-button" (click)="picked.emit(null)">
-        Todas las voces
+        {{ clearLabel() }}
       </button>
     }
     @if (allowCreate()) {
@@ -131,6 +131,7 @@ export class VoicePicker {
   readonly selected = input('');
   readonly allowCreate = input(false);
   readonly clearable = input(false);
+  readonly clearLabel = input('Todas las voces');
   readonly picked = output<MusicalVoice | null>();
   readonly saving = output<boolean>();
   readonly voices = signal<MusicalVoice[]>([]);

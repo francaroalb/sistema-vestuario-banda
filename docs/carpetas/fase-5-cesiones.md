@@ -1,6 +1,6 @@
 # Carpetas — fase 5: cesiones individuales
 
-Implementada el 13 de octubre de 2026. Pendiente de validación del usuario antes de fase 6.
+Implementada el 13 de octubre de 2026. Aprobada; fase 6 autorizada e implementada posteriormente.
 
 ## Acceso y alcance
 
@@ -127,4 +127,4 @@ prefijos sintéticos, omiten el alta de repertorio si ya hay carpetas ajenas y l
 sus propios datos. La concurrencia comprobada cubre dos entregas simultáneas; no es una prueba
 de carga ni una validación completa de futuros flujos mixtos.
 
-La siguiente fase es **6 — Integración con vestuario**. Requiere autorización expresa.
+La fase **6 — Integración con vestuario** se documenta en [fase-6-integracion.md](fase-6-integracion.md).

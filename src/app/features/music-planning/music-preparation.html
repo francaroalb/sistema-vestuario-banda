@@ -1,0 +1,443 @@
+<a class="back-link" [routerLink]="back">← Preparación de vestuario</a>
+<header>
+  <p class="eyebrow">Actuaciones · Carpetas musicales</p>
+  <h1>{{ plan()?.title || 'Preparar carpetas' }}</h1>
+</header>
+@if (error()) {
+  <p class="notice notice-error" role="alert">
+    {{ error() }}
+    <button class="text-button" [disabled]="busy()" (click)="load()">
+      Actualizar
+    </button>
+  </p>
+}
+@if (loading()) {
+  <p role="status">Cargando preparación musical…</p>
+}
+@if (plan(); as p) {
+  @if (scope === 'event' && p.series_id) {
+    <section class="card">
+      <h2>Esta actuación pertenece a una serie</h2>
+      <p>
+        Prepara las carpetas de forma continua y ajusta la voz de cada día desde
+        la serie.
+      </p>
+      <a class="btn btn-primary" [routerLink]="link('series', p.series_id)"
+        >Preparar carpetas de la serie</a
+      >
+    </section>
+  } @else {
+    <fieldset [disabled]="busy() || loading() || !connection.online()">
+      <legend class="sr-only">Preparación musical</legend>
+      <details class="card">
+        <summary>
+          Actuaciones y repertorios
+          <span>{{ p.events.length }} actuaciones</span>
+        </summary>
+        @for (e of p.events; track e.id) {
+          <div class="event-row">
+            <div>
+              <strong>{{ e.title }}</strong
+              ><small
+                >{{ time(e.starts_at)
+                }}{{ e.cancelled ? ' · Cancelada' : '' }}</small
+              >
+            </div>
+            <div class="actions">
+              @for (rep of ['PRO', 'PMM']; track rep) {
+                <button
+                  class="btn"
+                  [class.btn-primary]="e.repertoires.includes(rep)"
+                  [attr.aria-pressed]="e.repertoires.includes(rep)"
+                  (click)="repertoires(e, rep)"
+                >
+                  {{ rep }}
+                </button>
+              }
+              <button class="btn btn-quiet" (click)="editWindow(e)">
+                Fechas de carpeta
+              </button>
+            </div>
+            @if (window()?.id === e.id) {
+              <div class="window">
+                <p>
+                  Periodo propio de las carpetas; no cambia las fechas del
+                  vestuario.
+                </p>
+                <label class="field"
+                  >Desde<input
+                    type="datetime-local"
+                    [(ngModel)]="from" /></label
+                ><label class="field"
+                  >Hasta<input type="datetime-local" [(ngModel)]="until"
+                /></label>
+                <div class="actions">
+                  <button class="btn btn-primary" (click)="saveWindow()">
+                    Guardar fechas</button
+                  ><button class="btn btn-quiet" (click)="window.set(null)">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </details>
+      @if (!p.needs.length) {
+        <p class="notice">
+          Selecciona los repertorios de cada actuación y comprueba quién
+          necesita carpeta. Los refuerzos la necesitan por defecto.
+        </p>
+      }
+      @if (p.stale.length) {
+        <section class="card stale">
+          <h2>Asignaciones afectadas por cambios</h2>
+          <p>
+            Ya no coinciden con la participación, voz o repertorio. Revisa sus
+            reservas; las cesiones firmadas se conservan.
+          </p>
+          @for (a of p.stale; track a.id) {
+            <div class="event-row">
+              <span
+                ><strong>{{ a.person_name }}</strong> ·
+                {{ a.folder_code }}</span
+              ><button
+                class="btn btn-secondary"
+                (click)="release(a.id, a.version)"
+              >
+                Quitar asignación anterior
+              </button>
+            </div>
+          }
+        </section>
+      }
+      @for (person of p.people; track person.id) {
+        <section class="card person">
+          <button
+            class="person-toggle"
+            [attr.aria-expanded]="active() === person.id"
+            (click)="openPerson(person.id)"
+          >
+            <span
+              ><strong>{{ person.full_name }}</strong
+              ><small
+                >{{ person.instrument || 'Sin instrumento' }} ·
+                {{
+                  person.kind === 'REFUERZO' ? 'Refuerzo' : 'Componente'
+                }}</small
+              ></span
+            ><span class="state" [class.ready]="pending(person.id) === 0">{{
+              needs(person.id).length
+                ? pending(person.id)
+                  ? pending(person.id) + ' pendientes'
+                  : 'Preparada'
+                : 'Sin necesidades'
+            }}</span
+            ><span aria-hidden="true">{{
+              active() === person.id ? '−' : '+'
+            }}</span>
+          </button>
+          @if (active() === person.id) {
+            <div class="person-body">
+              <details>
+                <summary>Voz y participación por actuación</summary>
+                @if (proposedVoice(); as v) {
+                  <p class="proposal">
+                    Última voz utilizada: <strong>{{ v.name }}</strong>
+                    <button
+                      class="btn btn-quiet"
+                      (click)="voiceAll(person.id, v)"
+                    >
+                      Usar en estas actuaciones
+                    </button>
+                  </p>
+                }
+                @if (scope === 'series') {
+                  <app-voice-picker
+                    label="Aplicar una voz a todos sus días"
+                    (picked)="voiceAll(person.id, $event)"
+                  />
+                }
+                @for (part of parts(person.id); track part.event_id) {
+                  <div class="voice-row">
+                    <strong>{{ eventTitle(part.event_id) }}</strong
+                    ><app-voice-picker
+                      [label]="part.voice_name || 'Voz pendiente de definir'"
+                      [selected]="part.voice_id || ''"
+                      [clearable]="true"
+                      clearLabel="Dejar voz pendiente"
+                      (picked)="voice(part, $event)"
+                    /><button
+                      class="btn btn-quiet"
+                      [attr.aria-pressed]="part.required"
+                      (click)="required(part)"
+                    >
+                      {{
+                        part.required
+                          ? 'Necesita carpeta'
+                          : 'No necesita carpeta'
+                      }}
+                    </button>
+                  </div>
+                }
+              </details>
+              @if (scope === 'series') {
+                <div class="continuity">
+                  <strong>Periodos de carpeta</strong>
+                  <p>
+                    Por defecto, desde la primera hasta la última actuación de
+                    cada voz y repertorio. Si falta a días intermedios, elige
+                    cómo preparar sus carpetas.
+                  </p>
+                  <div class="actions">
+                    <button
+                      class="btn btn-secondary"
+                      [class.selected]="gap(person.id) === 'KEEP'"
+                      (click)="setGap(person.id, 'KEEP')"
+                    >
+                      Mantener entre actuaciones</button
+                    ><button
+                      class="btn btn-secondary"
+                      [class.selected]="gap(person.id) === 'SPLIT'"
+                      (click)="setGap(person.id, 'SPLIT')"
+                    >
+                      Dividir si no asiste
+                    </button>
+                  </div>
+                </div>
+              }
+              @for (n of needs(person.id); track n.need_key) {
+                <div class="need">
+                  <div class="need-heading">
+                    <strong
+                      >{{ n.repertoire_code }} ·
+                      {{ n.voice_name || 'Voz pendiente' }}</strong
+                    ><span
+                      class="state"
+                      [class.ready]="
+                        n.status === 'HELD' || n.status === 'ASSIGNED'
+                      "
+                      >{{ label[n.status] }}</span
+                    >
+                  </div>
+                  <small
+                    >{{ time(n.planned_from) }} →
+                    {{ time(n.planned_until) }}</small
+                  >
+                  @if (n.folder_code) {
+                    <p class="folder-code">{{ n.folder_code }}</p>
+                  }
+                  @if (n.holder_name && n.status === 'AWAIT_RETURN') {
+                    <p class="notice">
+                      En poder de {{ n.holder_name }}. Devolución prevista:
+                      {{
+                        n.holder_due_at ? time(n.holder_due_at) : 'sin fecha'
+                      }}. Se necesita desde {{ time(n.planned_from) }}.
+                    </p>
+                  }
+                  @if (n.own_due_warning) {
+                    <p class="notice">{{ notice('OWN_DUE') }}</p>
+                  }
+                  @if (n.status === 'CONFLICT') {
+                    <p class="notice notice-error">
+                      Revisa las fechas de carpeta, la voz y la disponibilidad
+                      antes de asignar o entregar.
+                    </p>
+                  }
+                  @if (n.maintenance_count) {
+                    <p class="notice">
+                      {{ n.maintenance_count }} tareas o incidencias pendientes.
+                      Revisa la carpeta antes de entregarla.
+                    </p>
+                  }
+                  <div class="actions">
+                    @if (!n.assignment_id && n.status === 'UNASSIGNED') {
+                      <button class="btn btn-primary" (click)="choose(n)">
+                        Ver carpetas recomendadas
+                      </button>
+                    }
+                    @if (n.assignment_id) {
+                      <button
+                        class="btn btn-quiet"
+                        (click)="
+                          release(n.assignment_id, n.assignment_version!)
+                        "
+                      >
+                        Cambiar / quitar asignación
+                      </button>
+                    }
+                    @if (
+                      n.reservation_id &&
+                      ['ASSIGNED', 'AWAIT_RETURN'].includes(n.status)
+                    ) {
+                      <a
+                        class="btn btn-primary"
+                        [routerLink]="[
+                          '/cesiones/carpetas',
+                          n.reservation_id,
+                          'entregar',
+                        ]"
+                        >Entregar y firmar</a
+                      >
+                    }
+                    @if (n.loan_id) {
+                      <a
+                        class="btn btn-secondary"
+                        [routerLink]="['/cesiones/carpetas', n.loan_id]"
+                        >Ver cesión real</a
+                      >
+                    }
+                  </div>
+                  @if (picking()?.need_key === n.need_key) {
+                    <section class="recommendations">
+                      <h3>
+                        Elegir {{ n.repertoire_code }} · {{ n.voice_name }}
+                      </h3>
+                      <p>
+                        La elección reserva el periodo. La entrega se confirma
+                        después con firma.
+                      </p>
+                      <div class="actions">
+                        <label class="field"
+                          >Buscar código<input
+                            [(ngModel)]="query"
+                            maxlength="60" /></label
+                        ><button
+                          class="btn btn-secondary"
+                          (click)="suggestionPage = 1; search()"
+                        >
+                          Buscar</button
+                        ><button
+                          class="btn btn-quiet"
+                          (click)="picking.set(null)"
+                        >
+                          Cerrar
+                        </button>
+                      </div>
+                      @if (suggesting()) {
+                        <p role="status">Comprobando disponibilidad…</p>
+                      } @else if (suggestionError()) {
+                        <p role="alert">
+                          {{ suggestionError() }}
+                          <button class="text-button" (click)="search()">
+                            Reintentar
+                          </button>
+                        </p>
+                      } @else if (suggestions(); as rec) {
+                        <div class="candidate-grid">
+                          @for (f of rec.rows; track f.id) {
+                            <button
+                              class="candidate"
+                              [class.selected]="candidate()?.id === f.id"
+                              (click)="pick(f)"
+                            >
+                              <strong>{{ f.code }}</strong
+                              ><span>{{
+                                f.holder_name
+                                  ? 'En poder de ' + f.holder_name
+                                  : 'En la Banda'
+                              }}</span
+                              ><small
+                                >{{
+                                  f.missing_count +
+                                  f.pending_add_count +
+                                  f.pending_remove_count
+                                    ? 'Repertorio con tareas pendientes'
+                                    : 'Repertorio completo'
+                                }}
+                                ·
+                                {{
+                                  f.physical_issue_count + f.score_issue_count
+                                }}
+                                incidencias</small
+                              >
+                            </button>
+                          } @empty {
+                            <p>
+                              No hay carpetas utilizables de esta voz y
+                              repertorio disponibles durante todo el periodo.
+                            </p>
+                          }
+                        </div>
+                        @if (rec.count > 24) {
+                          <div class="actions">
+                            <button
+                              class="btn btn-quiet"
+                              [disabled]="suggestionPage === 1"
+                              (click)="
+                                suggestionPage = suggestionPage - 1; search()
+                              "
+                            >
+                              Anterior</button
+                            ><span>Página {{ suggestionPage }}</span
+                            ><button
+                              class="btn btn-quiet"
+                              [disabled]="suggestionPage * 24 >= rec.count"
+                              (click)="
+                                suggestionPage = suggestionPage + 1; search()
+                              "
+                            >
+                              Siguiente
+                            </button>
+                          </div>
+                        }
+                        @if (candidate(); as f) {
+                          <div class="confirmation">
+                            <strong>Confirmar {{ f.code }}</strong>
+                            @for (w of f.warnings; track w) {
+                              <p class="notice">{{ notice(w) }}</p>
+                            }
+                            @if (f.warnings.length) {
+                              <label class="check"
+                                ><input type="checkbox" [(ngModel)]="ack" />He
+                                revisado los avisos y las fechas.</label
+                              >
+                            }
+                            <button
+                              class="btn btn-primary"
+                              [disabled]="!!f.warnings.length && !ack"
+                              (click)="assign()"
+                            >
+                              {{
+                                f.holder_id === person.id
+                                  ? 'Usar la carpeta que ya tiene'
+                                  : 'Reservar carpeta'
+                              }}
+                            </button>
+                          </div>
+                        }
+                      }
+                    </section>
+                  }
+                </div>
+              } @empty {
+                <p class="muted">
+                  No hay necesidades de carpetas para esta persona. Revisa los
+                  repertorios y su participación.
+                </p>
+              }
+            </div>
+          }
+        </section>
+      }
+    </fieldset>
+    @if (p.count > 24) {
+      <nav class="actions" aria-label="Participantes de carpetas">
+        <button
+          class="btn btn-quiet"
+          [disabled]="page === 1 || busy()"
+          (click)="move(-1)"
+        >
+          Anterior</button
+        ><span>Página {{ page }} · {{ p.count }} personas</span
+        ><button
+          class="btn btn-quiet"
+          [disabled]="page * 24 >= p.count || busy()"
+          (click)="move(1)"
+        >
+          Siguiente
+        </button>
+      </nav>
+    }
+  }
+}

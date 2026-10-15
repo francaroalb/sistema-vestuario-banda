@@ -107,6 +107,7 @@ test.describe('Supabase real · actuaciones fase 5', () => {
   create temporary table qg as select id from public.garments where id in (${ids(garments)}) and code like '${prefix}%';
   create temporary table ql as select id from public.loans where id in (${ids(loans)}) and person_id in(select id from qp);
   delete from public.audit_log where event_id in(select id from qe) or uniform_id in(select id from qu) or loan_id in(select id from ql) or person_id in(select id from qp) or garment_id in(select id from qg);
+  delete from public.music_planning_requests where payload->>'id' in(select id::text from qe);
   delete from public.planning_requests where payload->>'id' in(select id::text from qe union select id::text from qu);
   delete from public.event_assignments where event_id in(select id from qe);
   delete from public.event_participants where event_id in(select id from qe);
@@ -187,8 +188,13 @@ test.describe('Supabase real · actuaciones fase 5', () => {
     page.on('pageerror', (e) => errors.push(e.message));
     const payloads: any[] = [];
     page.on('request', (req) => {
-      if (req.url().includes('/rpc/plan_event')) {
+      if (
+        req.url().includes('/rpc/plan_event') ||
+        req.url().includes('/rpc/plan_music_participant')
+      ) {
         const b = req.postDataJSON();
+        if (req.url().includes('/rpc/plan_music_participant'))
+          b.p_action = 'PARTICIPANT';
         payloads.push(b);
         if (b.p_action === 'UNIFORM' && !uniforms.includes(b.p_id))
           uniforms.push(b.p_id);
@@ -217,7 +223,10 @@ test.describe('Supabase real · actuaciones fase 5', () => {
     await expect(
       page.getByRole('heading', { name: uName, exact: true }),
     ).toBeVisible();
-    await page.getByRole('link', { name: 'Volver a Actuaciones' }).click();
+    await page
+      .locator('app-events-tabs')
+      .getByRole('link', { name: 'Actuaciones', exact: true })
+      .click();
     await page
       .getByRole('link', { name: 'Nueva actuación', exact: true })
       .click();
@@ -247,6 +256,9 @@ test.describe('Supabase real · actuaciones fase 5', () => {
     await page.getByLabel('Buscar persona', { exact: true }).fill(p.name);
     await page
       .getByRole('button', { name: 'Seleccionar ' + p.name, exact: true })
+      .click();
+    await page
+      .getByRole('button', { name: 'Añadir con esta voz', exact: true })
       .click();
     await expect(
       page.getByRole('heading', { name: p.name, exact: true }),
@@ -470,19 +482,18 @@ test.describe('Supabase real · actuaciones fase 5', () => {
     await page
       .getByRole('button', { name: 'Seleccionar ' + first.name, exact: true })
       .click();
-    const returning = page
-      .locator('section')
-      .filter({
-        has: page.getByRole('heading', { name: first.name, exact: true }),
-      });
+    await page
+      .getByRole('button', { name: 'Añadir con esta voz', exact: true })
+      .click();
+    const returning = page.locator('section').filter({
+      has: page.getByRole('heading', { name: first.name, exact: true }),
+    });
     await expect(
       returning.getByText('Pendiente de asignar', { exact: true }),
     ).toBeVisible();
-    const assigned = page
-      .locator('section')
-      .filter({
-        has: page.getByRole('heading', { name: second.name, exact: true }),
-      });
+    const assigned = page.locator('section').filter({
+      has: page.getByRole('heading', { name: second.name, exact: true }),
+    });
     await expect(
       assigned.getByText('Asignada · pendiente de entrega', { exact: true }),
     ).toBeVisible();

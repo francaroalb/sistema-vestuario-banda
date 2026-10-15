@@ -341,3 +341,20 @@ Las escrituras del módulo usan un lock propio 65013; la UI empieza en fase 2.
 Carpetas tiene acceso propio en el menú general y navegación contextual independiente de
 Vestuario. La separación conserva los enlaces existentes y los modelos especializados.
 Ver [decisiones de navegación](carpetas/navegacion.md). No adelanta la fase 6.
+
+## Operaciones conjuntas — Carpetas fase 6
+
+Entregas y devoluciones por persona reutilizan los motores especializados en una sola
+transacción PostgreSQL y una firma. La cabecera común enlaza movimientos de prendas y
+operaciones de carpetas; los periodos y la posesión permanecen independientes.
+Ver [alcance y validación](carpetas/fase-6-integracion.md).
+
+## Planificación musical — Carpetas fases 7 y 8
+
+Voces por participación y repertorios por actuación generan necesidades independientes de las
+prendas. Las series agrupan periodos por persona, voz y repertorio; los huecos requieren decisión
+explícita. La reserva del ejemplar y la posesión física siguen separadas. Los cambios invalidan
+asignaciones para revisión, sin cancelar ni devolver material automáticamente.
+Recomendador exacto por voz/repertorio, disponibilidad temporal, operatividad y mantenimiento.
+RPC administrativas, versiones, peticiones idempotentes y bloqueos comunes de planificación/música.
+Ver [contratos, decisiones y pruebas](carpetas/fases-7-8-planificacion.md).

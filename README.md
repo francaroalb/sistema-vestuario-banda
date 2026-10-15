@@ -397,12 +397,12 @@ con el último commit subido.
 
 ## Ampliación de Carpetas musicales
 
-Fases 1 a 5 implementadas: datos y servicios, inventario de carpetas con voces configurables,
+Fases 1 a 8 implementadas: datos y servicios, inventario de carpetas con voces configurables,
 catálogo PRO/PMM, presencia física, operaciones individuales y por lotes, incidencias, mantenimiento
 y cesiones individuales con reservas, entrega firmada y devolución rápida.
 Las migraciones están aplicadas al Supabase de Vestuario. La interfaz sigue sin publicar.
 
-Con `npm start`, abrir http://localhost:4201/inventario/carpetas.
+Con `npm start`, abrir http://localhost:4201/carpetas.
 Desde **Mantenimiento** se consultan tareas por repertorio/conservación, filtros y resoluciones.
 Desde una carpeta se registran desperfectos exteriores; desde **Ver partituras**, daños o faltantes.
 Los daños conservan la presencia y solo un bloqueo explícito impide utilizar una carpeta.
@@ -410,7 +410,11 @@ Los daños conservan la presencia y solo un bloqueo explícito impide utilizar u
 Guías: [fase 1](docs/carpetas/fase-1-datos-servicios.md),
 [fase 2](docs/carpetas/fase-2-inventario.md), [fase 3](docs/carpetas/fase-3-repertorio.md)
 y [fase 4](docs/carpetas/fase-4-mantenimiento.md).
-Para probar las cesiones, abrir http://localhost:4201/cesiones/carpetas o usar la pestaña
-Carpetas de Cesiones. También se accede desde Personas y desde cada carpeta.
+Para probar las cesiones, abrir http://localhost:4201/cesiones/carpetas o acceder desde
+**Carpetas → Cesiones**. También se accede desde Personas y desde cada carpeta.
 Ver [guía de fase 5](docs/carpetas/fase-5-cesiones.md).
-No comenzar integración conjunta con vestuario (fase 6) sin aprobación expresa.
+La fase 6 añade **Entregar o devolver material** desde Carpetas, Cesiones y Personas: selección parcial de prendas y carpetas, fechas independientes y una firma.
+Ver [guía de fase 6](docs/carpetas/fase-6-integracion.md). Migración aplicada a Supabase; interfaz pendiente de publicar.
+Las fases 7 y 8 añaden **Preparar carpetas musicales** en actuaciones y series: voz por día, repertorios, periodos independientes, recomendaciones y avisos.
+Ver [guía y pruebas de fases 7 y 8](docs/carpetas/fases-7-8-planificacion.md).
+No comenzar la fase 9 de Carpetas sin aprobación expresa.

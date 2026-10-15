@@ -1,0 +1,366 @@
+<a class="back-link" [routerLink]="backLink">← Volver</a>
+<header class="page-heading">
+  <div>
+    <p class="eyebrow">Prendas y carpetas</p>
+    <h1>Entrega y devolución conjunta</h1>
+  </div>
+</header>
+@if (result(); as saved) {
+  <section class="card" role="status">
+    <h2>Operación confirmada</h2>
+    <p>
+      {{ action === 'DELIVER' ? 'Material entregado' : 'Material devuelto' }} a
+      nombre de <strong>{{ person()?.label }}</strong
+      >. Una firma para {{ selection().length }}
+      {{ selection().length === 1 ? 'elemento' : 'elementos' }}.
+    </p>
+    <div class="actions">
+      @for (loan of saved.loans; track loan.domain + loan.loan_id) {
+        <a
+          class="btn btn-secondary"
+          [routerLink]="[
+            loan.domain === 'FOLDER' ? '/cesiones/carpetas' : '/cesiones',
+            loan.loan_id,
+          ]"
+          >{{
+            loan.domain === 'FOLDER'
+              ? 'Ver cesión de carpeta'
+              : 'Ver cesión de prenda'
+          }}
+          {{ $index + 1 }}</a
+        >
+      }
+    </div>
+    <a class="btn btn-primary" [routerLink]="backLink">Terminar</a>
+  </section>
+} @else {
+  @if (error()) {
+    <p class="notice notice-error" role="alert">{{ error() }}</p>
+  }
+  @if (!connection.online()) {
+    <p class="notice" role="status">
+      Sin conexión. La selección se conserva; podrás confirmar cuando vuelva
+      internet.
+    </p>
+  }
+  @if (preview(); as review) {
+    <section class="card review">
+      <p class="eyebrow">Revisar y firmar</p>
+      <h2>
+        {{ action === 'DELIVER' ? 'Entregar a' : 'Recibir de' }}
+        {{ review.person_name }}
+      </h2>
+      @for (g of review.garments; track g.id) {
+        <div class="review-row">
+          <strong>{{ g.code }}</strong
+          ><span>{{ g.label }}</span
+          ><span>{{
+            action === 'DELIVER'
+              ? g.due_local
+                ? 'Devolución: ' + g.due_local.replace('T', ' ')
+                : 'Sin fecha de devolución'
+              : g.state === 'DISPONIBLE'
+                ? 'Disponible'
+                : g.state === 'DANADA'
+                  ? 'Dañada'
+                  : 'Pendiente de lavandería'
+          }}</span>
+        </div>
+      }
+      @for (f of review.folders; track f.id) {
+        <div class="review-row">
+          <strong>{{ f.folder_code }}</strong
+          ><span>{{ f.voice_name }}</span
+          ><span>{{
+            action === 'DELIVER'
+              ? $any(f.data).due_local
+                ? 'Devolución: ' + $any(f.data).due_local.replace('T', ' ')
+                : 'Sin fecha de devolución'
+              : 'Devuelta a la Banda'
+          }}</span>
+        </div>
+      }
+      @if (notes) {
+        <p class="notes">{{ notes }}</p>
+      }
+      @for (conflict of review.conflicts; track $index) {
+        <p class="notice notice-error" role="alert">{{ notice(conflict) }}</p>
+      }
+      @for (warning of review.warnings; track $index) {
+        <p class="notice">{{ notice(warning) }}</p>
+      }
+      @if (review.warnings.length) {
+        <label class="check"
+          ><input type="checkbox" [(ngModel)]="ack" [disabled]="busy()" />He
+          revisado los avisos y las fechas de uso.</label
+        >
+      }
+      @if (!review.conflicts.length) {
+        <app-signature-pad
+          materialLabel="el material indicado en esta operación"
+          [disabled]="busy() || !connection.online()"
+          (signed)="signed.set($event)"
+        />
+      }
+      <div class="actions">
+        <button class="btn btn-secondary" [disabled]="busy()" (click)="edit()">
+          Editar selección</button
+        ><button
+          class="btn btn-primary"
+          [disabled]="
+            busy() ||
+            !connection.online() ||
+            !signed() ||
+            !!review.conflicts.length ||
+            (!!review.warnings.length && !ack)
+          "
+          (click)="apply()"
+        >
+          {{ busy() ? 'Guardando…' : 'Confirmar operación' }}
+        </button>
+      </div>
+    </section>
+  } @else {
+    <div class="actions mode" role="group" aria-label="Operación">
+      <button
+        class="btn"
+        [class.btn-primary]="action === 'DELIVER'"
+        [attr.aria-pressed]="action === 'DELIVER'"
+        [disabled]="busy() || loading()"
+        (click)="changeAction('DELIVER')"
+      >
+        Entregar</button
+      ><button
+        class="btn"
+        [class.btn-primary]="action === 'RETURN'"
+        [attr.aria-pressed]="action === 'RETURN'"
+        [disabled]="busy() || loading()"
+        (click)="changeAction('RETURN')"
+      >
+        Devolver
+      </button>
+    </div>
+    @if (!person()) {
+      <section class="card">
+        <h2>1. Persona</h2>
+        @if (busy()) {
+          <p role="status">Cargando persona…</p>
+        } @else {
+          <app-choice-picker mode="person" (picked)="choosePerson($event)" />
+        }
+      </section>
+    }
+    @if (person(); as p) {
+      <section class="person card">
+        <div>
+          <strong>{{ p.label }}</strong
+          ><small>{{ p.subtitle }}</small>
+        </div>
+        <button
+          class="btn btn-quiet"
+          [disabled]="busy() || loading()"
+          (click)="changePerson()"
+        >
+          Cambiar persona
+        </button>
+      </section>
+      <fieldset [disabled]="busy()">
+        <legend class="sr-only">Seleccionar material</legend>
+        @if (selection().length) {
+          <section class="card">
+            <h2>
+              {{ selection().length }}
+              {{
+                selection().length === 1
+                  ? 'elemento seleccionado'
+                  : 'elementos seleccionados'
+              }}
+            </h2>
+            @for (row of selection(); track row.domain + row.id) {
+              <div class="material-row">
+                <div>
+                  <span class="kind"
+                    >{{ row.domain === 'FOLDER' ? 'Carpeta' : 'Prenda'
+                    }}{{ row.reserved ? ' · Reservada' : '' }}</span
+                  ><strong>{{ row.code }}</strong
+                  ><small>{{ row.label }}</small>
+                </div>
+                @if (action === 'DELIVER') {
+                  <label class="field"
+                    >Devolución prevista · {{ row.code
+                    }}<input
+                      type="datetime-local"
+                      [(ngModel)]="row.due"
+                      (ngModelChange)="dirty.set(true)"
+                  /></label>
+                } @else if (row.domain === 'GARMENT') {
+                  <label class="field"
+                    >Estado al devolver · {{ row.code
+                    }}<select [(ngModel)]="row.state">
+                      <option value="DISPONIBLE">Disponible</option>
+                      <option value="PENDIENTE_LAVANDERIA">
+                        Pendiente de lavandería
+                      </option>
+                      <option value="DANADA">Dañada</option>
+                    </select></label
+                  >
+                }
+                <button
+                  class="btn btn-quiet"
+                  [attr.aria-label]="'Quitar ' + row.code"
+                  (click)="remove(row)"
+                >
+                  Quitar
+                </button>
+              </div>
+            }
+            @if (action === 'DELIVER') {
+              <p class="muted">
+                Cada elemento conserva su propia fecha. Déjala vacía si no hay
+                devolución prevista. Horario de Madrid.
+              </p>
+            }
+          </section>
+        }
+        @if (action === 'DELIVER') {
+          <section class="card">
+            <h2>Añadir material</h2>
+            <div class="actions">
+              <button
+                class="btn btn-secondary"
+                [attr.aria-expanded]="picker === 'GARMENT'"
+                (click)="picker = picker === 'GARMENT' ? '' : 'GARMENT'"
+              >
+                Añadir prendas</button
+              ><button
+                class="btn btn-secondary"
+                [attr.aria-expanded]="picker === 'FOLDER'"
+                (click)="picker = picker === 'FOLDER' ? '' : 'FOLDER'"
+              >
+                Añadir carpetas
+              </button>
+            </div>
+            @if (picker === 'GARMENT') {
+              <app-choice-picker mode="garment" (picked)="addGarment($event)" />
+            }
+            @if (picker === 'FOLDER') {
+              <app-folder-picker (selected)="addFolder($event)" />
+            }
+          </section>
+        }
+        <section class="card">
+          <h2>
+            {{
+              action === 'RETURN'
+                ? 'Material en su poder'
+                : 'Carpetas reservadas para esta persona'
+            }}
+          </h2>
+          @if (loading()) {
+            <p role="status">Cargando material…</p>
+          } @else if (listError()) {
+            <p role="alert">
+              {{ listError() }}
+              <button class="text-button" (click)="load(page())">
+                Reintentar
+              </button>
+            </p>
+          } @else {
+            <div class="choices">
+              @if (action === 'RETURN') {
+                @for (item of held(); track item.domain + item.id) {
+                  <button
+                    class="choice"
+                    [disabled]="contains(item.domain, item.id)"
+                    (click)="addHeld(item)"
+                  >
+                    <strong>{{ item.code }}</strong
+                    ><span
+                      >{{ item.domain === 'FOLDER' ? 'Carpeta' : 'Prenda' }} ·
+                      {{ item.label }}</span
+                    ><small
+                      >{{
+                        item.due_at
+                          ? 'Prevista: ' + timestamp(item.due_at)
+                          : 'Sin fecha prevista'
+                      }}
+                      ·
+                      {{
+                        contains(item.domain, item.id)
+                          ? 'Seleccionado'
+                          : 'Seleccionar'
+                      }}</small
+                    >
+                  </button>
+                } @empty {
+                  <p>No hay material pendiente de devolver en esta página.</p>
+                }
+              } @else {
+                @for (item of reservations(); track item.id) {
+                  <button
+                    class="choice"
+                    [disabled]="contains('FOLDER', item.folder_id)"
+                    (click)="addReservation(item)"
+                  >
+                    <strong>{{ item.folder_code }}</strong
+                    ><span
+                      >{{ item.voice_name }} · Desde
+                      {{ timestamp(item.starts_at) }}</span
+                    ><small>{{
+                      contains('FOLDER', item.folder_id)
+                        ? 'Seleccionada'
+                        : 'Seleccionar reserva para entregar'
+                    }}</small>
+                  </button>
+                } @empty {
+                  <p class="muted">
+                    No hay reservas pendientes de carpetas en esta página.
+                  </p>
+                }
+              }
+            </div>
+            @if (count() > 24 || page() > 1) {
+              <nav class="actions" aria-label="Material de la persona">
+                <button
+                  class="btn btn-quiet"
+                  [disabled]="page() === 1"
+                  (click)="load(page() - 1)"
+                >
+                  Anterior</button
+                ><span>Página {{ page() }}</span
+                ><button
+                  class="btn btn-quiet"
+                  [disabled]="page() * 24 >= count()"
+                  (click)="load(page() + 1)"
+                >
+                  Siguiente
+                </button>
+              </nav>
+            }
+          }
+        </section>
+        <label class="field"
+          >Observaciones de la operación<textarea
+            [(ngModel)]="notes"
+            maxlength="2000"
+            rows="2"
+            (ngModelChange)="dirty.set(true)"
+          ></textarea>
+        </label>
+      </fieldset>
+      @if (action === 'RETURN') {
+        <p class="muted">
+          Solo se devolverá lo seleccionado. Las incidencias de carpetas pueden
+          registrarse desde su ficha o mediante la devolución individual.
+        </p>
+      }
+      <button
+        class="btn btn-primary"
+        [disabled]="busy() || !selection().length || !connection.online()"
+        (click)="review()"
+      >
+        {{ busy() ? 'Revisando…' : 'Revisar y firmar' }}
+      </button>
+    }
+  }
+}

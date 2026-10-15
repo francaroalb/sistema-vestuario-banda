@@ -1,3 +1,5 @@
+import { MusicPlanning } from '../../core/music-planning/music-planning';
+import { VoicePicker } from '../folders/voice-picker';
 import { NgTemplateOutlet } from '@angular/common';
 import { summarizeEvent, summarizeParticipant } from './series-preparation';
 import { RecommendationPanel } from './recommendation-panel';
@@ -35,6 +37,7 @@ import { ChoicePicker } from '../loans/choice-picker';
 @Component({
   selector: 'app-series-detail',
   imports: [
+    VoicePicker,
     FormsModule,
     NgTemplateOutlet,
     RouterLink,
@@ -47,6 +50,26 @@ import { ChoicePicker } from '../loans/choice-picker';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SeriesDetailPage {
+  private readonly music = inject(MusicPlanning);
+  readonly selectedVoice = signal<{ id: string; name: string } | null>(null);
+  applyVoice = false;
+  readonly voiceLoading = signal(false);
+  async suggestVoice(person: Choice) {
+    this.selectedVoice.set(null);
+    this.applyVoice = !this.blocks(person.id).length;
+    if (!this.applyVoice) return;
+    this.voiceLoading.set(true);
+    try {
+      const v = await this.music.suggestion(person.id);
+      if (this.selectedPerson()?.id === person.id) this.selectedVoice.set(v);
+    } catch {
+      this.error.set(
+        'No se pudo cargar la voz habitual. Puedes elegirla manualmente.',
+      );
+    } finally {
+      this.voiceLoading.set(false);
+    }
+  }
   private readonly repo = inject(EventsRepository);
   private readonly route = inject(ActivatedRoute);
   private readonly feedback = inject(Feedback);
@@ -304,7 +327,13 @@ export class SeriesDetailPage {
       !this.connection.online()
     )
       return false;
-    const key = JSON.stringify([action, this.detail()!.series.version, data]);
+    const key = JSON.stringify([
+      action,
+      this.detail()!.series.version,
+      data,
+      this.selectedVoice()?.id,
+      this.applyVoice,
+    ]);
     if (key !== this.commandKey) {
       this.commandKey = key;
       this.request = crypto.randomUUID();
@@ -312,13 +341,24 @@ export class SeriesDetailPage {
     this.saving.set(true);
     this.error.set('');
     try {
-      const s = await this.repo.seriesCommand(
-        action,
-        this.id,
-        this.detail()!.series.version,
-        data,
-        this.request,
-      );
+      const s =
+        action === 'ATTENDANCE'
+          ? ((await this.music.participant(
+              'series',
+              this.id,
+              this.detail()!.series.version,
+              data,
+              this.selectedVoice()?.id ?? null,
+              this.applyVoice || this.quick,
+              this.request,
+            )) as unknown as SeriesDetail['series'])
+          : await this.repo.seriesCommand(
+              action,
+              this.id,
+              this.detail()!.series.version,
+              data,
+              this.request,
+            );
       this.detail.update((d) => (d ? { ...d, series: s } : d));
       this.feedback.success('Serie actualizada.');
       return true;
@@ -374,6 +414,8 @@ export class SeriesDetailPage {
     this.editingPersonId.set(null);
     this.activePersonId.set(null);
     this.selectedPerson.set(null);
+    this.selectedVoice.set(null);
+    this.applyVoice = false;
     this.selected.set([]);
     this.gapChoice = '';
     this.quick = false;
@@ -387,6 +429,7 @@ export class SeriesDetailPage {
   }
   choose(p: Choice) {
     this.selectedPerson.set(p);
+    void this.suggestVoice(p);
     if (this.blocks(p.id).length) {
       this.activePersonId.set(p.id);
       this.editingPersonId.set(p.id);
@@ -414,6 +457,7 @@ export class SeriesDetailPage {
     this.dirty.set(true);
   }
   async saveAttendance() {
+    if (this.voiceLoading()) return;
     const p = this.selectedPerson();
     if ((!p && !this.quick) || (this.hasGap() && !this.gapChoice)) return;
     const old = p ? this.blocks(p.id) : [];

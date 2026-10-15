@@ -1,3 +1,4 @@
+import { MusicAlerts } from '../music-planning/music-alerts';
 import { EventsRepository } from '../../core/events/events-repository';
 import { BandEvent } from '../../core/events/models';
 import { madridDayRange } from '../../core/events/today';
@@ -19,7 +20,7 @@ import { inventoryError } from '../../core/inventory/inventory';
 import { Icon } from '../../shared/ui/icon';
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Icon],
+  imports: [MusicAlerts, RouterLink, Icon],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
