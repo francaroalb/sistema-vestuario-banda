@@ -102,6 +102,8 @@ export function parseImport(text: string, kind: ImportKind): ImportRow[] {
             'pendiente de lavanderia': 'PENDIENTE_LAVANDERIA',
             pendiente_lavanderia: 'PENDIENTE_LAVANDERIA',
             danada: 'DANADA',
+            'no disponible': 'NO_DISPONIBLE',
+            no_disponible: 'NO_DISPONIBLE',
           } as Record<string, string>
         )[state] ?? r['estado'],
       notes: r['observaciones'] ?? '',

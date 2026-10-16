@@ -36,6 +36,11 @@ export const states: {
     shortLabel: 'Lavandería',
   },
   { value: 'DANADA', label: 'Dañada', shortLabel: 'Dañada' },
+  {
+    value: 'NO_DISPONIBLE',
+    label: 'No disponible',
+    shortLabel: 'No disponible',
+  },
 ];
 export function stateLabel(state: PhysicalState): string {
   return states.find((item) => item.value === state)?.label ?? state;

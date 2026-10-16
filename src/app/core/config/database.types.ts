@@ -54,7 +54,11 @@ export type PersonRow = {
   updated_by: string;
   version: number;
 };
-export type PhysicalState = 'DISPONIBLE' | 'PENDIENTE_LAVANDERIA' | 'DANADA';
+export type PhysicalState =
+  | 'DISPONIBLE'
+  | 'PENDIENTE_LAVANDERIA'
+  | 'DANADA'
+  | 'NO_DISPONIBLE';
 export type Json =
   | string
   | number

@@ -189,6 +189,7 @@ export class ImportPage {
           DISPONIBLE: 'Disponible',
           PENDIENTE_LAVANDERIA: 'Pendiente de lavandería',
           DANADA: 'Dañada',
+          NO_DISPONIBLE: 'No disponible',
         } as Record<string, string>
       )[state] ?? state
     );

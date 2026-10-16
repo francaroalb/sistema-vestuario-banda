@@ -47,6 +47,7 @@
       <app-garment-status
         [state]="item.physical_state"
         [held]="!!item.loan_id"
+        [observation]="item.notes"
       />
     </div>
     <dl class="detail-data">

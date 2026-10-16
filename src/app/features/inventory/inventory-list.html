@@ -180,6 +180,7 @@
                 <app-garment-status
                   [state]="garment.physical_state"
                   [held]="!!garment.loan_id"
+                  [observation]="garment.notes"
                 /><app-icon name="arrow" />
               </div>
               @if (garment.loan_id) {

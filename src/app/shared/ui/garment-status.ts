@@ -10,13 +10,14 @@ import { Icon } from './icon';
       [class.held]="held()"
       [class.laundry]="!held() && state() === 'PENDIENTE_LAVANDERIA'"
       [class.damaged]="!held() && state() === 'DANADA'"
+      [class.unavailable]="state() === 'NO_DISPONIBLE'"
       ><app-icon
         [name]="
           held()
             ? 'people'
             : state() === 'DISPONIBLE'
               ? 'check'
-              : state() === 'DANADA'
+              : state() === 'DANADA' || state() === 'NO_DISPONIBLE'
                 ? 'warning'
                 : 'wash'
         "
@@ -24,8 +25,18 @@ import { Icon } from './icon';
     >
     @if (held() && state() !== 'DISPONIBLE') {
       <span class="condition">Estado físico: {{ label(state()) }}</span>
+    }
+    @if (state() === 'NO_DISPONIBLE' && observation()) {
+      <span class="condition unavailable-note"><strong>Observación:</strong> {{ observation() }}</span>
     }`,
   styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-1);
+      min-width: 0;
+    }
     .state {
       display: inline-flex;
       align-items: center;
@@ -54,6 +65,14 @@ import { Icon } from './icon';
       color: var(--color-error);
       border-color: var(--color-error-border);
     }
+    .state.unavailable {
+      background: #b42318;
+      color: #fff;
+      border: 2px solid #7a271a;
+      box-shadow: 0 0 0 2px rgb(180 35 24 / 18%);
+      text-transform: uppercase;
+      letter-spacing: 0.035em;
+    }
     .held {
       background: var(--color-primary-soft);
       color: var(--color-primary-dark);
@@ -65,11 +84,21 @@ import { Icon } from './icon';
       font-size: var(--text-xs);
       color: var(--color-muted);
     }
+    .unavailable-note {
+      max-width: 28rem;
+      padding: var(--space-2) var(--space-3);
+      border-left: 3px solid #b42318;
+      border-radius: var(--radius-sm);
+      background: #fef3f2;
+      color: #7a271a;
+      line-height: 1.45;
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GarmentStatus {
   readonly state = input.required<PhysicalState>();
   readonly held = input(false);
+  readonly observation = input<string | null>(null);
   readonly label = stateLabel;
 }

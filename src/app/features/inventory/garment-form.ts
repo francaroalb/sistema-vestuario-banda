@@ -88,11 +88,22 @@ export class GarmentForm {
         this.form.patchValue({
           garment_type_id: types.find((type) => type.active)?.id ?? '',
         });
+      this.updateNotesValidator();
     } catch (error) {
       this.loadError.set(inventoryError(error).message);
     } finally {
       this.loading.set(false);
     }
+  }
+  stateChanged(): void {
+    this.updateNotesValidator();
+  }
+  private updateNotesValidator(): void {
+    const validators = [Validators.maxLength(2000)];
+    if (this.form.controls.physical_state.value === 'NO_DISPONIBLE')
+      validators.unshift(nonBlank);
+    this.form.controls.notes.setValidators(validators);
+    this.form.controls.notes.updateValueAndValidity();
   }
   async save(): Promise<void> {
     if (

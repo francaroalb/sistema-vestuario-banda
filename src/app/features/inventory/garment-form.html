@@ -91,7 +91,7 @@
       </div>
       <div class="field span-full">
         <label for="garment-state">Estado físico</label
-        ><select id="garment-state" formControlName="physical_state">
+        ><select id="garment-state" formControlName="physical_state" (change)="stateChanged()">
           @for (state of states; track state.value) {
           <option [value]="state.value">{{ state.label }}</option>
           }
@@ -99,18 +99,24 @@
       </div>
       <div class="field span-full">
         <label for="garment-notes"
-          >Observaciones <span class="optional">opcional</span></label
+          >{{ form.controls.physical_state.value === 'NO_DISPONIBLE' ? 'Observación del estado' : 'Observaciones' }}
+          @if (form.controls.physical_state.value === 'NO_DISPONIBLE') { <span aria-hidden="true">*</span> } @else { <span class="optional">opcional</span> }</label
         ><textarea
           id="garment-notes"
           formControlName="notes"
           rows="3"
           maxlength="2000"
-          placeholder="Por ejemplo, le falta un botón."
-          aria-describedby="notes-help"
+          [placeholder]="form.controls.physical_state.value === 'NO_DISPONIBLE' ? 'Indica por qué no está disponible.' : 'Por ejemplo, le falta un botón.'"
+          [attr.aria-required]="form.controls.physical_state.value === 'NO_DISPONIBLE'"
+          [attr.aria-invalid]="form.controls.notes.touched && form.controls.notes.invalid"
+          aria-describedby="notes-help notes-error"
         ></textarea
         ><small id="notes-help"
-          >{{ form.controls.notes.value.length }}/2000 caracteres</small
+          >{{ form.controls.physical_state.value === 'NO_DISPONIBLE' ? 'Obligatoria para este estado. ' : '' }}{{ form.controls.notes.value.length }}/2000 caracteres</small
         >
+        @if (form.controls.notes.touched && form.controls.notes.invalid) {
+          <span class="field-error" id="notes-error">Añade una observación para indicar por qué no está disponible (máximo 2000 caracteres).</span>
+        }
       </div>
     </div>
   </fieldset>
